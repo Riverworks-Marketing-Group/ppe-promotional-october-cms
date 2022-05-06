@@ -1,0 +1,63 @@
+.hover-bg {
+  background-color: #fff;
+  transition: $trans;
+  padding: 15px;
+  &:hover {
+	background: $primary;
+  }
+}
+
+.content {
+  img {
+    margin-bottom: 1rem;
+  }
+  &.has-text-white {
+    h1, h2, h3, h4, h5, h6 {
+      color: white !important;
+    }
+  }
+}
+
+.radio, .checkbox {
+  transition: $trans;
+  &:hover {
+    color: #fff;
+    opacity: .5;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $family-secondary;
+}
+
+.bg {
+  background-size: cover;
+  background-position: center center;
+}
+
+@mixin slide-up-bg($color: $link) {
+  position: relative;
+  transform: translateZ(0);
+  overflow: hidden;
+  &:after {
+    content: '';
+    background: $color;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: translateY(100%);
+    transition: $trans;
+    z-index: -1;
+  }
+  &:hover {
+    &:after {
+      transform: translateY(0);
+    }
+  }
+}
+
+.button {
+  @include slide-up-bg;
+}

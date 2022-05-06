@@ -1,0 +1,79 @@
+html {
+  scroll-behavior: smooth;
+}
+body {
+  padding-top: 154px;
+}
+
+.anchor-section {
+  top: -154px;
+}
+
+#header {
+  box-shadow: 0 0 1px #000;
+}
+
+.logo {
+  img {
+	max-height: 105px;
+  }
+}
+
+button.close {
+  display: none;
+}
+
+.stripe-loading-indicator .stripe, .stripe-loading-indicator .stripe-loaded {
+  background: #2251a0 !important;
+}
+
+.alert {
+  background: #2251a0;
+  padding: 7px 11px;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+
+.header-top {
+  height: 57px;
+}
+
+@media (max-width: 800px) {
+  #header .hero-body {
+	height: 61px;
+  }
+  .logo img {
+	max-height: 61px;
+  }
+}
+
+.navbar-item:after {
+    background-color: #fff;   
+}
+
+.navbar.is-primary .navbar-end .navbar-link.is-active, .navbar.is-primary .navbar-end .navbar-link:focus, .navbar.is-primary .navbar-end .navbar-link:hover, .navbar.is-primary .navbar-end>a.navbar-item.is-active, .navbar.is-primary .navbar-end>a.navbar-item:focus, .navbar.is-primary .navbar-end>a.navbar-item:hover, .navbar.is-primary .navbar-start .navbar-link.is-active, .navbar.is-primary .navbar-start .navbar-link:focus, .navbar.is-primary .navbar-start .navbar-link:hover, .navbar.is-primary .navbar-start>a.navbar-item.is-active, .navbar.is-primary .navbar-start>a.navbar-item:focus, .navbar.is-primary .navbar-start>a.navbar-item:hover {
+    background-color: transparent;
+    color: #2251a0 !important;
+}
+
+.button.is-primary.is-hovered, .button.is-primary:hover {
+    color: #204c95;
+}
+
+.button:after {
+    background: #fff;
+}
+
+.button.is-primary.is-inverted.is-outlined.is-focused, .button.is-primary.is-inverted.is-outlined.is-hovered, .button.is-primary.is-inverted.is-outlined:focus, .button.is-primary.is-inverted.is-outlined:hover {
+  background-color: transparent !important;
+}
+
+.alert {
+    background: #fff;
+    color: #2251a0;
+    margin-top: 16px;
+}
+
+.button.is-primary.is-inverted.is-outlined:focus {
+    color: #fff;
+}

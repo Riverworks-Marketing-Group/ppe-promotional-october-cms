@@ -1,0 +1,9 @@
+{% for item in items if not item.viewBag.isHidden %}
+    {% if item.url %}
+        <a class="navbar-item {{ item.isActive ? 'is-active' }} {{ item.viewBag.cssClass }}" href="{{ item.url }}" {{ item.viewBag.isExternal ? 'target="_blank"' }}>
+            {{ item.title }}
+        </a>
+    {% else %}
+        <span class="navbar-item">{{ item.title }}</span>
+    {% endif %}
+{% endfor %}

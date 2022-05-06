@@ -1,0 +1,11 @@
+fields:
+  content:
+    span: auto
+    label: 'Content'
+    type: richeditor
+    size: giant
+  bg:
+    span: auto
+    label: 'Background'
+    type: mediafinder
+    mode: image

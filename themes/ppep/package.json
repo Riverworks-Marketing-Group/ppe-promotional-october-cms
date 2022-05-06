@@ -1,0 +1,59 @@
+{
+  "name": "psi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webpack.mix.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm run development",
+    "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch": "npm run development -- --watch",
+    "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "prod": "npm run production",
+    "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/pro-source-industrial/pro-source-industrial-oct-theme.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/pro-source-industrial/pro-source-industrial-oct-theme/issues"
+  },
+  "homepage": "https://gitlab.com/pro-source-industrial/pro-source-industrial-oct-theme#readme",
+  "devDependencies": {
+    "browser-sync": "^2.26.5",
+    "browser-sync-webpack-plugin": "^2.0.1",
+    "copy-webpack-plugin": "^5.0.3",
+    "cypress": "^3.4.1",
+    "imagemin-webpack-plugin": "^2.4.2",
+    "laravel-mix": "^4.0.15",
+    "laravel-mix-imagemin": "^1.0.3",
+    "resolve-url-loader": "^2.3.1",
+    "sass": "^1.20.1",
+    "sass-loader": "^7.1.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.5",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "dependencies": {
+    "@glidejs/glide": "^3.4.1",
+    "@types/glidejs": "^1.0.30",
+    "@types/jquery": "^3.3.31",
+    "@types/slick-carousel": "^1.6.34",
+    "bootstrap": "4.4.1",
+    "bulma": "^0.8.2",
+    "gsap": "^3.1.1",
+    "imports-loader": "^0.7.0",
+    "jquery": "^3.5.0",
+    "masonry-layout": "^4.2.2",
+    "scrollmagic": "^2.0.7",
+    "scrollmagic-plugin-gsap": "^1.0.4",
+    "slick-carousel": "^1.8.1",
+    "smoothscroll-polyfill": "^0.4.4",
+    "tiny-slider": "^2.9.2",
+    "typed.js": "^2.0.11"
+  }
+}

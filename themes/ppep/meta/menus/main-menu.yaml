@@ -1,0 +1,28 @@
+name: 'Main Menu'
+items:
+    -
+        title: Products
+        nesting: ''
+        type: url
+        url: '#products'
+        code: ''
+        reference: ''
+        cmsPage: ''
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: Contact
+        nesting: ''
+        type: url
+        url: '#contact'
+        code: ''
+        reference: ''
+        cmsPage: ''
+        replace: ''
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'

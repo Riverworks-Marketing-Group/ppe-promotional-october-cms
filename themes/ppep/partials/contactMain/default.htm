@@ -1,0 +1,55 @@
+[viewBag]
+==
+<form data-request="{{ __SELF__ }}::onFormSubmit">
+
+    {{ form_token() }}
+
+    <div class="field">
+        <label class="label has-text-white" for="name">Name</label>
+        <div class="control">
+            <input class="input" type="text" name="Name" id="name">
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label has-text-white" for="email">Email</label>
+        <div class="control">
+            <input class="input" type="email" name="Email" id="email">
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label has-text-white" for="phone">Phone</label>
+        <div class="control">
+            <input class="input" type="tel" name="Phone" id="phone">
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label has-text-white">What products are you interested in?</label>
+        {% for p in products %}
+            <label class="checkbox is-block">
+                <input type="checkbox" name="{{ p.name|replace({' ':'', '-':''}) }}">
+                {{ p.name }}
+            </label>
+        {% endfor %}
+        <label class="checkbox is-block">
+            <input type="checkbox" name="Other">
+            Other
+        </label>
+    </div>
+
+    <div class="field">
+        <label class="label has-text-white" for="message">Message</label>
+        <div class="control">
+            <textarea class="textarea" name="Message" id="message"></textarea>
+        </div>
+    </div>
+
+    {% partial '@recaptcha' %}
+
+    <button type="submit" class="button is-primary is-inverted is-outlined">Submit</button>
+    
+    <div id="{{ __SELF__ }}_forms_flash"></div>
+
+</form>

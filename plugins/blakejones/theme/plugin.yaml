@@ -1,0 +1,11 @@
+plugin:
+    name: 'blakejones.theme::lang.plugin.name'
+    description: 'blakejones.theme::lang.plugin.description'
+    author: 'Blake Jones'
+    icon: oc-icon-paint-brush
+    homepage: ''
+navigation:
+    theme:
+        label: Theme
+        url: cms/themeoptions/update
+        icon: icon-paint-brush

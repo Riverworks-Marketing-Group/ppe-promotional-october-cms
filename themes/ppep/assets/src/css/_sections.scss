@@ -1,0 +1,53 @@
+.anchor-section {
+  font-size: 0;
+  position: absolute;
+  top: -#{$header-offset};
+}
+
+.glide__slide {
+  height: 350px;
+  position: relative;
+  .content {
+    position: absolute;
+    left: 2rem;
+    right: 2rem;
+    bottom: 2rem;
+  }
+}
+
+.glide__arrow {
+  top: 32%;
+  background: $primary;
+  border: 0;
+  transition: $trans;
+  &:hover {
+    opacity: .75;
+  }
+}
+
+.glide__arrow--left {
+  left: 0;
+  transform: translateX(-50%);
+}
+
+.glide__arrow--right {
+  right: 0;
+  transform: translateX(50%);
+}
+
+.glide__bullets {
+  bottom: 1em;
+}
+
+.products {
+  .columns {
+    margin-bottom: -2rem;
+  }
+  .column {
+    margin-bottom: 2rem;
+  }
+}
+
+.g-recaptcha {
+  display: none;
+}

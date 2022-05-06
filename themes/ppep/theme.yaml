@@ -1,0 +1,46 @@
+name: 'Hampton Trucking'
+description: 'Theme by Riverworks Marketing'
+author: 'Riverworks Marketing'
+homepage: 'https://www.riverworksmarketing.com/'
+code: 'ht'
+form:
+  tabs:
+    fields:
+      logo:
+        span: auto
+        label: 'Logo'
+        type: mediafinder
+        mode: image
+        tab: Header
+      logo_alt:
+        span: auto
+        label: 'Logo Alt'
+        type: text
+        tab: Header
+      phone:
+        span: auto
+        label: 'Phone'
+        type: text
+        tab: Header
+      email:
+        span: auto
+        label: 'Email'
+        type: text
+        tab: Header
+      footer_content:
+        span: full
+        label: 'Footer Content'
+        type: richeditor
+        size: giant
+        tab: Footer
+      default_banner:
+        span: auto
+        label: 'Default Banner Background'
+        type: mediafinder
+        mode: image
+        tab: Defaults
+      site_name:
+        span: auto
+        label: 'Site Name (Meta Title)'
+        type: text
+        tab: SEO

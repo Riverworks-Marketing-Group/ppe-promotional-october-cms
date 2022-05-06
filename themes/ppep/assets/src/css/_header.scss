@@ -1,0 +1,86 @@
+body {
+  padding-top: $header-offset;
+}
+
+#header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  .hero-body {
+    height: 105px;
+	position: relative;
+    margin-top: -44px;
+  }
+}
+
+.header-top {
+  border-bottom: 1px solid $primary;
+  padding: 0 1rem;
+  a {
+    display: table;
+    padding: 10px 0;
+    color: $primary;
+    position: relative;
+    z-index: 9;
+    &:hover {
+      color: $link;
+    }
+  }
+  .is-one-third {
+    padding-right: 0;
+  }
+  .is-two-thirds {
+    padding-left: 0;
+  }
+}
+
+.logo {
+  max-width: 230px;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+}
+
+.navbar-center {
+  justify-content: center;
+  width: 100%;
+}
+
+.navbar-item {
+  font-family: $family-secondary;
+  text-transform: uppercase;
+  padding-left: 20px;
+  padding-right: 20px;
+  @include slide-up-bg($primary);
+}
+
+@media (max-width: 800px) {
+  #header {
+    .hero-body {
+      margin-top: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      height: 60px;
+    }
+  }
+}
+
+@media (max-width: 460px) {
+  .header-top {
+    a {
+      font-size: 13px;
+    }
+  }
+}
+
+@media (max-width: 350px) {
+  .header-top {
+    i {
+      display: none !important;
+    }
+  }
+}

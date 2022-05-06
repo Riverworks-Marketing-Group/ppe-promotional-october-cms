@@ -1,0 +1,27 @@
+fields:
+  name:
+    span: auto
+    label: 'Name'
+    type: text
+  img_alt:
+    span: auto
+    label: 'Image Alt'
+    type: text
+  content:
+    span: auto
+    label: 'Content'
+    type: richeditor
+    size: giant
+  img:
+    span: auto
+    label: 'Image'
+    type: mediafinder
+    mode: image
+  btn_link:
+    span: auto
+    label: 'Button Link'
+    type: text
+  btn_txt:
+    span: auto
+    label: 'Button Text'
+    type: text

@@ -1,0 +1,19 @@
+description = "Default"
+==
+<!doctype html>
+<html>
+<head>
+    {% partial 'site/head' %}
+</head>
+<body id="{{ this.page.id }}">
+
+{% partial 'site/header' %}
+
+<main id="main">
+    {% page %}
+</main>
+
+{% partial 'site/footer' %}
+
+</body>
+</html>

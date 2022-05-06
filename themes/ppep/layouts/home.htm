@@ -1,0 +1,124 @@
+description = "Home"
+
+[staticPage]
+useContent = 0
+default = 1
+
+[genericForm contactMain]
+group = "Main"
+rules[Name] = "required|max:255"
+rules[Email] = "required|email|max:255"
+rules[Phone] = "required|max:255"
+rules[Message] = "required|max:10000"
+messages_success = "Your form was successfully submitted"
+messages_errors = "There were errors with your submission"
+mail_enabled = 1
+mail_subject = "PPE Promotional Submission"
+mail_recipients[] = "sales@ppepromotional.com"
+mail_replyto = "Email"
+reset_form = 1
+inline_errors = "display"
+allowed_fields[] = "Name"
+allowed_fields[] = "Email"
+allowed_fields[] = "Phone"
+allowed_fields[] = "Message"
+allowed_fields[] = "Masks"
+allowed_fields[] = "HandSanitzer"
+allowed_fields[] = "PatientGowns"
+allowed_fields[] = "Gloves"
+allowed_fields[] = "Shields"
+allowed_fields[] = "AntimicrobialPens"
+allowed_fields[] = "AntimicrobialMousepads"
+allowed_fields[] = "AntimicrobialScreenSpray"
+allowed_fields[] = "AntibacterialWetWipes"
+allowed_fields[] = "UVLightBox"
+allowed_fields[] = "BagHooks"
+allowed_fields[] = "HandSanitizerSpray"
+allowed_fields[] = "HandSanitizerGel"
+allowed_fields[] = "CompactHandSanitizerWipes"
+allowed_fields[] = "SafetyKey"
+allowed_fields[] = "LightweightFaceCovers"
+allowed_fields[] = "PremiumFabricFaceCovers"
+allowed_fields[] = "Other"
+sanitize_data = "disabled"
+anonymize_ip = "disabled"
+recaptcha_enabled = 1
+recaptcha_theme = "light"
+recaptcha_type = "image"
+recaptcha_size = "invisible"
+emails_date_format = "Y-m-d"
+==
+<!doctype html>
+<html>
+<head>
+    {% partial 'site/head' %}
+</head>
+<body id="{{ this.page.id }}">
+
+{% partial 'site/header' %}
+
+<main id="main">
+
+    <section class="products section is-relative has-background-white">
+        {variable
+            name="products_content"
+            label="Products Content"
+            type="richeditor"
+            size="giant"
+            span="full"
+            tab="Products"
+        }{/variable}
+        {variable
+            name="products"
+            label="Products"
+            type="repeater"
+            form="~/themes/ppep/yaml/product.yaml"
+            span="full"
+            tab="Products"
+        }{/variable}
+        <div id="products" class="anchor-section"> </div>
+        <div class="container">
+            <div class="columns is-multiline is-variable is-5">
+                <div class="column is-full">
+                    <div class="content">
+                        {{ products_content|raw }}
+                    </div>
+                </div>
+                {% for p in products %}
+                    <div class="column is-one-third">
+                        <div class="content">
+                            <img src="{{ p.img|media }}" alt="{{ p.img_alt|default(p.name) }}">
+                            <h4>{{ p.name }}</h4>
+                            {{ p.content|raw }}
+                            <a class="button is-primary" href="{{ p.btn_link }}">{{ p.btn_txt }}</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="contact section is-relative has-background-primary has-text-white">
+        {variable
+            name="contact_content"
+            label="Contact Content"
+            type="richeditor"
+            size="giant"
+            span="full"
+            tab="Contact"
+        }{/variable}
+        <div id="contact" class="anchor-section"> </div>
+        <div class="container">
+            <div class="content has-text-white">
+                {{ contact_content|raw }}
+            </div>
+            {% component 'contactMain' %}
+        </div>
+    </section>
+
+</main>
+
+{% partial 'site/footer' %}
+
+</body>
+</html>
