@@ -1,6 +1,7 @@
 <?php namespace Backend\Widgets;
 
 use Lang;
+use Throwable;
 use Backend\Classes\WidgetBase;
 
 /**
@@ -79,14 +80,17 @@ class Search extends WidgetBase
             'searchOnEnter',
         ]);
 
-        /*
-         * Add CSS class styles
-         */
-        $this->cssClasses[] = 'icon search';
-
         if ($this->growable) {
             $this->cssClasses[] = 'growable';
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function loadAssets()
+    {
+        $this->addJs('js/october.search.js', 'core');
     }
 
     /**
@@ -104,7 +108,7 @@ class Search extends WidgetBase
     }
 
     /**
-     * Prepares the view data
+     * prepareVars for display
      */
     public function prepareVars()
     {
@@ -130,8 +134,8 @@ class Search extends WidgetBase
         $params = func_get_args();
         try {
             $result = $this->fireEvent('search.submit', [$params]);
-        } catch (\Throwable $e) {
-            // Remove the search term from the session if the search has failed.
+        }
+        catch (Throwable $e) {
             $this->setActiveTerm('');
             throw $e;
         }

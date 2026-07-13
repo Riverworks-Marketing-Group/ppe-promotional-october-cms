@@ -17,16 +17,26 @@ class Engine implements EngineInterface
     protected $environment;
 
     /**
+     * @var System\Twig\Loader
+     */
+    protected $loader;
+
+    /**
      * Constructor
      */
     public function __construct(TwigEnvironment $environment)
     {
         $this->environment = $environment;
+
+        $this->loader = $this->environment->getLoader();
     }
 
     public function get($path, array $vars = [])
     {
+        $this->loader->addCacheItem($path);
+
         $template = $this->environment->loadTemplate($path);
+
         return $template->render($vars);
     }
 }

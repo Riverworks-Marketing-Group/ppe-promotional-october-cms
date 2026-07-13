@@ -1,0 +1,72 @@
+{
+    "name": "october/october",
+    "description": "Built using October CMS: The Laravel-Based CMS Engineered For Simplicity",
+    "type": "project",
+    "homepage": "https://octobercms.com",
+    "license": "proprietary",
+    "require": {
+        "php": ">=7.2.9",
+        "october/rain": "^2.0",
+        "laravel/framework": "^6.0",
+        "october/all": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0|^9.0"
+    },
+    "scripts": {
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "php artisan key:generate --ansi"
+        ],
+        "post-autoload-dump": [
+            "System\\Console\\ComposerScript::postAutoloadDump"
+        ],
+        "post-update-cmd": [
+            "System\\Console\\ComposerScript::postUpdateCmd"
+        ],
+        "pre-package-uninstall": [
+            "System\\Console\\ComposerScript::prePackageUninstall"
+        ],
+        "test": [
+            "phpunit --stop-on-failure"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "composer/installers": true
+        },
+        "audit": {
+            "ignore": [
+                "PKSA-h2tj-db1h-m5mf",
+                "PKSA-drxd-zbt8-s1kh",
+                "PKSA-4k1j-qzgm-rvr3",
+                "PKSA-57nm-kh7g-ddrg",
+                "PKSA-44b4-zdw9-q1j5",
+                "PKSA-bbp3-wdjz-b51v",
+                "PKSA-4qp4-vb8r-g3zj",
+                "PKSA-q2z3-dfft-h9n9",
+                "PKSA-91zd-f7p3-qtvm",
+                "PKSA-yr75-7y9f-cxw9",
+                "PKSA-zpmz-wj2m-t91q",
+                "PKSA-ygz3-dmrq-fzm6",
+                "PKSA-4s4z-t146-6123"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "System\\Console\\": "modules/system/console"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": {
+        "octobercms": {
+            "type": "composer",
+            "url": "https://gateway.octobercms.com"
+        }
+    }
+}

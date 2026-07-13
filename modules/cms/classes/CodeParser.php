@@ -5,9 +5,10 @@ use Lang;
 use Cache;
 use Config;
 use SystemException;
+use Exception;
 
 /**
- * Parses the PHP code section of CMS objects.
+ * CodeParser parses the PHP code section of CMS objects.
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
@@ -30,23 +31,29 @@ class CodeParser
     protected static $cache = [];
 
     /**
-     * @var string Key for the parsed PHP file information cache.
+     * @var \Illuminate\Cache\CacheManager
+     */
+    protected $cacheManager;
+
+    /**
+     * @var string dataCacheKey is the key for the parsed PHP file information cache.
      */
     protected $dataCacheKey = '';
 
     /**
-     * Creates the class instance
+     * __construct
      * @param \Cms\Classes\CmsCompoundObject A reference to a CMS object to parse.
      */
     public function __construct(CmsCompoundObject $object)
     {
         $this->object = $object;
         $this->filePath = $object->getFilePath();
-        $this->dataCacheKey = Config::get('cache.codeParserDataCacheKey', 'cms-php-file-data');
+        $this->cacheManager = Cache::driver(Config::get('cms.template_cache_driver', 'file'));
+        $this->dataCacheKey = 'cms_code_parser_'.$object->theme->getDirName();
     }
 
     /**
-     * Parses the CMS object's PHP code section and returns an array with the following keys:
+     * parse the CMS object's PHP code section and returns an array with the following keys:
      * - className
      * - filePath (path to the parsed PHP file)
      * - offset (PHP section offset in the template file)
@@ -117,7 +124,7 @@ class CodeParser
     }
 
    /**
-    * Rebuilds the current file cache.
+    * rebuild the current file cache.
     * @param string The path in which the cached file should be stored
     */
     protected function rebuild($path)
@@ -128,7 +135,6 @@ class CodeParser
         $body = $this->object->code;
         $body = preg_replace('/^\s*function/m', 'public function', $body);
 
-        $namespaces = [];
         $pattern = '/(use\s+[a-z0-9_\\\\]+(\s+as\s+[a-z0-9_]+)?;\n?)/mi';
         preg_match_all($pattern, $body, $namespaces);
         $body = preg_replace($pattern, '', $body);
@@ -141,9 +147,7 @@ class CodeParser
         $fileContents = '<?php '.PHP_EOL;
 
         foreach ($namespaces[0] as $namespace) {
-            if (str_contains($namespace, '\\')) {
-                $fileContents .= $namespace;
-            }
+            $fileContents .= $namespace;
         }
 
         $fileContents .= 'class '.$className.$parentClass.PHP_EOL;
@@ -161,7 +165,7 @@ class CodeParser
     }
 
     /**
-     * Runs the object's PHP file and returns the corresponding object.
+     * source runs the object's PHP file and returns the corresponding object.
      * @param \Cms\Classes\Page $page Specifies the CMS page.
      * @param \Cms\Classes\Layout $layout Specifies the CMS layout.
      * @param \Cms\Classes\Controller $controller Specifies the CMS controller.
@@ -176,22 +180,32 @@ class CodeParser
             require_once $data['filePath'];
         }
 
-        if (!class_exists($className) && ($data = $this->handleCorruptCache($data))) {
+        // Handle corrupt cache during concurrent access
+        $count = 0;
+        while (!class_exists($className)) {
+            usleep(rand(50000, 200000));
+
+            $data = $this->handleCorruptCache($data);
             $className = $data['className'];
+
+            if ($count++ > 10) {
+                $path = $data['filePath'] ?? $this->getCacheFilePath();
+                throw new SystemException(Lang::get('system::lang.file.create_fail', ['name'=>$path]));
+            }
         }
 
         return new $className($page, $layout, $controller);
     }
 
     /**
-     * In some rare cases the cache file will not contain the class
+     * handleCorruptCache in some rare cases the cache file will not contain the class
      * name we expect. When this happens, destroy the corrupt file,
      * flush the request cache, and repeat the cycle.
      * @return void
      */
     protected function handleCorruptCache($data)
     {
-        $path = array_get($data, 'filePath', $this->getCacheFilePath());
+        $path = $data['filePath'] ?? $this->getCacheFilePath();
 
         if (is_file($path)) {
             if (($className = $this->extractClassFromFile($path)) && class_exists($className)) {
@@ -212,7 +226,7 @@ class CodeParser
     //
 
     /**
-     * Stores result data inside cache.
+     * storeCachedInfo stores result data inside cache.
      * @param array $result
      * @return void
      */
@@ -224,13 +238,22 @@ class CodeParser
         $cached = $this->getCachedInfo() ?: [];
         $cached[$this->filePath] = $cacheItem;
 
-        Cache::put($this->dataCacheKey, base64_encode(serialize($cached)), 1440);
+        $toStore = base64_encode(serialize($cached));
+
+        $minutes = Config::get('cms.template_cache_ttl', 1440);
+        if ($minutes < 0) {
+            $this->cacheManager->forever($this->dataCacheKey, $toStore);
+        }
+        else {
+            $expiresAt = now()->addMinutes($minutes);
+            $this->cacheManager->put($this->dataCacheKey, $toStore, $expiresAt);
+        }
 
         self::$cache[$this->filePath] = $result;
     }
 
     /**
-     * Returns path to the cached parsed file
+     * getCacheFilePath returns path to the cached parsed file
      * @return string
      */
     protected function getCacheFilePath()
@@ -246,12 +269,12 @@ class CodeParser
     }
 
     /**
-     * Returns information about all cached files.
+     * getCachedInfo returns information about all cached files.
      * @return mixed Returns an array representing the cached data or NULL.
      */
     protected function getCachedInfo()
     {
-        $cached = Cache::get($this->dataCacheKey, false);
+        $cached = $this->cacheManager->get($this->dataCacheKey, false);
 
         if (
             $cached !== false &&
@@ -264,7 +287,7 @@ class CodeParser
     }
 
     /**
-     * Returns information about a cached file
+     * getCachedFileInfo returns information about a cached file
      * @return integer
      */
     protected function getCachedFileInfo()
@@ -283,7 +306,7 @@ class CodeParser
     //
 
     /**
-     * Evaluates PHP content in order to detect syntax errors.
+     * validate evaluates PHP content in order to detect syntax errors.
      * The method handles PHP errors and throws exceptions.
      */
     protected function validate($php)
@@ -292,25 +315,28 @@ class CodeParser
     }
 
     /**
-     * Extracts the class name from a cache file
+     * extractClassFromFile extracts the class name from a cache file
      * @return string
      */
     protected function extractClassFromFile($path)
     {
-        $fileContent = file_get_contents($path);
-        $matches = [];
-        $pattern = '/Cms\S+_\S+Class/';
-        preg_match($pattern, $fileContent, $matches);
+        try {
+            $fileContent = File::sharedGet($path);
+            $matches = [];
+            $pattern = '/Cms\S+_\S+Class/';
+            preg_match($pattern, $fileContent, $matches);
 
-        if (!empty($matches[0])) {
-            return $matches[0];
+            if (!empty($matches[0])) {
+                return $matches[0];
+            }
         }
+        catch (Exception $ex) {}
 
         return null;
     }
 
     /**
-     * Writes content with concurrency support and cache busting
+     * writeContentSafe writes content with concurrency support and cache busting
      * This work is based on the Twig\Cache\FilesystemCache class
      */
     protected function writeContentSafe($path, $content)
@@ -335,15 +361,8 @@ class CodeParser
         /*
          * Compile cached file into bytecode cache
          */
-        if (Config::get('cms.forceBytecodeInvalidation', false)) {
-            $opcache_enabled = ini_get('opcache.enable');
-            $opcache_path = trim(ini_get('opcache.restrict_api'));
-
-            if (!empty($opcache_path) && !starts_with(__FILE__, $opcache_path)) {
-                $opcache_enabled = false;
-            }
-
-            if (function_exists('opcache_invalidate') && $opcache_enabled) {
+        if (Config::get('cms.force_bytecode_invalidation', false)) {
+            if (function_exists('opcache_invalidate') && ini_get('opcache.enable')) {
                 opcache_invalidate($path, true);
             }
             elseif (function_exists('apc_compile_file')) {
@@ -353,7 +372,7 @@ class CodeParser
     }
 
     /**
-     * Make directory with concurrency support
+     * makeDirectorySafe makes a directory with concurrency support
      */
     protected function makeDirectorySafe($dir)
     {

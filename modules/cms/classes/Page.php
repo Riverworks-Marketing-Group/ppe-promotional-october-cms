@@ -2,18 +2,22 @@
 
 use Lang;
 use ApplicationException;
+use October\Rain\Router\Helper as RouterHelper;
 use October\Rain\Filesystem\Definitions as FileDefinitions;
+use ValidationException;
 
 /**
- * The CMS page class.
+ * Page template class
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
 class Page extends CmsCompoundObject
 {
+    use \Cms\Traits\ParsableAttributes;
+
     /**
-     * @var string The container name associated with the model, eg: pages.
+     * @var string dirName associated with the model, eg: pages.
      */
     protected $dirName = 'pages';
 
@@ -34,18 +38,36 @@ class Page extends CmsCompoundObject
     ];
 
     /**
+     * @var array parsable attributes support using parsed variables.
+     */
+    protected $parsable = [
+        'meta_title',
+        'meta_description',
+    ];
+
+    /**
      * @var array The API bag allows the API handler code to bind arbitrary
      * data to the page object.
      */
     public $apiBag = [];
 
     /**
-     * @var array The rules to be applied to the data.
+     * @var array rules to be applied to the data.
      */
     public $rules = [
         'title' => 'required',
-        'url'   => 'required'
+        'url' => 'required',
     ];
+
+    /**
+     * beforeValidate applies custom validation rules
+     */
+    public function beforeValidate()
+    {
+        if (!RouterHelper::validateUrl($this->getAttribute('url'))) {
+            throw new ValidationException(['url' => Lang::get('cms::lang.page.invalid_url')]);
+        }
+    }
 
     /**
      * Returns name of a PHP class to us a parent for the PHP class created for the object's PHP section.

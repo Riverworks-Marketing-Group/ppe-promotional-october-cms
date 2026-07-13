@@ -17,7 +17,7 @@ class MailTemplate extends Model
     use \October\Rain\Database\Traits\Validation;
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_mail_templates';
 
@@ -136,8 +136,8 @@ class MailTemplate extends Model
 
     protected function fillFromSections($sections)
     {
-        $this->content_html = $sections['html'];
-        $this->content_text = $sections['text'];
+        $this->content_html = $sections['html'] ?? '';
+        $this->content_text = $sections['text'] ?? '';
         $this->subject = array_get($sections, 'settings.subject', 'No subject');
 
         $layoutCode = array_get($sections, 'settings.layout', 'default');
@@ -160,15 +160,5 @@ class MailTemplate extends Model
         }
 
         return $template;
-    }
-
-    /**
-     * @deprecated see System\Classes\MailManager::registerCallback
-     * Remove if year >= 2019
-     */
-    public static function registerCallback(callable $callback)
-    {
-        traceLog('MailTemplate::registerCallback is deprecated, use ' . MailManager::class . '::registerCallback instead');
-        MailManager::instance()->registerCallback($callback);
     }
 }

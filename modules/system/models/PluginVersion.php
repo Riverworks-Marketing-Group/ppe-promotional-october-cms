@@ -21,7 +21,7 @@ class PluginVersion extends Model
     protected $guarded = ['*'];
 
     /**
-     * @var bool Disable model timestamps.
+     * @var bool timestamps enabled
      */
     public $timestamps = false;
 
@@ -104,10 +104,7 @@ class PluginVersion extends Model
             }
 
             $this->disabledBySystem = $pluginObj->disabled;
-
-            if (($configDisabled = Config::get('cms.disablePlugins')) && is_array($configDisabled)) {
-                $this->disabledByConfig = in_array($this->code, $configDisabled);
-            }
+            $this->disabledByConfig = in_array($this->code, $manager->listDisabledByConfig());
         }
         else {
             $this->name = $this->code;

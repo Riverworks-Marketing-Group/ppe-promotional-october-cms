@@ -8,7 +8,7 @@ use ApplicationException;
 use File as FileHelper;
 
 /**
- * Mail layout
+ * MailLayout
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
@@ -18,7 +18,7 @@ class MailLayout extends Model
     use \October\Rain\Database\Traits\Validation;
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_mail_layouts';
 
@@ -36,13 +36,13 @@ class MailLayout extends Model
      * @var array Validation rules
      */
     public $rules = [
-        'code'                  => 'required|unique:system_mail_layouts',
-        'name'                  => 'required',
-        'content_html'          => 'required',
+        'code' => 'required|unique:system_mail_layouts',
+        'name' => 'required',
+        'content_html' => 'required',
     ];
 
     /**
-     * @var array Options array
+     * @var array jsonable attribute names that are json encoded and decoded from the database
      */
     protected $jsonable = [
         'options'
@@ -126,7 +126,7 @@ class MailLayout extends Model
     {
         $sections = self::getTemplateSections($path);
 
-        $css = '
+        $defaultCss = '
 @media only screen and (max-width: 600px) {
     .inner-body {
         width: 100% !important;
@@ -145,9 +145,9 @@ class MailLayout extends Model
         ';
 
         $this->name = array_get($sections, 'settings.name', '???');
-        $this->content_css = $css;
-        $this->content_html =  array_get($sections, 'html');
-        $this->content_text = array_get($sections, 'text');
+        $this->content_css = $sections['css'] ?? $defaultCss;
+        $this->content_html =  $sections['html'] ?? '';
+        $this->content_text = $sections['text'] ?? '';
     }
 
     protected static function getTemplateSections($code)

@@ -5,7 +5,7 @@ use Lang;
 use Cms\Contracts\CmsObject as CmsObjectContract;
 use Cms\Helpers\File as FileHelper;
 use October\Rain\Extension\Extendable;
-use ApplicationException;
+use SystemException;
 
 /**
  * The CMS component partial class. These objects are read-only.
@@ -103,8 +103,14 @@ class ComponentPartial extends Extendable implements CmsObjectContract
     {
         $partial = Partial::loadCached($theme, strtolower($component->alias) . '/' . $fileName);
 
+        // Look at second segment of component definition
         if ($partial === null) {
             $partial = Partial::loadCached($theme, $component->alias . '/' . $fileName);
+        }
+
+        // Look at first segment if not a PHP class
+        if ($partial === null && strpos($component->name, '\\') === false) {
+            $partial = Partial::loadCached($theme, $component->name . '/' . $fileName);
         }
 
         return $partial;
@@ -133,6 +139,7 @@ class ComponentPartial extends Extendable implements CmsObjectContract
         $this->fileName = $fileName;
         $this->mtime = File::lastModified($filePath);
         $this->content = $content;
+
         return $this;
     }
 
@@ -145,7 +152,9 @@ class ComponentPartial extends Extendable implements CmsObjectContract
     public static function check(ComponentBase $component, $fileName)
     {
         $partial = new static($component);
+
         $filePath = $partial->getFilePath($fileName);
+
         if (!strlen(File::extension($filePath))) {
             $filePath .= '.'.$partial->getDefaultExtension();
         }
@@ -161,7 +170,7 @@ class ComponentPartial extends Extendable implements CmsObjectContract
     protected function validateFileName($fileName)
     {
         if (!FileHelper::validatePath($fileName, $this->maxNesting)) {
-            throw new ApplicationException(Lang::get('cms::lang.cms_object.invalid_file', [
+            throw new SystemException(Lang::get('cms::lang.cms_object.invalid_file', [
                 'name' => $fileName
             ]));
         }

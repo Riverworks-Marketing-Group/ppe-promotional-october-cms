@@ -4,10 +4,9 @@ use Lang;
 use ApplicationException;
 use October\Rain\Extension\ExtensionBase;
 use System\Traits\ViewMaker;
-use October\Rain\Html\Helper as HtmlHelper;
 
 /**
- * Controller Behavior base class
+ * ControllerBehavior base class
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -23,7 +22,7 @@ class ControllerBehavior extends ExtensionBase
     }
 
     /**
-     * @var array Supplied configuration.
+     * @var object Supplied configuration.
      */
     protected $config;
 
@@ -43,7 +42,7 @@ class ControllerBehavior extends ExtensionBase
     protected $actions;
 
     /**
-     * Constructor.
+     * __construct the behavior
      */
     public function __construct($controller)
     {
@@ -64,14 +63,30 @@ class ControllerBehavior extends ExtensionBase
             }
         }
 
-        // Hide all methods that aren't explicitly listed as actions
+        /*
+         * Hide all methods that aren't explicitly listed as actions
+         */
         if (is_array($this->actions)) {
             $this->hideAction(array_diff(get_class_methods(get_class($this)), $this->actions));
         }
+
+        /**
+         * Constructor logic that is protected by authentication
+         */
+        $controller->bindEvent('page.beforeDisplay', function() {
+            $this->beforeDisplay();
+        });
     }
 
     /**
-     * Sets the configuration values
+     * beforeDisplay fires before the page is displayed and AJAX is executed.
+     */
+    public function beforeDisplay()
+    {
+    }
+
+    /**
+     * setConfig sets the configuration values
      * @param mixed $config   Config object or array
      * @param array $required Required config items
      */
@@ -81,51 +96,22 @@ class ControllerBehavior extends ExtensionBase
     }
 
     /**
-     * Safe accessor for configuration values.
+     * getConfig is a safe accessor for configuration values
      * @param string $name Config name, supports array names like "field[key]"
      * @param mixed $default Default value if nothing is found
      * @return string
      */
     public function getConfig($name = null, $default = null)
     {
-        /*
-         * Return all config
-         */
-        if ($name === null) {
-            return $this->config;
-        }
-
-        /*
-         * Array field name, eg: field[key][key2][key3]
-         */
-        $keyParts = HtmlHelper::nameToArray($name);
-
-        /*
-         * First part will be the field name, pop it off
-         */
-        $fieldName = array_shift($keyParts);
-        if (!isset($this->config->{$fieldName})) {
+        if (!$this->config) {
             return $default;
         }
 
-        $result = $this->config->{$fieldName};
-
-        /*
-         * Loop the remaining key parts and build a result
-         */
-        foreach ($keyParts as $key) {
-            if (!is_array($result) || !array_key_exists($key, $result)) {
-                return $default;
-            }
-
-            $result = $result[$key];
-        }
-
-        return $result;
+        return $this->getConfigValueFrom($this->config, $name, $default);
     }
 
     /**
-     * Protects a public method from being available as an controller action.
+     * hideAction protects a public method from being available as an controller action.
      * These methods could be defined in a controller to override a behavior default action.
      * Such methods should be defined as public, to allow the behavior object to access it.
      * By default public methods of a controller are considered as actions.
@@ -142,7 +128,7 @@ class ControllerBehavior extends ExtensionBase
     }
 
     /**
-     * Makes all views in context of the controller, not the behavior.
+     * makeFileContents makes all views in context of the controller, not the behavior.
      * @param string $filePath Absolute path to the view file.
      * @param array $extraParams Parameters that should be available to the view.
      * @return string
@@ -150,11 +136,13 @@ class ControllerBehavior extends ExtensionBase
     public function makeFileContents($filePath, $extraParams = [])
     {
         $this->controller->vars = array_merge($this->controller->vars, $this->vars);
+
         return $this->controller->makeFileContents($filePath, $extraParams);
     }
 
     /**
-     * Returns true in case if a specified method exists in the extended controller.
+     * controllerMethodExists returns true in case if a specified method exists in the
+     * extended controller.
      * @param string $methodName Specifies the method name
      * @return bool
      */

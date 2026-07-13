@@ -22,7 +22,7 @@
                                 class="column-label"
                                 onclick="$.oc.importBehavior.loadFileColumnSample(this)"
                             >
-                                <?= e($column) ?>
+                                <?= $column ?>
                             </a>
                         </span>
                     </div>
@@ -40,5 +40,6 @@
 </div>
 
 <script>
-    $.oc.importBehavior.bindColumnSorting()
+    $.oc.importBehavior.bindColumnSorting();
 </script>
+

@@ -3,14 +3,13 @@
 use Backend\Classes\FormWidgetBase;
 use Cms\Classes\ComponentManager;
 use Cms\Classes\ComponentHelpers;
-use Cms\Components\SoftComponent;
 use Cms\Components\UnknownComponent;
 use Exception;
 
 /**
- * Component Builder
- * Builds a collection of Cms components and configures them.
+ * Components builds a collection of Cms components and configures them
  *
+ * @deprecated No longer used by the system
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
@@ -26,6 +25,9 @@ class Components extends FormWidgetBase
         return $this->makePartial('formcomponents', ['components' => $components]);
     }
 
+    /**
+     * listComponents
+     */
     protected function listComponents()
     {
         $result = [];
@@ -38,35 +40,17 @@ class Components extends FormWidgetBase
         $manager->listComponents();
 
         foreach ($this->model->settings['components'] as $name => $properties) {
-            list($name, $alias) = strpos($name, ' ') ? explode(' ', $name) : [$name, $name];
+            [$name, $alias] = strpos($name, ' ') ? explode(' ', $name) : [$name, $name];
 
             try {
                 $componentObj = $manager->makeComponent($name, null, $properties);
-                $componentObj->alias = ((starts_with($name, '@') && $alias !== $name) ? '@' : '') . $alias;
-                $componentObj->pluginIcon = 'icon-puzzle-piece';
-
-                /*
-                 * Look up the plugin hosting this component
-                 */
-                $plugin = $manager->findComponentPlugin($componentObj);
-                if ($plugin) {
-                    $pluginDetails = $plugin->pluginDetails();
-                    if (isset($pluginDetails['icon'])) {
-                        $componentObj->pluginIcon = $pluginDetails['icon'];
-                    }
-                }
+                $componentObj->alias = $alias;
+                $componentObj->pluginIcon = $manager->findComponentOwnerDetails($componentObj)['icon'] ?? 'icon-puzzle-piece';
             }
             catch (Exception $ex) {
-                if (starts_with($name, '@')) {
-                    $componentObj = new SoftComponent($properties);
-                    $componentObj->name = $name;
-                    $componentObj->alias = (($alias !== $name) ? '@' : '') . $alias;
-                    $componentObj->pluginIcon = 'icon-flag';
-                } else {
-                    $componentObj = new UnknownComponent(null, $properties, $ex->getMessage());
-                    $componentObj->alias = $alias;
-                    $componentObj->pluginIcon = 'icon-bug';
-                }
+                $componentObj = new UnknownComponent(null, $properties, $ex->getMessage());
+                $componentObj->alias = $alias;
+                $componentObj->pluginIcon = 'icon-bug';
             }
 
             $result[] = $componentObj;
@@ -75,21 +59,33 @@ class Components extends FormWidgetBase
         return $result;
     }
 
+    /**
+     * getComponentName
+     */
     protected function getComponentName($component)
     {
         return ComponentHelpers::getComponentName($component);
     }
 
+    /**
+     * getComponentDescription
+     */
     protected function getComponentDescription($component)
     {
         return ComponentHelpers::getComponentDescription($component);
     }
 
+    /**
+     * getComponentsPropertyConfig
+     */
     protected function getComponentsPropertyConfig($component)
     {
         return ComponentHelpers::getComponentsPropertyConfig($component);
     }
 
+    /**
+     * getComponentPropertyValues
+     */
     protected function getComponentPropertyValues($component)
     {
         return ComponentHelpers::getComponentPropertyValues($component);

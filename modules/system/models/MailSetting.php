@@ -65,6 +65,13 @@ class MailSetting extends Model
         $this->smtp_password = $config->get('mail.password');
         $this->smtp_authorization = !!strlen($this->smtp_user);
         $this->smtp_encryption = $config->get('mail.encryption');
+        $this->mailgun_domain = $config->get('services.mailgun.domain');
+        $this->mailgun_secret = $config->get('services.mailgun.secret');
+        $this->mandrill_secret = $config->get('services.mandrill.secret');
+        $this->ses_key = $config->get('services.ses.key');
+        $this->ses_secret = $config->get('services.ses.secret');
+        $this->ses_region = $config->get('services.ses.region');
+        $this->sparkpost_secret = $config->get('services.sparkpost.secret');
     }
 
     public function getSendModeOptions()

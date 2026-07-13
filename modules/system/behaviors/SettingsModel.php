@@ -1,18 +1,18 @@
 <?php namespace System\Behaviors;
 
-use App;
-use Artisan;
-use Cache;
 use Log;
+use Cache;
+use System;
+use Artisan;
 use Exception;
 use System\Classes\ModelBehavior;
 
 /**
- * Settings model extension
+ * SettingsModel extension
  *
  * Add this the model class definition:
  *
- *     public $implement = ['System.Behaviors.SettingsModel'];
+ *     public $implement = [\System\Behaviors\SettingsModel::class];
  *     public $settingsCode = 'author_plugin_code';
  *     public $settingsFields = 'fields.yaml';
  *
@@ -21,8 +21,19 @@ class SettingsModel extends ModelBehavior
 {
     use \System\Traits\ConfigMaker;
 
+    /**
+     * @var string recordCode
+     */
     protected $recordCode;
+
+    /**
+     * @var array fieldConfig
+     */
     protected $fieldConfig;
+
+    /**
+     * @var array fieldValues
+     */
     protected $fieldValues = [];
 
     /**
@@ -73,7 +84,8 @@ class SettingsModel extends ModelBehavior
             return self::$instances[$this->recordCode];
         }
 
-        if (!$item = $this->getSettingsRecord()) {
+        $item = $this->getSettingsRecord();
+        if (!$item) {
             $this->model->initSettingsData();
             $item = $this->model;
         }
@@ -86,11 +98,14 @@ class SettingsModel extends ModelBehavior
      */
     public function resetDefault()
     {
-        if ($record = $this->getSettingsRecord()) {
-            $record->delete();
-            unset(self::$instances[$this->recordCode]);
-            Cache::forget($this->getCacheKey());
+        $record = $this->getSettingsRecord();
+        if (!$record) {
+            return;
         }
+
+        $record->delete();
+        unset(self::$instances[$this->recordCode]);
+        Cache::forget($this->getCacheKey());
     }
 
     /**
@@ -99,15 +114,19 @@ class SettingsModel extends ModelBehavior
      */
     public function isConfigured()
     {
-        return App::hasDatabase() && $this->getSettingsRecord() !== null;
+        return $this->getSettingsRecord() !== null;
     }
 
     /**
-     * Returns the raw Model record that stores the settings.
+     * getSettingsRecord returns the raw Model record that stores the settings.
      * @return Model
      */
     public function getSettingsRecord()
     {
+        if (!System::hasDatabase()) {
+            return null;
+        }
+
         $record = $this->model
             ->where('item', $this->recordCode)
             ->remember(1440, $this->getCacheKey())
@@ -122,7 +141,7 @@ class SettingsModel extends ModelBehavior
     public function set($key, $value = null)
     {
         $data = is_array($key) ? $key : [$key => $value];
-        $obj = self::instance();
+        $obj = $this->instance();
         $obj->fill($data);
         return $obj->save();
     }
@@ -173,6 +192,7 @@ class SettingsModel extends ModelBehavior
     {
         $this->fieldValues = $this->model->value ?: [];
         $this->model->attributes = array_merge($this->fieldValues, $this->model->attributes);
+        $this->model->syncOriginal();
     }
 
     /**
@@ -208,7 +228,8 @@ class SettingsModel extends ModelBehavior
 
         try {
             Artisan::call('queue:restart');
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             Log::warning($e->getMessage());
         }
     }

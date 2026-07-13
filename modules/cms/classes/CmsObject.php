@@ -6,7 +6,6 @@ use Event;
 use Config;
 use October\Rain\Halcyon\Model as HalcyonModel;
 use Cms\Contracts\CmsObject as CmsObjectContract;
-use ApplicationException;
 use ValidationException;
 use Exception;
 
@@ -35,13 +34,6 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
      * @var array The array of custom error messages.
      */
     public $customMessages = [];
-
-    /**
-     * @var int The maximum allowed path nesting level. The default value is 2,
-     * meaning that files can only exist in the root directory, or in a
-     * subdirectory. Set to null if any level is allowed.
-     */
-    protected $maxNesting = null;
 
     /**
      * @var array The attributes that are mass assignable.
@@ -100,11 +92,16 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
      */
     public static function load($theme, $fileName)
     {
-        return static::inTheme($theme)->find($fileName);
+        try {
+            return static::inTheme($theme)->find($fileName);
+        }
+        catch (Exception $ex) {
+            static::throwHalcyonException($ex);
+        }
     }
 
     /**
-     * Loads the object from a cache.
+     * loadCached loads the object from a cache
      * This method is used by the CMS in the runtime. If the cache is not found, it is created.
      * @param \Cms\Classes\Theme $theme Specifies the theme the object belongs to.
      * @param string $fileName Specifies the file name, with the extension.
@@ -112,10 +109,12 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
      */
     public static function loadCached($theme, $fileName)
     {
-        return static::inTheme($theme)
-            ->remember(Config::get('cms.parsedPageCacheTTL', 1440))
-            ->find($fileName)
-        ;
+        try {
+            return CmsObjectCache::lookup(static::inTheme($theme), $fileName);
+        }
+        catch (Exception $ex) {
+            static::throwHalcyonException($ex);
+        }
     }
 
     /**
@@ -132,7 +131,8 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
 
         if ($skipCache) {
             $result = $instance->get();
-        } else {
+        }
+        else {
             $items = $instance->newQuery()->lists('fileName');
 
             $loadedItems = [];
@@ -203,7 +203,7 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
             parent::save($options);
         }
         catch (Exception $ex) {
-            $this->throwHalcyonSaveException($ex);
+            static::throwHalcyonException($ex);
         }
     }
 
@@ -294,9 +294,9 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
      */
     public function getTwigCacheKey()
     {
-        $key = $this->getFilePath();
+        $key = $this->theme->getDirName().'/'.$this->getObjectTypeDirName().'/'.$this->fileName;
 
-        if ($event = $this->fireEvent('cmsObject.getTwigCacheKey', compact('key'), true)) {
+        if ($event = $this->fireEvent('cmsObject.getTwigCacheKey', $key, true)) {
             $key = $event;
         }
 
@@ -311,7 +311,7 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
      * Converts an exception type thrown by Halcyon to a native CMS exception.
      * @param Exception $ex
      */
-    protected function throwHalcyonSaveException(Exception $ex)
+    protected static function throwHalcyonException(Exception $ex)
     {
         if ($ex instanceof \October\Rain\Halcyon\Exception\MissingFileNameException) {
             throw new ValidationException([
@@ -331,20 +331,25 @@ class CmsObject extends HalcyonModel implements CmsObjectContract
                'fileName' => Lang::get('cms::lang.cms_object.invalid_file', ['name'=>$ex->getInvalidFileName()])
             ]);
         }
+        elseif ($ex instanceof \October\Rain\Halcyon\Exception\InvalidDirectoryNameException) {
+            throw new ValidationException([
+               'fileName' => Lang::get('cms::lang.cms_object.invalid_file', ['name'=>$ex->getInvalidDirectoryName()])
+            ]);
+        }
         elseif ($ex instanceof \October\Rain\Halcyon\Exception\FileExistsException) {
-            throw new ApplicationException(
+            throw new ValidationException(['fileName' =>
                 Lang::get('cms::lang.cms_object.file_already_exists', ['name' => $ex->getInvalidPath()])
-            );
+            ]);
         }
         elseif ($ex instanceof \October\Rain\Halcyon\Exception\CreateDirectoryException) {
-            throw new ApplicationException(
+            throw new ValidationException(['fileName' =>
                 Lang::get('cms::lang.cms_object.error_creating_directory', ['name' => $ex->getInvalidPath()])
-            );
+            ]);
         }
         elseif ($ex instanceof \October\Rain\Halcyon\Exception\CreateFileException) {
-            throw new ApplicationException(
+            throw new ValidationException(['fileName' =>
                 Lang::get('cms::lang.cms_object.error_saving', ['name' => $ex->getInvalidPath()])
-            );
+            ]);
         }
         else {
             throw $ex;

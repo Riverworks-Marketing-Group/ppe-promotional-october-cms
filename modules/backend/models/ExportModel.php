@@ -5,12 +5,11 @@ use Lang;
 use Model;
 use Response;
 use League\Csv\Writer as CsvWriter;
-use October\Rain\Parse\League\EscapeFormula as CsvEscapeFormula;
 use ApplicationException;
 use SplTempFileObject;
 
 /**
- * Model used for exporting data
+ * ExportModel used for exporting data
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -50,7 +49,7 @@ abstract class ExportModel extends Model
 
     /**
      * Download a previously compiled export file.
-     * @return void
+     * @return \Response
      */
     public function download($name, $outputName = null)
     {
@@ -63,7 +62,7 @@ abstract class ExportModel extends Model
             throw new ApplicationException(Lang::get('backend::lang.import_export.file_not_found_error'));
         }
 
-        return Response::download($csvPath, $outputName)->deleteFileAfterSend(true);
+        return Response::download($csvPath, $outputName, ['Content-Type' =>'text/csv'])->deleteFileAfterSend(true);
     }
 
     /**
@@ -112,9 +111,6 @@ abstract class ExportModel extends Model
             $csv->setEscape($options['escape']);
         }
 
-        // Temporary until upgrading to league/csv >= 9.1.0 (will be $csv->addFormatter($formatter))
-        $formatter = new CsvEscapeFormula();
-
         /*
          * Add headers
          */
@@ -128,10 +124,6 @@ abstract class ExportModel extends Model
          */
         foreach ($results as $result) {
             $data = $this->matchDataToColumns($result, $columns);
-
-            // Temporary until upgrading to league/csv >= 9.1.0
-            $data = $formatter($data);
-
             $csv->insertOne($data);
         }
 

@@ -1,70 +1,101 @@
 <?php namespace Backend\Classes;
 
-use Config;
 use System\Classes\PluginManager;
 use October\Rain\Auth\Manager as RainAuthManager;
 use October\Rain\Exception\SystemException;
 
 /**
- * Back-end authentication manager.
+ * AuthManager is backend authentication manager.
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
 class AuthManager extends RainAuthManager
 {
+    /**
+     * {@inheritdoc}
+     */
     protected static $instance;
 
+    /**
+     * {@inheritdoc}
+     */
     protected $sessionKey = 'admin_auth';
 
-    protected $userModel = 'Backend\Models\User';
+    /**
+     * {@inheritdoc}
+     */
+    protected $userModel = \Backend\Models\User::class;
 
-    protected $groupModel = 'Backend\Models\UserGroup';
+    /**
+     * @var string roleModel class
+     */
+    protected $roleModel = \Backend\Models\UserRole::class;
 
-    protected $throttleModel = 'Backend\Models\UserThrottle';
+    /**
+     * {@inheritdoc}
+     */
+    protected $groupModel = \Backend\Models\UserGroup::class;
 
+    /**
+     * {@inheritdoc}
+     */
+    protected $throttleModel = \Backend\Models\UserThrottle::class;
+
+    /**
+     * {@inheritdoc}
+     */
     protected $requireActivation = false;
 
     //
     // Permission management
     //
 
+    /**
+     * permissionDefaults
+     */
     protected static $permissionDefaults = [
-        'code'    => null,
-        'label'   => null,
+        'code' => null,
+        'label' => null,
         'comment' => null,
-        'roles'   => null,
-        'order'   => 500
+        'roles' => null,
+        'order' => 500
     ];
 
     /**
-     * @var array Cache of registration callbacks.
+     * @var array callbacks for registration.
      */
     protected $callbacks = [];
 
     /**
-     * @var array List of registered permissions.
+     * @var array permissions registered.
      */
     protected $permissions = [];
 
     /**
-     * @var array List of registered permission roles.
+     * @var array permissionRoles is a list of registered permission roles.
      */
     protected $permissionRoles = false;
 
     /**
-     * @var array Cache of registered permissions.
+     * @var array permissionCache of registered permissions.
      */
     protected $permissionCache = false;
 
-    protected function init()
+    /**
+     * userHasAccess is identical to User::hasAccess
+     */
+    public function userHasAccess($permissions, $all = true)
     {
-        $this->useThrottle = Config::get('auth.throttle.enabled', true);
-        parent::init();
+        if ($user = $this->getUser()) {
+            return $user->hasAccess($permissions, $all);
+        }
+
+        return false;
     }
 
     /**
-     * Registers a callback function that defines authentication permissions.
+     * registerCallback registers a callback function that defines authentication permissions.
      * The callback function should register permissions by calling the manager's
      * registerPermissions() function. The manager instance is passed to the
      * callback function as an argument. Usage:
@@ -81,7 +112,7 @@ class AuthManager extends RainAuthManager
     }
 
     /**
-     * Registers the back-end permission items.
+     * registerPermissions registers the back-end permission items.
      * The argument is an array of the permissions. The array keys represent the
      * permission codes, specific for the plugin/module. Each element in the
      * array should be an associative array with the following keys:
@@ -105,12 +136,11 @@ class AuthManager extends RainAuthManager
     }
 
     /**
-     * Removes a single back-end permission
-     * @param string $owner Specifies the permissions' owner plugin or module in the format Author.Plugin
-     * @param string $code The code of the permission to remove
-     * @return void
+     * removePermission removes a single back-end permission. Where owner specifies the
+     * permissions' owner plugin or module in the format Author.Plugin. Where code is
+     * the permission to remove.
      */
-    public function removePermission($owner, $code)
+    public function removePermission(string $owner, string $code)
     {
         if (!$this->permissions) {
             throw new SystemException('Unable to remove permissions before they are loaded.');
@@ -128,10 +158,9 @@ class AuthManager extends RainAuthManager
     }
 
     /**
-     * Returns a list of the registered permissions items.
-     * @return array
+     * listPermissions returns a list of the registered permissions items.
      */
-    public function listPermissions()
+    public function listPermissions(): array
     {
         if ($this->permissionCache !== false) {
             return $this->permissionCache;
@@ -162,7 +191,7 @@ class AuthManager extends RainAuthManager
          * Sort permission items
          */
         usort($this->permissions, function ($a, $b) {
-            if ($a->order == $b->order) {
+            if ($a->order === $b->order) {
                 return 0;
             }
 
@@ -173,10 +202,9 @@ class AuthManager extends RainAuthManager
     }
 
     /**
-     * Returns an array of registered permissions, grouped by tabs.
-     * @return array
+     * listTabbedPermissions returns an array of registered permissions, grouped by tabs.
      */
-    public function listTabbedPermissions()
+    public function listTabbedPermissions(): array
     {
         $tabs = [];
 
@@ -201,20 +229,16 @@ class AuthManager extends RainAuthManager
         return parent::createUserModelQuery()->withTrashed();
     }
 
-
     /**
      * {@inheritdoc}
      */
     protected function validateUserModel($user)
     {
-        if ( ! $user instanceof $this->userModel) {
+        if (!$user instanceof $this->userModel) {
             return false;
         }
 
-        // Perform the deleted_at check manually since the relevant migrations
-        // might not have been run yet during the update to build 444.
-        // @see https://github.com/octobercms/october/issues/3999
-        if (array_key_exists('deleted_at', $user->getAttributes()) && $user->deleted_at !== null) {
+        if ($user->deleted_at !== null) {
             return false;
         }
 
@@ -222,12 +246,13 @@ class AuthManager extends RainAuthManager
     }
 
     /**
-     * Returns an array of registered permissions belonging to a given role code
+     * listPermissionsForRole returns an array of registered permissions belonging to a
+     * given role code.
      * @param string $role
      * @param bool $includeOrphans
      * @return array
      */
-    public function listPermissionsForRole($role, $includeOrphans = true)
+    public function listPermissionsForRole($role, $includeOrphans = true): array
     {
         if ($this->permissionRoles === false) {
             $this->permissionRoles = [];
@@ -253,7 +278,10 @@ class AuthManager extends RainAuthManager
         return $result;
     }
 
-    public function hasPermissionsForRole($role)
+    /**
+     * hasPermissionsForRole checks if the user has the permissions for a role.
+     */
+    public function hasPermissionsForRole($role): bool
     {
         return !!$this->listPermissionsForRole($role, false);
     }

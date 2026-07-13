@@ -1,75 +1,75 @@
 <?php namespace Backend\Classes;
 
-use IteratorAggregate;
-use ArrayIterator;
-use ArrayAccess;
+use October\Rain\Element\Form\FieldsetDefinition;
 
 /**
- * Form Tabs definition
- * A translation of the form field tab configuration
+ * FormTabs is a fieldset definition for backend tabs
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class FormTabs implements IteratorAggregate, ArrayAccess
+class FormTabs extends FieldsetDefinition
 {
     const SECTION_OUTSIDE = 'outside';
     const SECTION_PRIMARY = 'primary';
     const SECTION_SECONDARY = 'secondary';
 
+    //
+    // Configurable properties
+    //
+
     /**
-     * @var string Specifies the form section these tabs belong to.
+     * @var string section specifies the form section these tabs belong to
      */
     public $section = 'outside';
 
     /**
-     * @var array Collection of panes fields to these tabs.
-     */
-    public $fields = [];
-
-    /**
-     * @var array Names of tabs to lazy load.
+     * @var array lazy is the names of tabs to lazy load
      */
     public $lazy = [];
 
     /**
-     * @var string Default tab label to use when none is specified.
+     * @var array adaptive is the names of tabs that use the entire screen space
+     */
+    public $adaptive = [];
+
+    /**
+     * @var string defaultTab is default tab label to use when none is specified
      */
     public $defaultTab = 'backend::lang.form.undefined_tab';
 
     /**
-     * @var array List of icons for their corresponding tabs.
+     * @var string activeTab is the selected tab when the form first loads, name or index.
+     */
+    public $activeTab;
+
+    /**
+     * @var array icons lists of icons for their corresponding tabs
      */
     public $icons = [];
 
     /**
-     * @var bool Should these tabs stretch to the bottom of the page layout.
+     * @var bool stretch should these tabs stretch to the bottom of the page layout
      */
     public $stretch;
 
     /**
-     * @var boolean If set to TRUE, fields will not be displayed in tabs.
-     */
-    public $suppressTabs = false;
-
-    /**
-     * @var string Specifies a CSS class to attach to the tab container.
+     * @var string cssClass cpecifies a CSS class to attach to the tab container
      */
     public $cssClass;
 
     /**
-     * @var array Specifies a CSS class to an individual tab pane.
+     * @var array paneCssClass specifies a CSS class to an individual tab pane
      */
     public $paneCssClass;
 
     /**
-     * @var bool Each tab gets url fragment to be linkable.
+     * @var bool linkable means tab gets url fragment to be linkable
      */
     public $linkable = true;
 
     /**
-     * Constructor.
-     * Specifies a tabs rendering section. Supported sections are:
+     * __construct specifies a tabs rendering section. Supported sections are:
      * - outside - stores a section of "tabless" fields.
      * - primary - tabs section for primary fields.
      * - secondary - tabs section for secondary fields.
@@ -79,22 +79,25 @@ class FormTabs implements IteratorAggregate, ArrayAccess
     public function __construct($section, $config = [])
     {
         $this->section = strtolower($section) ?: $this->section;
-        $this->config = $this->evalConfig($config);
 
-        if ($this->section == self::SECTION_OUTSIDE) {
+        if ($config && is_array($config)) {
+            $this->useConfig($config);
+        }
+
+        if ($this->section === self::SECTION_OUTSIDE) {
             $this->suppressTabs = true;
         }
     }
 
     /**
-     * Process options and apply them to this object.
-     * @param array $config
-     * @return array
+     * evalConfig process options and apply them to this object
      */
-    protected function evalConfig($config)
+    protected function evalConfig(array $config): void
     {
-        if (array_key_exists('defaultTab', $config)) {
-            $this->defaultTab = $config['defaultTab'];
+        parent::evalConfig($config);
+
+        if (array_key_exists('activeTab', $config)) {
+            $this->activeTab = $config['activeTab'];
         }
 
         if (array_key_exists('icons', $config)) {
@@ -105,10 +108,6 @@ class FormTabs implements IteratorAggregate, ArrayAccess
             $this->stretch = $config['stretch'];
         }
 
-        if (array_key_exists('suppressTabs', $config)) {
-            $this->suppressTabs = $config['suppressTabs'];
-        }
-
         if (array_key_exists('cssClass', $config)) {
             $this->cssClass = $config['cssClass'];
         }
@@ -117,92 +116,53 @@ class FormTabs implements IteratorAggregate, ArrayAccess
             $this->paneCssClass = $config['paneCssClass'];
         }
 
-        if (array_key_exists('linkable', $config)) {
-            $this->linkable = (bool) $config['linkable'];
-        }
-
         if (array_key_exists('lazy', $config)) {
             $this->lazy = $config['lazy'];
         }
-    }
 
-    /**
-     * Add a field to the collection of tabs.
-     * @param string    $name
-     * @param FormField $field
-     * @param string    $tab
-     */
-    public function addField($name, FormField $field, $tab = null)
-    {
-        if (!$tab) {
-            $tab = $this->defaultTab;
+        if (array_key_exists('adaptive', $config)) {
+            $this->adaptive = $config['adaptive'];
         }
 
-        $this->fields[$tab][$name] = $field;
-    }
-
-    /**
-     * Remove a field from all tabs by name.
-     * @param string    $name
-     * @return boolean
-     */
-    public function removeField($name)
-    {
-        foreach ($this->fields as $tab => $fields) {
-            foreach ($fields as $fieldName => $field) {
-                if ($fieldName == $name) {
-                    unset($this->fields[$tab][$fieldName]);
-
-                    /*
-                     * Remove empty tabs from collection
-                     */
-                    if (!count($this->fields[$tab])) {
-                        unset($this->fields[$tab]);
-                    }
-
-                    return true;
-                }
-            }
+        if (array_key_exists('linkable', $config)) {
+            $this->linkable = (bool) $config['linkable'];
         }
-
-        return false;
     }
 
     /**
-     * Returns true if any fields have been registered for these tabs
-     * @return boolean
+     * isLazy checks if a tab should be lazy loaded
      */
-    public function hasFields()
+    public function isLazy($tabName): bool
     {
-        return count($this->fields) > 0;
+        return in_array($tabName, $this->lazy);
     }
 
     /**
-     * Returns an array of the registered fields, including tabs.
-     * @return array
+     * addLazy flags a tab to be lazy loaded
      */
-    public function getFields()
+    public function addLazy($tabName)
     {
-        return $this->fields;
+        $this->lazy = array_merge((array) $this->lazy, (array) $tabName);
     }
 
     /**
-     * Returns an array of the registered fields, without tabs.
-     * @return array
+     * isAdaptive checks if a tab uses adaptive sizing
      */
-    public function getAllFields()
+    public function isAdaptive($tabName): bool
     {
-        $tablessFields = [];
-
-        foreach ($this->getFields() as $tab) {
-            $tablessFields += $tab;
-        }
-
-        return $tablessFields;
+        return in_array($tabName, $this->adaptive);
     }
 
     /**
-     * Returns an icon for the tab based on the tab's name.
+     * addAdaptive flags a tab to use adaptive sizing
+     */
+    public function addAdaptive($tabName)
+    {
+        $this->adaptive = array_merge((array) $this->adaptive, (array) $tabName);
+    }
+
+    /**
+     * getIcon returns an icon for the tab based on the tab's name
      * @param string $name
      * @return string
      */
@@ -214,7 +174,7 @@ class FormTabs implements IteratorAggregate, ArrayAccess
     }
 
     /**
-     * Returns a tab pane CSS class.
+     * getPaneCssClass returns a tab pane CSS class
      * @param string $index
      * @param string $label
      * @return string
@@ -232,50 +192,45 @@ class FormTabs implements IteratorAggregate, ArrayAccess
         if ($label !== null && isset($this->paneCssClass[$label])) {
             return $this->paneCssClass[$label];
         }
+
+        return $this->paneCssClass['*'] ?? '';
     }
 
     /**
-     * Get an iterator for the items.
-     * @return ArrayIterator
+     * setPaneCssClass appends a CSS class to the tab pane
      */
-    public function getIterator()
+    public function setPaneCssClass($tabNameOrIndex, string $cssClass, bool $overwrite = false)
     {
-        return new ArrayIterator(
-            $this->suppressTabs
-                ? $this->getAllFields()
-                : $this->getFields()
-        );
+        if (is_string($this->paneCssClass)) {
+            $this->paneCssClass = ['*' => $this->paneCssClass];
+        }
+
+        if ($overwrite) {
+            $this->paneCssClass[$tabNameOrIndex] = $cssClass;
+        }
+        else {
+            $currentValue = $this->paneCssClass[$tabNameOrIndex] ?? '';
+            $this->paneCssClass[$tabNameOrIndex] = trim($currentValue . ' ' . $cssClass);
+        }
     }
 
     /**
-     * ArrayAccess implementation
+     * isPaneActive returns a tab pane CSS class
      */
-    public function offsetSet($offset, $value)
+    public function isPaneActive($index = null, $label = null): bool
     {
-        $this->fields[$offset] = $value;
-    }
+        if ($this->activeTab === null) {
+            return $index === 1;
+        }
 
-    /**
-     * ArrayAccess implementation
-     */
-    public function offsetExists($offset)
-    {
-        return isset($this->fields[$offset]);
-    }
+        if ($index !== null && $this->activeTab === $index) {
+            return true;
+        }
 
-    /**
-     * ArrayAccess implementation
-     */
-    public function offsetUnset($offset)
-    {
-        unset($this->fields[$offset]);
-    }
+        if ($label !== null && $this->activeTab === $label) {
+            return true;
+        }
 
-    /**
-     * ArrayAccess implementation
-     */
-    public function offsetGet($offset)
-    {
-        return $this->fields[$offset] ?? null;
+        return false;
     }
 }

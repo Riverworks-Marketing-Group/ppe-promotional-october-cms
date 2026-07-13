@@ -3,8 +3,8 @@
 use Url;
 use Twig\Extension\AbstractExtension as TwigExtension;
 use Twig\TwigFilter as TwigSimpleFilter;
-use System\Classes\MediaLibrary;
 use System\Classes\MarkupManager;
+use System\Classes\ResizeImages;
 
 /**
  * The System Twig extension class implements common Twig functions and filters.
@@ -53,7 +53,7 @@ class Extension extends TwigExtension
     {
         $filters = [
             new TwigSimpleFilter('app', [$this, 'appFilter'], ['is_safe' => ['html']]),
-            new TwigSimpleFilter('media', [$this, 'mediaFilter'], ['is_safe' => ['html']]),
+            new TwigSimpleFilter('resize', [$this, 'resizeFilter'], ['is_safe' => ['html']]),
         ];
 
         /*
@@ -82,7 +82,7 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Converts supplied URL to one relative to the website root.
+     * appFilter converts supplied URL to one relative to the website root.
      * @param mixed $url Specifies the application-relative URL
      * @return string
      */
@@ -92,12 +92,11 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Converts supplied file to a URL relative to the media library.
-     * @param string $file Specifies the media-relative file
-     * @return string
+     * resizeFilter converts supplied input into a URL that will return the desired resized image.
+     * The image can be either a file model, absolute path, or URL.
      */
-    public function mediaFilter($file)
+    public function resizeFilter($image, $width = null, $height = null, $options = [])
     {
-        return MediaLibrary::url($file);
+        return Url::to(ResizeImages::resize($image, $width, $height, $options));
     }
 }

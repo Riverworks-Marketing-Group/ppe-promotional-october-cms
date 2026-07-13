@@ -5,23 +5,23 @@ use Form as FormHelper;
 use Backend\Classes\FormTabs;
 use Backend\Classes\FormField;
 use Backend\Classes\WidgetBase;
-use Backend\Classes\WidgetManager;
-use Backend\Classes\FormWidgetBase;
+use October\Rain\Element\Form\FieldDefinition;
+use October\Rain\Element\Form\FieldsetDefinition;
 use October\Rain\Database\Model;
 use October\Rain\Html\Helper as HtmlHelper;
-use ApplicationException;
-use Exception;
-use BackendAuth;
+use October\Contracts\Element\FormElement;
+use SystemException;
 
 /**
- * Form Widget
- * Used for building back end forms and renders a form.
+ * Form Widget is used for building back end forms and renders a form
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class Form extends WidgetBase
+class Form extends WidgetBase implements FormElement
 {
+    use \Backend\Widgets\Form\FieldProcessor;
+    use \Backend\Widgets\Form\HasFormWidgets;
     use \Backend\Traits\FormModelSaver;
 
     //
@@ -87,39 +87,39 @@ class Form extends WidgetBase
 
     /**
      * @var array Collection of all fields used in this form.
-     * @see Backend\Classes\FormField
+     * @see \Backend\Classes\FormField
      */
     protected $allFields = [];
 
     /**
      * @var object Collection of tab sections used in this form.
-     * @see Backend\Classes\FormTabs
+     * @see \Backend\Classes\FormTabs
      */
     protected $allTabs = [
-        'outside'   => null,
-        'primary'   => null,
+        'outside' => null,
+        'primary' => null,
         'secondary' => null,
     ];
 
     /**
-     * @var array Collection of all form widgets used in this form.
+     * @var FieldsetDefinition|null activeTabSection where fields are currently being added
      */
-    protected $formWidgets = [];
+    protected $activeTabSection = null;
 
     /**
-     * @var string Active session key, used for editing forms and deferred bindings.
+     * @var string sessionKey for the active session, used for editing forms and deferred bindings.
      */
     public $sessionKey;
+
+    /**
+     * @var string sessionKeySuffix adds some extra uniqueness to the session key.
+     */
+    public $sessionKeySuffix;
 
     /**
      * @var bool Render this form with uneditable preview data.
      */
     public $previewMode = false;
-
-    /**
-     * @var \Backend\Classes\WidgetManager
-     */
-    protected $widgetManager;
 
     /**
      * @inheritDoc
@@ -135,9 +135,10 @@ class Form extends WidgetBase
             'context',
             'arrayName',
             'isNested',
+            'sessionKeySuffix',
         ]);
 
-        $this->widgetManager = WidgetManager::instance();
+        $this->initFormWidgetsConcern();
         $this->allTabs = (object) $this->allTabs;
         $this->validateModel();
     }
@@ -180,12 +181,21 @@ class Form extends WidgetBase
      */
     public function render($options = [])
     {
+        $this->defineFormFields();
+        $this->applyFiltersFromModel();
+        $this->prepareVars();
+
+        /*
+         * Custom options
+         */
         if (isset($options['preview'])) {
             $this->previewMode = $options['preview'];
         }
+
         if (!isset($options['useContainer'])) {
             $options['useContainer'] = true;
         }
+
         if (!isset($options['section'])) {
             $options['section'] = null;
         }
@@ -210,11 +220,9 @@ class Form extends WidgetBase
         /*
          * Apply a container to the element
          */
-        if ($useContainer = $options['useContainer']) {
+        if ($options['useContainer']) {
             $targetPartial = $section ? 'section-container' : 'form-container';
         }
-
-        $this->prepareVars();
 
         /*
          * Force preview mode on all widgets
@@ -229,22 +237,31 @@ class Form extends WidgetBase
     }
 
     /**
-     * Renders a single form field
+     * renderFields renders the specified fields.
+     */
+    public function renderFields(array $fields): string
+    {
+        return $this->makePartial('form_fields', ['fields' => $fields]);
+    }
+
+    /**
+     * renderField renders a single form field
      *
      * Options:
      *  - useContainer: Wrap the result in a container, used by AJAX. Default: true
      *
-     * @param string|array $field The field name or definition
+     * @param \Backend\Classes\FormField|string $field The field name or definition
      * @param array $options
      * @return string|bool The rendered partial contents, or false if suppressing an exception
      */
     public function renderField($field, $options = [])
     {
+        $this->defineFormFields();
         $this->prepareVars();
 
         if (is_string($field)) {
             if (!isset($this->allFields[$field])) {
-                throw new ApplicationException(Lang::get(
+                throw new SystemException(Lang::get(
                     'backend::lang.form.missing_definition',
                     compact('field')
                 ));
@@ -256,36 +273,44 @@ class Form extends WidgetBase
         if (!isset($options['useContainer'])) {
             $options['useContainer'] = true;
         }
+
         $targetPartial = $options['useContainer'] ? 'field-container' : 'field';
 
         return $this->makePartial($targetPartial, ['field' => $field]);
     }
 
     /**
-     * Renders the HTML element for a field
-     * @param FormWidgetBase $field
+     * renderFieldElement renders the HTML element for a field
+     * @param \Backend\Classes\FormField|string $field
      * @return string|bool The rendered partial contents, or false if suppressing an exception
      */
     public function renderFieldElement($field)
     {
-        return $this->makePartial(
-            'field_' . $field->type,
-            [
-                'field' => $field,
-                'formModel' => $this->model
-            ]
-        );
+        if (is_string($field)) {
+            if (!isset($this->allFields[$field])) {
+                throw new SystemException(Lang::get(
+                    'backend::lang.form.missing_definition',
+                    compact('field')
+                ));
+            }
+
+            $field = $this->allFields[$field];
+        }
+
+        return $this->makePartial('field_' . $field->type, [
+            'field' => $field,
+            'formModel' => $this->model
+        ]);
     }
 
     /**
-     * Validate the supplied form model.
-     *
+     * validateModel validates the supplied form model.
      * @return mixed
      */
     protected function validateModel()
     {
         if (!$this->model) {
-            throw new ApplicationException(Lang::get(
+            throw new SystemException(Lang::get(
                 'backend::lang.form.missing_model',
                 ['class'=>get_class($this->controller)]
             ));
@@ -305,8 +330,6 @@ class Form extends WidgetBase
      */
     protected function prepareVars()
     {
-        $this->defineFormFields();
-        $this->applyFiltersFromModel();
         $this->vars['sessionKey'] = $this->getSessionKey();
         $this->vars['outsideTabs'] = $this->allTabs->outside;
         $this->vars['primaryTabs'] = $this->allTabs->primary;
@@ -314,7 +337,7 @@ class Form extends WidgetBase
     }
 
     /**
-     * Sets or resets form field values.
+     * setFormValues sets or resets form field values.
      * @param array $data
      * @return array
      */
@@ -324,23 +347,22 @@ class Form extends WidgetBase
             $data = $this->getSaveData();
         }
 
-        /*
-         * Fill the model as if it were to be saved
-         */
+        // Fill the model as if it were to be saved
         $this->prepareModelsToSave($this->model, $data);
 
-        /*
-         * Data set differs from model
-         */
+        // Data set differs from model
         if ($this->data !== $this->model) {
             $this->data = (object) array_merge((array) $this->data, (array) $data);
         }
 
-        /*
-         * Set field values from data source
-         */
+        // Set field values from data source
         foreach ($this->allFields as $field) {
             $field->value = $this->getFieldValue($field);
+        }
+
+        // Notify form widgets of the change
+        foreach ($this->formWidgets as $widget) {
+            $widget->resetFormValue();
         }
 
         return $data;
@@ -354,7 +376,7 @@ class Form extends WidgetBase
     public function onRefresh()
     {
         $result = [];
-        $saveData = $this->getSaveData();
+        $saveData = $this->getSaveDataInternal();
 
         /**
          * @event backend.form.beforeRefresh
@@ -381,6 +403,7 @@ class Form extends WidgetBase
          * Set the form variables and prepare the widget
          */
         $this->setFormValues($saveData);
+        $this->applyFiltersFromModel();
         $this->prepareVars();
 
         /**
@@ -411,7 +434,6 @@ class Form extends WidgetBase
                     continue;
                 }
 
-                /** @var FormWidgetBase $fieldObject */
                 $fieldObject = $this->allFields[$field];
                 $result['#' . $fieldObject->getId('group')] = $this->makePartial('field', ['field' => $fieldObject]);
             }
@@ -457,17 +479,19 @@ class Form extends WidgetBase
     }
 
     /**
-     * Renders all fields of a tab in the target tab-pane.
-     *
-     * @return array
+     * onLazyLoadTab renders all fields of a tab in the target tab pane
      */
     public function onLazyLoadTab()
     {
         $target  = post('target');
-        $tabName = post('name');
-        $tabSection = post('section');
 
-        $fields = array_get(optional($this->getTab($tabSection))->fields, $tabName);
+        if (!$tabName = post('name')) {
+            throw new SystemException(Lang::get('backend::lang.form.missing_tab'));
+        }
+
+        $tab = $this->getTab(post('section', 'primary'));
+
+        $fields = $tab !== null ? array_get($tab->getFields(), $tabName) : [];
 
         return [
             $target => $this->makePartial('form_fields', ['fields' => $fields]),
@@ -475,10 +499,8 @@ class Form extends WidgetBase
     }
 
     /**
-     * Helper method to convert a field name to a valid ID attribute.
-     *
+     * nameToId is a helper method to convert a field name to a valid ID attribute
      * @param $input
-     *
      * @return string
      */
     public function nameToId($input)
@@ -487,10 +509,34 @@ class Form extends WidgetBase
     }
 
     /**
-     * Creates a flat array of form fields from the configuration.
-     * Also slots fields in to their respective tabs.
-     *
-     * @return void
+     * addFormField adds a field to the fieldset
+     */
+    public function addFormField(string $fieldName = null, string $label = null): FieldDefinition
+    {
+        $fieldObj = new FormField($fieldName, $label);
+
+        $fieldObj->arrayName = $this->arrayName;
+
+        $fieldObj->idPrefix = $this->getId();
+
+        $this->allFields[$fieldName] = $fieldObj;
+
+        $this->activeTabSection->addField($fieldName, $fieldObj);
+
+        return $fieldObj;
+    }
+
+    /**
+     * getFormFieldset returns the current fieldset definition
+     */
+    public function getFormFieldset(): FieldsetDefinition
+    {
+        return $this->activeTabSection;
+    }
+
+    /**
+     * defineFormFields creates a flat array of form fields from the configuration
+     * and slots fields in to their respective tabs
      */
     protected function defineFormFields()
     {
@@ -504,16 +550,16 @@ class Form extends WidgetBase
          *
          * Example usage:
          *
-         *     Event::listen('backend.form.extendFieldsBefore', function ((\Backend\Widgets\Form) $formWidget) {
+         *     Event::listen('backend.form.extendFieldsBefore', function ((\Backend\Widgets\Form) $widget) {
          *         // You should always check to see if you're extending correct model/controller
-         *         if (!$formWidget->model instanceof \Foo\Example\Models\Bar) {
+         *         if (!$widget->model instanceof \Foo\Example\Models\Bar) {
          *             return;
          *         }
          *
          *         // Here you can't use addFields() because it will throw you an exception because form is not yet created
          *         // and it does not have tabs and fields
          *         // For this example we will pretend that we want to add a new field named example_field
-         *         $formWidget->fields['example_field'] = [
+         *         $widget->fields['example_field'] = [
          *             'label' => 'Example field',
          *             'comment' => 'Your example field',
          *             'type' => 'text',
@@ -524,14 +570,14 @@ class Form extends WidgetBase
          *
          *     $formWidget->bindEvent('form.extendFieldsBefore', function () use ((\Backend\Widgets\Form $formWidget)) {
          *         // You should always check to see if you're extending correct model/controller
-         *         if (!$formWidget->model instanceof \Foo\Example\Models\Bar) {
+         *         if (!$widget->model instanceof \Foo\Example\Models\Bar) {
          *             return;
          *         }
          *
          *         // Here you can't use addFields() because it will throw you an exception because form is not yet created
          *         // and it does not have tabs and fields
          *         // For this example we will pretend that we want to add a new field named example_field
-         *         $formWidget->fields['example_field'] = [
+         *         $widget->fields['example_field'] = [
          *             'label' => 'Example field',
          *             'comment' => 'Your example field',
          *             'type' => 'text',
@@ -542,14 +588,21 @@ class Form extends WidgetBase
         $this->fireSystemEvent('backend.form.extendFieldsBefore');
 
         /*
+         * Init tabs
+         */
+        $this->allTabs->outside = new FormTabs(FormTabs::SECTION_OUTSIDE, (array) $this->config);
+        $this->allTabs->primary = new FormTabs(FormTabs::SECTION_PRIMARY, $this->tabs);
+        $this->allTabs->secondary = new FormTabs(FormTabs::SECTION_SECONDARY, $this->secondaryTabs);
+
+        /*
          * Outside fields
          */
         if (!isset($this->fields) || !is_array($this->fields)) {
             $this->fields = [];
         }
 
-        $this->allTabs->outside = new FormTabs(FormTabs::SECTION_OUTSIDE, (array) $this->config);
         $this->addFields($this->fields);
+        $this->addFieldsFromModel();
 
         /*
          * Primary Tabs + Fields
@@ -558,8 +611,8 @@ class Form extends WidgetBase
             $this->tabs['fields'] = [];
         }
 
-        $this->allTabs->primary = new FormTabs(FormTabs::SECTION_PRIMARY, $this->tabs);
         $this->addFields($this->tabs['fields'], FormTabs::SECTION_PRIMARY);
+        $this->addFieldsFromModel(FormTabs::SECTION_PRIMARY);
 
         /*
          * Secondary Tabs + Fields
@@ -568,8 +621,8 @@ class Form extends WidgetBase
             $this->secondaryTabs['fields'] = [];
         }
 
-        $this->allTabs->secondary = new FormTabs(FormTabs::SECTION_SECONDARY, $this->secondaryTabs);
         $this->addFields($this->secondaryTabs['fields'], FormTabs::SECTION_SECONDARY);
+        $this->addFieldsFromModel(FormTabs::SECTION_SECONDARY);
 
         /**
          * @event backend.form.extendFields
@@ -577,19 +630,19 @@ class Form extends WidgetBase
          *
          * Example usage:
          *
-         *     Event::listen('backend.form.extendFields', function ((\Backend\Widgets\Form) $formWidget) {
+         *     Event::listen('backend.form.extendFields', function ((\Backend\Widgets\Form) $widget) {
          *         // Only for the User controller
-         *         if (!$formWidget->getController() instanceof \RainLab\User\Controllers\Users) {
+         *         if (!$widget->getController() instanceof \RainLab\User\Controllers\Users) {
          *             return;
          *         }
          *
          *         // Only for the User model
-         *         if (!$formWidget->model instanceof \RainLab\User\Models\User) {
+         *         if (!$widget->model instanceof \RainLab\User\Models\User) {
          *             return;
          *         }
          *
          *         // Add an extra birthday field
-         *         $formWidget->addFields([
+         *         $widget->addFields([
          *             'birthday' => [
          *                 'label'   => 'Birthday',
          *                 'comment' => 'Select the users birthday',
@@ -598,24 +651,24 @@ class Form extends WidgetBase
          *         ]);
          *
          *         // Remove a Surname field
-         *         $formWidget->removeField('surname');
+         *         $widget->removeField('surname');
          *     });
          *
          * Or
          *
          *     $formWidget->bindEvent('form.extendFields', function () use ((\Backend\Widgets\Form $formWidget)) {
          *         // Only for the User controller
-         *         if (!$formWidget->getController() instanceof \RainLab\User\Controllers\Users) {
+         *         if (!$widget->getController() instanceof \RainLab\User\Controllers\Users) {
          *             return;
          *         }
          *
          *         // Only for the User model
-         *         if (!$formWidget->model instanceof \RainLab\User\Models\User) {
+         *         if (!$widget->model instanceof \RainLab\User\Models\User) {
          *             return;
          *         }
          *
          *         // Add an extra birthday field
-         *         $formWidget->addFields([
+         *         $widget->addFields([
          *             'birthday' => [
          *                 'label'   => 'Birthday',
          *                 'comment' => 'Select the users birthday',
@@ -624,26 +677,36 @@ class Form extends WidgetBase
          *         ]);
          *
          *         // Remove a Surname field
-         *         $formWidget->removeField('surname');
+         *         $widget->removeField('surname');
          *     });
          *
          */
         $this->fireSystemEvent('backend.form.extendFields', [$this->allFields]);
 
         /*
+         * Apply post processing
+         */
+        $this->processPermissionCheck($this->allFields);
+        $this->processFormWidgetFields($this->allFields);
+        $this->processValidationAttributes($this->allFields);
+        $this->processFieldOptionValues($this->allFields);
+        $this->processRequiredAttributes($this->allFields);
+
+        /*
+         * Set field values from data source
+         */
+        foreach ($this->allFields as $field) {
+            if ($field->value === null) {
+                $field->value = $this->getFieldValue($field);
+            }
+        }
+
+        /*
          * Convert automatic spanned fields
          */
-        foreach ($this->allTabs->outside->getFields() as $fields) {
-            $this->processAutoSpan($fields);
-        }
-
-        foreach ($this->allTabs->primary->getFields() as $fields) {
-            $this->processAutoSpan($fields);
-        }
-
-        foreach ($this->allTabs->secondary->getFields() as $fields) {
-            $this->processAutoSpan($fields);
-        }
+        $this->processAutoSpan($this->allTabs->outside);
+        $this->processAutoSpan($this->allTabs->primary);
+        $this->processAutoSpan($this->allTabs->secondary);
 
         /*
          * At least one tab section should stretch
@@ -664,65 +727,20 @@ class Form extends WidgetBase
             }
         }
 
-        /*
-         * Bind all form widgets to controller
-         */
-        foreach ($this->allFields as $field) {
-            if ($field->type !== 'widget') {
-                continue;
-            }
-
-            $widget = $this->makeFormFieldWidget($field);
-            $widget->bindToController();
-        }
-
         $this->fieldsDefined = true;
     }
 
     /**
-     * Converts fields with a span set to 'auto' as either
-     * 'left' or 'right' depending on the previous field.
-     *
-     * @return void
-     */
-    protected function processAutoSpan($fields)
-    {
-        $prevSpan = null;
-
-        foreach ($fields as $field) {
-            if (strtolower($field->span) === 'auto') {
-                if ($prevSpan === 'left') {
-                    $field->span = 'right';
-                }
-                else {
-                    $field->span = 'left';
-                }
-            }
-
-            $prevSpan = $field->span;
-        }
-    }
-
-    /**
-     * Programatically add fields, used internally and for extensibility.
-     *
+     * addFields programatically, used internally and for extensibility
      * @param array $fields
      * @param string $addToArea
-     * @return void
      */
     public function addFields(array $fields, $addToArea = null)
     {
         foreach ($fields as $name => $config) {
-            // Check if user has permissions to show this field
-            $permissions = array_get($config, 'permissions');
-            if (!empty($permissions) && !BackendAuth::getUser()->hasAccess($permissions, false)) {
-                continue;
-            }
-
             $fieldObj = $this->makeFormField($name, $config);
-            $fieldTab = is_array($config) ? array_get($config, 'tab') : null;
 
-            // Check that the form field matches the active context
+            // Check form field matches the active context
             if ($fieldObj->context !== null) {
                 $context = is_array($fieldObj->context) ? $fieldObj->context : [$fieldObj->context];
                 if (!in_array($this->getContext(), $context)) {
@@ -730,34 +748,56 @@ class Form extends WidgetBase
                 }
             }
 
-            // Apply the field name to the validation engine
-            $attrName = implode('.', HtmlHelper::nameToArray($fieldObj->fieldName));
+            // Field name without @context suffix
+            $fieldName = $fieldObj->fieldName;
 
-            if ($this->model && method_exists($this->model, 'setValidationAttributeName')) {
-                $this->model->setValidationAttributeName($attrName, $fieldObj->label);
-            }
-
-            $this->allFields[$fieldObj->fieldName] = $fieldObj;
+            $this->allFields[$fieldName] = $fieldObj;
 
             switch (strtolower($addToArea)) {
                 case FormTabs::SECTION_PRIMARY:
-                    $this->allTabs->primary->addField($name, $fieldObj, $fieldTab);
+                    $this->allTabs->primary->addField($fieldName, $fieldObj);
                     break;
                 case FormTabs::SECTION_SECONDARY:
-                    $this->allTabs->secondary->addField($name, $fieldObj, $fieldTab);
+                    $this->allTabs->secondary->addField($fieldName, $fieldObj);
                     break;
                 default:
-                    $this->allTabs->outside->addField($name, $fieldObj);
+                    $this->allTabs->outside->addField($fieldName, $fieldObj);
                     break;
             }
         }
     }
 
     /**
-     * Add tab fields.
-     *
-     * @param array $fields
-     * @return void
+     * addFieldsFromModel from the model
+     */
+    protected function addFieldsFromModel(string $addToArea = null): void
+    {
+        if ($this->isNested || !$this->model) {
+            return;
+        }
+
+        switch (strtolower($addToArea)) {
+            case FormTabs::SECTION_PRIMARY:
+                $this->activeTabSection = $this->allTabs->primary;
+                $modelMethod = 'definePrimaryFormFields';
+                break;
+            case FormTabs::SECTION_SECONDARY:
+                $this->activeTabSection = $this->allTabs->secondary;
+                $modelMethod = 'defineSecondaryFormFields';
+                break;
+            default:
+                $this->activeTabSection = $this->allTabs->outside;
+                $modelMethod = 'defineFormFields';
+                break;
+        }
+
+        if (method_exists($this->model, $modelMethod)) {
+            $this->model->$modelMethod($this);
+        }
+    }
+
+    /**
+     * addTabFields
      */
     public function addTabFields(array $fields)
     {
@@ -765,8 +805,7 @@ class Form extends WidgetBase
     }
 
     /**
-     * @param array $fields
-     * @return void
+     * addSecondaryTabFields
      */
     public function addSecondaryTabFields(array $fields)
     {
@@ -774,12 +813,9 @@ class Form extends WidgetBase
     }
 
     /**
-     * Programatically remove a field.
-     *
-     * @param string $name
-     * @return bool
+     * removeField programatically
      */
-    public function removeField($name)
+    public function removeField($name): bool
     {
         if (!isset($this->allFields[$name])) {
             return false;
@@ -801,10 +837,8 @@ class Form extends WidgetBase
     }
 
     /**
-     * Programatically remove all fields belonging to a tab.
-     *
+     * removeTab programatically remove all fields belonging to a tab
      * @param string $name
-     * @return bool
      */
     public function removeTab($name)
     {
@@ -816,16 +850,12 @@ class Form extends WidgetBase
     }
 
     /**
-     * Creates a form field object from name and configuration.
-     *
-     * @param string $name
-     * @param array $config
-     * @return FormField
+     * makeFormField creates a form field object from name and configuration
      */
-    protected function makeFormField($name, $config = [])
+    protected function makeFormField(string $name, $config = []): FormField
     {
         $label = $config['label'] ?? null;
-        list($fieldName, $fieldContext) = $this->getFieldName($name);
+        [$fieldName, $fieldContext] = $this->evalFieldName($name);
 
         $field = new FormField($fieldName, $label);
 
@@ -833,7 +863,6 @@ class Form extends WidgetBase
             $field->context = $fieldContext;
         }
 
-        $attrName = implode('.', HtmlHelper::nameToArray($field->fieldName));
         $field->arrayName = $this->arrayName;
         $field->idPrefix = $this->getId();
 
@@ -841,12 +870,7 @@ class Form extends WidgetBase
          * Simple field type
          */
         if (is_string($config)) {
-            if ($this->isFormWidget($config) !== false) {
-                $field->displayAs('widget', ['widget' => $config]);
-            }
-            else {
-                $field->displayAs($config);
-            }
+            $field->displayAs($config);
         }
         /*
          * Defined field type
@@ -854,195 +878,36 @@ class Form extends WidgetBase
         else {
             $fieldType = $config['type'] ?? null;
             if (!is_string($fieldType) && $fieldType !== null) {
-                throw new ApplicationException(Lang::get(
+                throw new SystemException(Lang::get(
                     'backend::lang.field.invalid_type',
                     ['type' => gettype($fieldType)]
                 ));
             }
 
-            /*
-             * Widget with configuration
-             */
-            if ($this->isFormWidget($fieldType) !== false) {
-                $config['widget'] = $fieldType;
-                $fieldType = 'widget';
+            if ($config) {
+                $field->useConfig($config);
             }
 
-            $field->displayAs($fieldType, $config);
-        }
-
-        /*
-         * Set field value
-         */
-        $field->value = $this->getFieldValue($field);
-
-        /*
-         * Check model if field is required
-         */
-        if ($field->required === null && $this->model && method_exists($this->model, 'isAttributeRequired')) {
-            // Check nested fields
-            if ($this->isNested) {
-                // Get the current attribute level
-                $nameArray = HtmlHelper::nameToArray($this->arrayName);
-                unset($nameArray[0]);
-
-                // Convert any numeric indexes to wildcards
-                foreach ($nameArray as $i => $value) {
-                    if (preg_match('/^[0-9]*$/', $value)) {
-                        $nameArray[$i] = '*';
-                    }
-                }
-
-                // Recombine names for full attribute name in rules array
-                $attrName = implode('.', $nameArray) . ".{$attrName}";
+            if ($fieldType) {
+                $field->displayAs($fieldType);
             }
-
-            $field->required = $this->model->isAttributeRequired($attrName);
-        }
-
-        /*
-         * Get field options from model
-         */
-        $optionModelTypes = ['dropdown', 'radio', 'checkboxlist', 'balloon-selector'];
-
-        if (in_array($field->type, $optionModelTypes, false)) {
-            /*
-             * Defer the execution of option data collection
-             */
-            $field->options(function () use ($field, $config) {
-                $fieldOptions = $config['options'] ?? null;
-                $fieldOptions = $this->getOptionsFromModel($field, $fieldOptions);
-                return $fieldOptions;
-            });
         }
 
         return $field;
     }
 
     /**
-     * Check if a field type is a widget or not
-     *
-     * @param  string  $fieldType
-     * @return boolean
+     * getFields for the instance
      */
-    protected function isFormWidget($fieldType)
-    {
-        if ($fieldType === null) {
-            return false;
-        }
-
-        if (strpos($fieldType, '\\')) {
-            return true;
-        }
-
-        $widgetClass = $this->widgetManager->resolveFormWidget($fieldType);
-
-        if (!class_exists($widgetClass)) {
-            return false;
-        }
-
-        if (is_subclass_of($widgetClass, 'Backend\Classes\FormWidgetBase')) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Makes a widget object from a form field object.
-     *
-     * @param $field
-     * @return \Backend\Traits\FormWidgetBase|null
-     */
-    protected function makeFormFieldWidget($field)
-    {
-        if ($field->type !== 'widget') {
-            return null;
-        }
-
-        if (isset($this->formWidgets[$field->fieldName])) {
-            return $this->formWidgets[$field->fieldName];
-        }
-
-        $widgetConfig = $this->makeConfig($field->config);
-        $widgetConfig->alias = $this->alias . studly_case($this->nameToId($field->fieldName));
-        $widgetConfig->sessionKey = $this->getSessionKey();
-        $widgetConfig->previewMode = $this->previewMode;
-        $widgetConfig->model = $this->model;
-        $widgetConfig->data = $this->data;
-        $widgetConfig->parentForm = $this;
-
-        $widgetName = $widgetConfig->widget;
-        $widgetClass = $this->widgetManager->resolveFormWidget($widgetName);
-
-        if (!class_exists($widgetClass)) {
-            throw new ApplicationException(Lang::get(
-                'backend::lang.widget.not_registered',
-                ['name' => $widgetClass]
-            ));
-        }
-
-        $widget = $this->makeFormWidget($widgetClass, $field, $widgetConfig);
-
-        /*
-         * If options config is defined, request options from the model.
-         */
-        if (isset($field->config['options'])) {
-            $field->options(function () use ($field) {
-                $fieldOptions = $field->config['options'];
-                if ($fieldOptions === true) {
-                    $fieldOptions = null;
-                }
-                $fieldOptions = $this->getOptionsFromModel($field, $fieldOptions);
-                return $fieldOptions;
-            });
-        }
-
-        return $this->formWidgets[$field->fieldName] = $widget;
-    }
-
-    /**
-     * Get all the loaded form widgets for the instance.
-     *
-     * @return array
-     */
-    public function getFormWidgets()
-    {
-        return $this->formWidgets;
-    }
-
-    /**
-     * Get a specified form widget
-     *
-     * @param string $field
-     * @return mixed
-     */
-    public function getFormWidget($field)
-    {
-        if (isset($this->formWidgets[$field])) {
-            return $this->formWidgets[$field];
-        }
-
-        return null;
-    }
-
-    /**
-     * Get all the registered fields for the instance.
-     *
-     * @return array
-     */
-    public function getFields()
+    public function getFields(): array
     {
         return $this->allFields;
     }
 
     /**
-     * Get a specified field object
-     *
-     * @param string $field
-     * @return mixed
+     * getField object specified
      */
-    public function getField($field)
+    public function getField(string $field)
     {
         if (isset($this->allFields[$field])) {
             return $this->allFields[$field];
@@ -1052,8 +917,7 @@ class Form extends WidgetBase
     }
 
     /**
-     * Get all tab objects for the instance.
-     *
+     * getTabs for the instance
      * @return object[FormTabs]
      */
     public function getTabs()
@@ -1078,11 +942,10 @@ class Form extends WidgetBase
     }
 
     /**
-     * Parses a field's name
-     * @param string $field Field name
-     * @return array [columnName, context]
+     * evalFieldName parses a field's name for embedded context
+     * with a result of fieldName@context to [fieldName, context]
      */
-    protected function getFieldName($field)
+    protected function evalFieldName(string $field): array
     {
         if (strpos($field, '@') === false) {
             return [$field, null];
@@ -1092,15 +955,28 @@ class Form extends WidgetBase
     }
 
     /**
+     * hasFieldValue determines if the field value is found in the data.
+     */
+    protected function hasFieldValue($field, $data = null): bool
+    {
+        return $field->getValueFromData($data, FormField::NO_SAVE_DATA) !== FormField::NO_SAVE_DATA;
+    }
+
+    /**
      * Looks up the field value.
      * @param mixed $field
+     * @param mixed $data
      * @return string
      */
-    protected function getFieldValue($field)
+    protected function getFieldValue($field, $data = null)
     {
+        if ($data === null) {
+            $data = $this->data;
+        }
+
         if (is_string($field)) {
             if (!isset($this->allFields[$field])) {
-                throw new ApplicationException(Lang::get(
+                throw new SystemException(Lang::get(
                     'backend::lang.form.missing_definition',
                     compact('field')
                 ));
@@ -1109,60 +985,56 @@ class Form extends WidgetBase
             $field = $this->allFields[$field];
         }
 
-        $defaultValue = $this->shouldFetchDefaultValues()
-            ? $field->getDefaultFromData($this->data)
+        $defaultValue = $this->useDefaultValues()
+            ? $field->getDefaultFromData($data)
             : null;
 
-        return $field->getValueFromData(
-            $this->data,
-            is_string($defaultValue) ? trans($defaultValue) : $defaultValue
-        );
+        // No translation on complex arrays (i.e repeater defaults)
+        $defaultValue = is_string($defaultValue)
+            ? Lang::get($defaultValue)
+            : $defaultValue;
+
+        return $field->getValueFromData($data, $defaultValue);
     }
 
     /**
-     * Checks if default values should be taken from data.
-     * This should be done when model exists or when explicitly configured
+     * useDefaultValues determines when to apply default data
      */
-    protected function shouldFetchDefaultValues()
+    protected function useDefaultValues(): bool
     {
-        $enableDefaults = object_get($this->config, 'enableDefaults');
-        if ($enableDefaults === false) {
-            return false;
-        }
-        return !$this->model->exists || $enableDefaults;
+        return $this->isNested || !$this->model->exists;
     }
 
     /**
-     * Returns a HTML encoded value containing the other fields this
-     * field depends on
+     * getFieldDepends returns a HTML encoded value containing the other fields
+     * this field depends on
      * @param  \Backend\Classes\FormField $field
-     * @return string
      */
-    protected function getFieldDepends($field)
+    protected function getFieldDepends($field): string
     {
         if (!$field->dependsOn) {
             return '';
         }
 
         $dependsOn = is_array($field->dependsOn) ? $field->dependsOn : [$field->dependsOn];
+
         $dependsOn = htmlspecialchars(json_encode($dependsOn), ENT_QUOTES, 'UTF-8');
+
         return $dependsOn;
     }
 
     /**
-     * Helper method to determine if field should be rendered
+     * showFieldLabels is a helper method to determine if field should be rendered
      * with label and comments.
-     * @param  \Backend\Classes\FormField $field
-     * @return boolean
      */
-    protected function showFieldLabels($field)
+    protected function showFieldLabels(FormField $field): bool
     {
-        if (in_array($field->type, ['checkbox', 'switch', 'section'])) {
+        if (in_array($field->type, ['checkbox', 'switch', 'section', 'hint'])) {
             return false;
         }
 
         if ($field->type === 'widget') {
-            return $this->makeFormFieldWidget($field)->showLabels;
+            return (bool) ($this->makeFormFieldWidget($field)->showLabels ?? true);
         }
 
         return true;
@@ -1174,6 +1046,20 @@ class Form extends WidgetBase
      * @return array
      */
     public function getSaveData()
+    {
+        $this->defineFormFields();
+
+        $saveData = $this->getSaveDataInternal();
+
+        $this->applyFiltersFromModel($saveData);
+
+        return $this->cleanSaveDataInternal($saveData);
+    }
+
+    /**
+     * getSaveDataInternal will return all possible data to save
+     */
+    protected function getSaveDataInternal(): array
     {
         $this->defineFormFields();
 
@@ -1190,22 +1076,13 @@ class Form extends WidgetBase
         /*
          * Spin over each field and extract the postback value
          */
-        foreach ($this->allFields as $field) {
-            /*
-             * Disabled and hidden should be omitted from data set
-             */
-            if ($field->disabled || $field->hidden) {
-                continue;
-            }
-
+        foreach ($this->allFields as $name => $field) {
             /*
              * Handle HTML array, eg: item[key][another]
              */
-            $parts = HtmlHelper::nameToArray($field->fieldName);
+            $parts = HtmlHelper::nameToArray($name);
             if (($value = $this->dataArrayGet($data, $parts)) !== null) {
-                /*
-                 * Number fields should be converted to integers
-                 */
+                // Convert number to float
                 if ($field->type === 'number') {
                     $value = !strlen(trim($value)) ? null : (float) $value;
                 }
@@ -1218,36 +1095,67 @@ class Form extends WidgetBase
          * Give widgets an opportunity to process the data.
          */
         foreach ($this->formWidgets as $field => $widget) {
+            /*
+             * Handle HTML array, eg: item[key][another]
+             */
             $parts = HtmlHelper::nameToArray($field);
-
-            if ((isset($widget->config->disabled) && $widget->config->disabled)
-                || (isset($widget->config->hidden) && $widget->config->hidden)) {
-                continue;
+            if (($value = $this->dataArrayGet($data, $parts)) !== null) {
+                $widgetValue = $widget->getSaveValue($value);
+                $this->dataArraySet($result, $parts, $widgetValue);
             }
-
-            $widgetValue = $widget->getSaveValue($this->dataArrayGet($result, $parts));
-            $this->dataArraySet($result, $parts, $widgetValue);
         }
 
         return $result;
     }
 
-    /*
-     * Allow the model to filter fields.
+    /**
+     * cleanSaveDataInternal will purge disabled and hidden fields from the dataset
      */
-    protected function applyFiltersFromModel()
+    protected function cleanSaveDataInternal(array $data): array
     {
+        foreach ($this->allFields as $name => $field) {
+            if ($field->disabled || $field->hidden) {
+                $parts = HtmlHelper::nameToArray($name);
+                $this->dataArrayForget($data, $parts);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * applyFiltersFromModel allows the model to filter fields
+     */
+    protected function applyFiltersFromModel($applyData = null)
+    {
+        $targetModel = clone $this->model;
+
+        /*
+         * Apply specified data before filtering
+         */
+        if ($applyData) {
+            if (method_exists($targetModel, 'fill')) {
+                $this->prepareModelsToSave($targetModel, $applyData);
+            }
+
+            foreach ($this->allFields as $field) {
+                if ($this->hasFieldValue($field, $applyData)) {
+                    $field->value = $this->getFieldValue($field, $applyData);
+                }
+            }
+        }
+
         /*
          * Standard usage
          */
-        if (method_exists($this->model, 'filterFields')) {
-            $this->model->filterFields((object) $this->allFields, $this->getContext());
+        if (method_exists($targetModel, 'filterFields')) {
+            $targetModel->filterFields((object) $this->allFields, $this->getContext());
         }
 
         /*
          * Advanced usage
          */
-        if (method_exists($this->model, 'fireEvent')) {
+        if (method_exists($targetModel, 'fireEvent')) {
             /**
              * @event model.form.filterFields
              * Called after the form is initialized
@@ -1258,94 +1166,25 @@ class Form extends WidgetBase
              *         if ($model->source_type == 'http') {
              *             $fields->source_url->hidden = false;
              *             $fields->git_branch->hidden = true;
-             *         } elseif ($model->source_type == 'git') {
+             *         }
+             *         elseif ($model->source_type == 'git') {
              *             $fields->source_url->hidden = false;
              *             $fields->git_branch->hidden = false;
-             *         } else {
+             *         }
+             *         else {
              *             $fields->source_url->hidden = true;
              *             $fields->git_branch->hidden = true;
              *         }
              *     });
              *
              */
-            $this->model->fireEvent('model.form.filterFields', [$this, (object) $this->allFields, $this->getContext()]);
+            $targetModel->fireEvent('model.form.filterFields', [$this, (object) $this->allFields, $this->getContext()]);
         }
     }
 
     /**
-     * Looks at the model for defined options.
-     *
-     * @param $field
-     * @param $fieldOptions
-     * @return mixed
-     */
-    protected function getOptionsFromModel($field, $fieldOptions)
-    {
-        /*
-         * Advanced usage, supplied options are callable
-         */
-        if (is_array($fieldOptions) && is_callable($fieldOptions)) {
-            $fieldOptions = call_user_func($fieldOptions, $this, $field);
-        }
-
-        /*
-         * Refer to the model method or any of its behaviors
-         */
-        if (!is_array($fieldOptions) && !$fieldOptions) {
-            try {
-                list($model, $attribute) = $field->resolveModelAttribute($this->model, $field->fieldName);
-                if (!$model) {
-                    throw new Exception();
-                }
-            }
-            catch (Exception $ex) {
-                throw new ApplicationException(Lang::get('backend::lang.field.options_method_invalid_model', [
-                    'model' => get_class($this->model),
-                    'field' => $field->fieldName
-                ]));
-            }
-
-            $methodName = 'get'.studly_case($attribute).'Options';
-            if (
-                !$this->objectMethodExists($model, $methodName) &&
-                !$this->objectMethodExists($model, 'getDropdownOptions')
-            ) {
-                throw new ApplicationException(Lang::get('backend::lang.field.options_method_not_exists', [
-                    'model'  => get_class($model),
-                    'method' => $methodName,
-                    'field'  => $field->fieldName
-                ]));
-            }
-
-            if ($this->objectMethodExists($model, $methodName)) {
-                $fieldOptions = $model->$methodName($field->value, $this->data);
-            }
-            else {
-                $fieldOptions = $model->getDropdownOptions($attribute, $field->value, $this->data);
-            }
-        }
-        /*
-         * Field options are an explicit method reference
-         */
-        elseif (is_string($fieldOptions)) {
-            if (!$this->objectMethodExists($this->model, $fieldOptions)) {
-                throw new ApplicationException(Lang::get('backend::lang.field.options_method_not_exists', [
-                    'model'  => get_class($this->model),
-                    'method' => $fieldOptions,
-                    'field'  => $field->fieldName
-                ]));
-            }
-
-            $fieldOptions = $this->model->$fieldOptions($field->value, $field->fieldName, $this->data);
-        }
-
-        return $fieldOptions;
-    }
-
-    /**
-     * Returns the active session key.
-     *
-     * @return \Illuminate\Routing\Route|mixed|string
+     * getSessionKey returns the active session key.
+     * @return string
      */
     public function getSessionKey()
     {
@@ -1353,16 +1192,26 @@ class Form extends WidgetBase
             return $this->sessionKey;
         }
 
-        if (post('_session_key')) {
-            return $this->sessionKey = post('_session_key');
+        $sessionKey = post('_session_key');
+
+        if (!$sessionKey) {
+            $sessionKey = FormHelper::getSessionKey();
         }
 
-        return $this->sessionKey = FormHelper::getSessionKey();
+        return $this->sessionKey = $sessionKey;
     }
 
     /**
-     * Returns the active context for displaying the form.
-     *
+     * getSessionKeyWithPrefix
+     * @return string
+     */
+    public function getSessionKeyWithSuffix()
+    {
+        return $this->getSessionKey() . $this->sessionKeySuffix;
+    }
+
+    /**
+     * getContext returns the active context for displaying the form.
      * @return string
      */
     public function getContext()
@@ -1371,35 +1220,15 @@ class Form extends WidgetBase
     }
 
     /**
-     * Internal helper for method existence checks.
-     *
-     * @param  object $object
-     * @param  string $method
-     * @return boolean
-     */
-    protected function objectMethodExists($object, $method)
-    {
-        if (method_exists($object, 'methodExists')) {
-            return $object->methodExists($method);
-        }
-
-        return method_exists($object, $method);
-    }
-
-    /**
      * Variant to array_get() but preserves dots in key names.
      *
      * @param array $array
      * @param array $parts
      * @param null $default
-     * @return array|null
+     * @return mixed
      */
     protected function dataArrayGet(array $array, array $parts, $default = null)
     {
-        if ($parts === null) {
-            return $array;
-        }
-
         if (count($parts) === 1) {
             $key = array_shift($parts);
             if (isset($array[$key])) {
@@ -1430,10 +1259,6 @@ class Form extends WidgetBase
      */
     protected function dataArraySet(array &$array, array $parts, $value)
     {
-        if ($parts === null) {
-            return $value;
-        }
-
         while (count($parts) > 1) {
             $key = array_shift($parts);
 
@@ -1447,5 +1272,28 @@ class Form extends WidgetBase
         $array[array_shift($parts)] = $value;
 
         return $array;
+    }
+
+    /**
+     * Variant to array_forget() but preserves dots in key names.
+     *
+     * @param array $array
+     * @param array $parts
+     * @return void
+     */
+    protected function dataArrayForget(array &$array, array $parts)
+    {
+        while (count($parts) > 1) {
+            $part = array_shift($parts);
+
+            if (isset($array[$part]) && is_array($array[$part])) {
+                $array = &$array[$part];
+            }
+            else {
+                continue;
+            }
+        }
+
+        unset($array[array_shift($parts)]);
     }
 }

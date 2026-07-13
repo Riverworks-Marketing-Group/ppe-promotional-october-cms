@@ -1,34 +1,41 @@
 <?php namespace Backend\FormWidgets;
 
-use Backend\Classes\FormWidgetBase;
 use Backend\Widgets\Form;
+use Backend\Classes\FormWidgetBase;
+use October\Rain\Database\Model;
 
 /**
- * Nested Form
- * Renders a nested form bound to a jsonable field of a model.
+ * NestedForm widget
  *
  * @package october\backend
- * @author Sascha Aeppli
+ * @author Alexey Bobkov, Samuel Georges
  */
 class NestedForm extends FormWidgetBase
 {
+    use \Backend\Traits\FormModelWidget;
+
     /**
      * @inheritDoc
      */
     protected $defaultAlias = 'nestedform';
 
     /**
-     * @var [] Form configuration
+     * @var array form configuration
      */
     public $form;
 
     /**
-     * @var bool defines if the nested form is styled like a panel (default true).
+     * @var bool showPanel defines if the nested form is styled like a panel
      */
-    public $usePanelStyles = true;
+    public $showPanel = true;
 
     /**
-     * @var Form form widget reference
+     * @var bool useRelation will instruct the widget to look for a relationship
+     */
+    protected $useRelation = false;
+
+    /**
+     * @var Form formWidget reference
      */
     protected $formWidget;
 
@@ -39,23 +46,36 @@ class NestedForm extends FormWidgetBase
     {
         $this->fillFromConfig([
             'form',
-            'usePanelStyles',
+            'showPanel'
         ]);
 
         if ($this->formField->disabled) {
             $this->previewMode = true;
         }
 
+        $this->processRelationMode();
+
+        $this->makeNestedFormWidget();
+    }
+
+    /**
+     * makeNestedFormWidget creates a form widget
+     */
+    protected function makeNestedFormWidget()
+    {
         $config = $this->makeConfig($this->form);
-        $config->model = $this->model;
-        $config->data = $this->getLoadValue();
+
+        if ($this->useRelation) {
+            $config->model = $this->getLoadValueFromRelation();
+        }
+        else {
+            $config->model = $this->model;
+            $config->data = $this->getLoadValue();
+            $config->isNested = true;
+        }
+
         $config->alias = $this->alias . $this->defaultAlias;
         $config->arrayName = $this->getFieldName();
-        $config->isNested = true;
-
-        if (object_get($this->getParentForm()->config, 'enableDefaults') === true) {
-            $config->enableDefaults = true;
-        }
 
         $widget = $this->makeWidget(Form::class, $config);
         $widget->previewMode = $this->previewMode;
@@ -64,6 +84,35 @@ class NestedForm extends FormWidgetBase
         $this->formWidget = $widget;
     }
 
+    /**
+     * prepareVars for display
+     */
+    public function prepareVars()
+    {
+        $this->formWidget->previewMode = $this->previewMode;
+    }
+
+    /**
+     * resetFormValue from the form field
+     */
+    public function resetFormValue()
+    {
+        $this->formWidget->setFormValues($this->formField->value);
+    }
+
+    /**
+     * getLoadValueFromRelation
+     */
+    protected function getLoadValueFromRelation()
+    {
+        [$model, $attribute] = $this->resolveModelAttribute($this->valueFrom);
+
+        return $model->{$attribute} ?? $this->getRelationModel();
+    }
+
+    /**
+     * loadAssets
+     */
     protected function loadAssets()
     {
         $this->addCss('css/nestedform.css', 'core');
@@ -78,8 +127,15 @@ class NestedForm extends FormWidgetBase
         return $this->makePartial('nestedform');
     }
 
-    public function prepareVars()
+    /**
+     * processRelationMode
+     */
+    protected function processRelationMode()
     {
-        $this->formWidget->previewMode = $this->previewMode;
+        [$model, $attribute] = $this->nearestModelAttribute($this->valueFrom);
+
+        if ($model instanceof Model && $model->hasRelation($attribute)) {
+            $this->useRelation = true;
+        }
     }
 }

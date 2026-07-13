@@ -2,23 +2,21 @@
 
 use Lang;
 use Flash;
+use Config;
 use Backend;
 use Redirect;
-use Response;
-use BackendMenu;
 use BackendAuth;
 use Backend\Models\UserGroup;
-use Backend\Classes\Controller;
-use System\Classes\SettingsManager;
+use Backend\Classes\SettingsController;
 
 /**
- * Backend user controller
+ * Users controller for backend users
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  *
  */
-class Users extends Controller
+class Users extends SettingsController
 {
     /**
      * @var array Extensions implemented by this controller.
@@ -49,6 +47,11 @@ class Users extends Controller
     public $bodyClass = 'compact-container';
 
     /**
+     * @var string settingsItemCode determines the settings code
+     */
+    public $settingsItemCode = 'administrators';
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -58,9 +61,6 @@ class Users extends Controller
         if ($this->action == 'myaccount') {
             $this->requiredPermissions = null;
         }
-
-        BackendMenu::setContext('October.System', 'system', 'users');
-        SettingsManager::setContext('October.System', 'administrators');
     }
 
     /**
@@ -132,43 +132,11 @@ class Users extends Controller
     }
 
     /**
-     * Impersonate this user
-     */
-    public function update_onImpersonateUser($recordId)
-    {
-        if (!$this->user->hasAccess('backend.impersonate_users')) {
-            return Response::make(Lang::get('backend::lang.page.access_denied.label'), 403);
-        }
-
-        $model = $this->formFindModelObject($recordId);
-
-        BackendAuth::impersonate($model);
-
-        Flash::success(Lang::get('backend::lang.account.impersonate_success'));
-
-        return Backend::redirect('backend/users/myaccount');
-    }
-
-    /**
-     * Unsuspend this user
-     */
-    public function update_onUnsuspendUser($recordId)
-    {
-        $model = $this->formFindModelObject($recordId);
-
-        $model->unsuspend();
-
-        Flash::success(Lang::get('backend::lang.account.unsuspend_success'));
-
-        return Redirect::refresh();
-    }
-
-    /**
      * My Settings controller
      */
     public function myaccount()
     {
-        SettingsManager::setContext('October.Backend', 'myaccount');
+        // SettingsManager::setContext('October.Backend', 'myaccount');
 
         $this->pageTitle = 'backend::lang.myaccount.menu_label';
         return $this->update($this->user->id, 'myaccount');
@@ -181,13 +149,19 @@ class Users extends Controller
     {
         $result = $this->asExtension('FormController')->update_onSave($this->user->id, 'myaccount');
 
-        /*
-         * If the password or login name has been updated, reauthenticate the user
-         */
+        // If the password or login name has been updated, reauthenticate the user
+        //
         $loginChanged = $this->user->login != post('User[login]');
         $passwordChanged = strlen(post('User[password]'));
         if ($loginChanged || $passwordChanged) {
-            BackendAuth::login($this->user->reload(), true);
+
+            // Determine remember policy
+            $remember = Config::get('backend.force_remember', true);
+            if ($remember === null) {
+                $remember = BackendAuth::hasRemember();
+            }
+
+            BackendAuth::login($this->user->reload(), (bool) $remember);
         }
 
         return $result;
@@ -216,7 +190,7 @@ class Users extends Controller
          * Mark default groups
          */
         if (!$form->model->exists) {
-            $defaultGroupIds = UserGroup::where('is_new_user_default', true)->lists('id');
+            $defaultGroupIds = UserGroup::where('is_new_user_default', true)->pluck('id')->all();
 
             $groupField = $form->getField('groups');
             if ($groupField) {
@@ -234,7 +208,7 @@ class Users extends Controller
         return [
             'permissions' => [
                 'tab' => 'backend::lang.user.permissions',
-                'type' => 'Backend\FormWidgets\PermissionEditor',
+                'type' => \Backend\FormWidgets\PermissionEditor::class,
                 'trigger' => [
                     'action' => 'disable',
                     'field' => 'is_superuser',
