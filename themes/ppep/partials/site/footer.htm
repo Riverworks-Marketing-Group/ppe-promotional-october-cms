@@ -1,6 +1,7 @@
 <footer id="footer" class="footer">
     <div class="content has-text-centered">
-        {{ this.theme.footer_content|raw }}
+        {{ this.theme.footer_content|replace({'{{ year }}': "now"|date("Y")})|raw }}
+
     </div>
 </footer>
 
