@@ -1,7 +1,6 @@
 <?php namespace Backend\FormWidgets;
 
-use Lang;
-use ApplicationException;
+use Backend\Classes\FormField;
 use Backend\Classes\FormWidgetBase;
 
 /**
@@ -21,7 +20,7 @@ class Repeater extends FormWidgetBase
     const MODE_BUILDER = 'builder';
 
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
@@ -30,9 +29,14 @@ class Repeater extends FormWidgetBase
     public $form;
 
     /**
+     * @var array groups configuration
+     */
+    public $groups;
+
+    /**
      * @var string prompt text for adding new items
      */
-    public $prompt = 'backend::lang.repeater.add_new_item';
+    public $prompt = "Add New Item";
 
     /**
      * @var bool showReorder allows the user to reorder the items
@@ -76,23 +80,20 @@ class Repeater extends FormWidgetBase
     public $itemsExpanded = true;
 
     /**
+     * @var bool useTabs for the form fields.
+     */
+    public $useTabs = false;
+
+    /**
      * @var string Defines a mount point for the editor toolbar.
      * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::stateElementName
+     * Format: stateElementName
      * Only works in Vue applications and form document layouts.
      */
     public $externalToolbarAppState = null;
 
-    /**
-     * @var string Defines an event bus for an external toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::eventBus
-     * Only works in Vue applications and form document layouts.
-     */
-    public $externalToolbarEventBus = null;
-
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -111,9 +112,9 @@ class Repeater extends FormWidgetBase
     protected $formWidgets = [];
 
     /**
-     * @var bool onAddItemCalled stops nested repeaters populating from previous sibling.
+     * @var bool onAddItemCalled sets the create context for default values
      */
-    protected static $onAddItemCalled = false;
+    protected static $onAddItemCalled;
 
     /**
      * @var bool useGroups
@@ -147,6 +148,7 @@ class Repeater extends FormWidgetBase
     {
         $this->fillFromConfig([
             'form',
+            'groups',
             'prompt',
             'displayMode',
             'itemsExpanded',
@@ -156,8 +158,8 @@ class Repeater extends FormWidgetBase
             'groupKeyFrom',
             'minItems',
             'maxItems',
-            'externalToolbarAppState',
-            'externalToolbarEventBus'
+            'useTabs',
+            'externalToolbarAppState'
         ]);
 
         if ($this->formField->disabled) {
@@ -172,11 +174,7 @@ class Repeater extends FormWidgetBase
 
         $this->processLegacyConfig();
 
-        // First pass will contain postback, then raw attributes
-        // This occurs to bind widgets to the controller early
-        if (!self::$onAddItemCalled) {
-            $this->processItems();
-        }
+        $this->processItems();
     }
 
     /**
@@ -193,13 +191,6 @@ class Repeater extends FormWidgetBase
      */
     public function prepareVars()
     {
-        // Second pass will contain filtered attributes, then postback
-        // This occurs to apply filtered values to the widget data
-        // @todo Replace with resetFormValue method
-        if (!self::$onAddItemCalled) {
-            $this->processItems();
-        }
-
         if ($this->previewMode) {
             foreach ($this->formWidgets as $widget) {
                 $widget->previewMode = true;
@@ -221,7 +212,6 @@ class Repeater extends FormWidgetBase
         $this->vars['showReorder'] = $this->showReorder;
         $this->vars['showDuplicate'] = $this->showDuplicate;
         $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
-        $this->vars['externalToolbarEventBus'] = $this->externalToolbarEventBus;
     }
 
     /**
@@ -229,8 +219,8 @@ class Repeater extends FormWidgetBase
      */
     protected function loadAssets()
     {
-        $this->addCss('css/repeater.css', 'core');
-        $this->addJs('js/repeater-min.js', 'core');
+        $this->addCss('css/repeater.css');
+        $this->addJs('js/repeater-min.js');
     }
 
     /**
@@ -239,6 +229,20 @@ class Repeater extends FormWidgetBase
     public function getSaveValue($value)
     {
         return $this->processSaveValue($value);
+    }
+
+    /**
+     * resetFormValue from the form field
+     */
+    public function resetFormValue()
+    {
+        // Transfer approved config
+        $this->minItems = $this->formField->minItems;
+        $this->maxItems = $this->formField->maxItems;
+
+        // Reprocess widgets
+        $this->formWidgets = [];
+        $this->processItems();
     }
 
     /**
@@ -283,26 +287,6 @@ class Repeater extends FormWidgetBase
      */
     protected function processSaveValue($value)
     {
-        if (!is_array($value) || !$value) {
-            return null;
-        }
-
-        if ($this->minItems && count($value) < $this->minItems) {
-            throw new ApplicationException(Lang::get('backend::lang.repeater.min_items_failed', [
-                'name' => $this->fieldName,
-                'min' => $this->minItems,
-                'items' => count($value)
-            ]));
-        }
-
-        if ($this->maxItems && count($value) > $this->maxItems) {
-            throw new ApplicationException(Lang::get('backend::lang.repeater.max_items_failed', [
-                'name' => $this->fieldName,
-                'max' => $this->maxItems,
-                'items' => count($value)
-            ]));
-        }
-
         return $this->useRelation
             ? $this->processSaveForRelation($value)
             : $this->processSaveForJson($value);
@@ -313,50 +297,11 @@ class Repeater extends FormWidgetBase
      */
     protected function processItems()
     {
-        $currentValue = $this->useRelation
-            ? $this->getLoadValueFromRelation()
-            : $this->getLoadValue();
-
-        // This lets record finder work inside a repeater with some hacks
-        // since record finder spawns outside the form and its AJAX calls
-        // don't reinitialize this repeater's items. We a need better way
-        // remove if year >= 2023 -sg
-        $handler = $this->controller->getAjaxHandler();
-        if (!$this->isLoaded && starts_with($handler, $this->alias . 'Form')) {
-            $handler = str_after($handler, $this->alias . 'Form');
-            preg_match("~^(\d+)~", $handler, $matches);
-
-            if (isset($matches[1])) {
-                $index = $matches[1];
-                $this->makeItemFormWidget($index);
-            }
+        if ($this->useRelation) {
+            $this->processItemsForRelation();
         }
-
-        // Pad current value with minimum items and disable for groups,
-        // which cannot predict their item types
-        if (!$this->useGroups && $this->minItems > 0) {
-            if (!is_array($currentValue)) {
-                $currentValue = [];
-            }
-
-            if (count($currentValue) < $this->minItems) {
-                $currentValue = array_pad($currentValue, $this->minItems, []);
-            }
-        }
-
-        // Repeater value is empty or invalid
-        if ($currentValue === null || !is_array($currentValue)) {
-            $this->formWidgets = [];
-            return;
-        }
-
-        // Load up the necessary form widgets
-        foreach ($currentValue as $index => $value) {
-            $groupType = $this->useRelation
-                ? $this->getGroupCodeFromRelation($value)
-                : $this->getGroupCodeFromJson($value);
-
-            $this->makeItemFormWidget($index, $groupType);
+        else {
+            $this->processItemsForJson();
         }
     }
 
@@ -380,27 +325,54 @@ class Repeater extends FormWidgetBase
 
         if ($this->useRelation) {
             $config->model = $this->getModelFromIndex($index);
+            $indexName = ($modelKey = $config->model->getKey()) ? "id:{$modelKey}" : $index;
         }
         else {
             $config->model = $this->model;
             $config->data = $this->getValueFromIndex($dataIndex);
             $config->isNested = true;
+            $indexName = $index;
         }
 
         $config->alias = $this->alias . 'Form' . $index;
+        $config->context = self::$onAddItemCalled ? FormField::CONTEXT_CREATE : FormField::CONTEXT_UPDATE;
         $config->arrayName = $this->getFieldName().'['.$index.']';
         $config->sessionKey = $this->sessionKey;
-        $config->sessionKeySuffix = $this->sessionKeySuffix . '-' . $index;
+        $config->sessionKeySuffix = $this->sessionKeySuffix . "-{$index}";
+        $config->parentFieldName = $this->formField->fieldName . "[{$indexName}]";
 
         $widget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
         $widget->previewMode = $this->previewMode;
-        $widget->bindToController();
 
         $this->indexMeta[$index] = [
             'groupCode' => $groupCode
         ];
 
+        // Convert to tabbed config
+        $useTabs = isset($config->useTabs) ? $config->useTabs : $this->useTabs;
+        if ($useTabs) {
+            $widget->bindEvent('form.extendFields', function() use ($widget) {
+                $this->moveTabbedFormFields($widget, 'outside', 'secondary');
+            });
+        }
+
+        $widget->bindToController();
+
         return $this->formWidgets[$index] = $widget;
+    }
+
+    /**
+     * moveTabbedFormFields from one tab to another
+     */
+    protected function moveTabbedFormFields($widget, $fromTab, $toTab)
+    {
+        $from = $widget->getTab($fromTab);
+        $to = $widget->getTab($toTab);
+
+        foreach ($from->getAllFields() as $name => $field) {
+            $to->addField($name, $field);
+            $from->removeField($name);
+        }
     }
 
     /**
@@ -408,9 +380,7 @@ class Repeater extends FormWidgetBase
      */
     protected function getValueFromIndex($index)
     {
-        $data = $this->isLoaded
-            ? $this->getLoadedValueFromPost()
-            : $this->getLoadValue();
+        $data = $this->getLoadValue();
 
         return $data[$index] ?? [];
     }
@@ -420,7 +390,9 @@ class Repeater extends FormWidgetBase
      */
     protected function getDisplayMode(): string
     {
-        return $this->displayMode ?: static::MODE_ACCORDION;
+        return in_array($this->displayMode, [static::MODE_ACCORDION, static::MODE_BUILDER])
+            ? $this->displayMode
+            : static::MODE_ACCORDION;
     }
 
     //
@@ -433,6 +405,8 @@ class Repeater extends FormWidgetBase
     public function onAddItem()
     {
         self::$onAddItemCalled = true;
+
+        $this->prepareParentModelData();
 
         $groupCode = post('_repeater_group');
         $index = $this->getNextIndex();
@@ -460,6 +434,14 @@ class Repeater extends FormWidgetBase
         $fromIndex = post('_repeater_index');
         $groupCode = post('_repeater_group');
         $toIndex = $this->getNextIndex();
+
+        if ($this->useRelation) {
+            // Relation must be saved to replicate
+            $this->processSaveForRelation([$fromIndex => $this->getValueFromIndex($fromIndex)]);
+
+            // Duplicate the model with replication
+            $this->duplicateRelationAtIndex($fromIndex, $toIndex, $groupCode);
+        }
 
         $this->prepareVars();
         $this->vars['widget'] = $this->makeItemFormWidget($toIndex, $groupCode, $fromIndex);
@@ -497,6 +479,8 @@ class Repeater extends FormWidgetBase
      */
     public function onRefresh()
     {
+        $this->prepareParentModelData();
+
         $index = post('_repeater_index');
         $group = post('_repeater_group');
 
@@ -511,15 +495,37 @@ class Repeater extends FormWidgetBase
      */
     protected function getNextIndex(): int
     {
-        $data = $this->isLoaded
-            ? $this->getLoadedValueFromPost()
-            : $this->getLoadValue();
-
-        if (is_array($data) && count($data)) {
-            return max(array_keys($data)) + 1;
+        // Use post() over getLoadValue() to retain the _index value
+        $data = post($this->formField->getName());
+        if (!is_array($data) || !count($data)) {
+            return 1;
         }
 
-        return 0;
+        // Locate the indexes from the payload or fallback to max
+        // of array keys which can cause collisions with deleted
+        // items so its not ideal but we need to use something
+        $nextIndex = 0;
+        $indexes = array_column($data, '_index');
+
+        $nextIndex = $indexes
+            ? max($indexes)
+            : max(array_keys($data));
+
+        return $nextIndex + 1;
+    }
+
+    /**
+     * prepareParentModelData will ensure the parent model has its form data set
+     * to provide context for newly created items or refreshed existing items.
+     */
+    protected function prepareParentModelData()
+    {
+        // This code is used since it is more efficient than calling setFormValues()
+        // on the form widget, switching to this could be useful if form field value
+        // context is needed in the future.
+        if (($form = $this->getParentForm()) && !$form->isNested) {
+            $this->prepareModelsToSave($form->getModel(), $form->getSaveData());
+        }
     }
 
     //
@@ -537,13 +543,13 @@ class Repeater extends FormWidgetBase
             return null;
         }
 
-        $fields = array_get($this->groupDefinitions, $code.'.fields');
+        $config = array_get($this->groupDefinitions, $code);
 
-        if (!$fields) {
+        if (!isset($config['fields'])) {
             return null;
         }
 
-        return ['fields' => $fields];
+        return $config;
     }
 
     /**
@@ -552,21 +558,29 @@ class Repeater extends FormWidgetBase
     protected function processGroupMode()
     {
         $palette = [];
-        $group = $this->getConfig('groups', []);
-        $this->useGroups = (bool) $group;
+        $groups = $this->groups;
+        $this->useGroups = (bool) $groups;
 
         if ($this->useGroups) {
-            if (is_string($group)) {
-                $group = $this->makeConfig($group);
+            if (is_string($groups)) {
+                $groups = $this->makeConfig($groups);
             }
 
-            foreach ($group as $code => $config) {
-                $palette[$code] = [
-                    'code' => $code,
-                    'name' => $config['name'] ?? '',
-                    'icon' => $config['icon'] ?? 'icon-square-o',
-                    'description' => $config['description'] ?? '',
-                    'fields' => $config['fields'] ?? ''
+            foreach ($groups as $code => $config) {
+                if (str_starts_with($code, '_')) {
+                    continue;
+                }
+
+                if (is_string($config)) {
+                    $config = $this->makeConfig($config);
+                }
+
+                $palette[$code] = ['code' => $code] + ((array) $config) + [
+                    'name' => '',
+                    'icon' => 'icon-square',
+                    'description' => '',
+                    'titleFrom' => '',
+                    'fields' => [],
                 ];
             }
 

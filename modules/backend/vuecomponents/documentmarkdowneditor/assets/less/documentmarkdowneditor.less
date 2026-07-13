@@ -8,9 +8,10 @@
         }
 
         .editor-preview-side {
-            background: white;
+            background-color: @input-bg;
+            color: @input-color;
             border: none;
-            border-left: @color-grey-3 1px solid;
+            border-left: @primary-border 1px solid;
         }
 
         .CodeMirror {
@@ -43,4 +44,19 @@
     }
 
     @import "../../../../assets/less/core/base-editor-styles.less";
+}
+
+// Override vendor styles
+.CodeMirror {
+    background-color: @input-bg;
+    color: @input-color;
+}
+
+[data-bs-theme="dark"] {
+    .cm-s-easymde .cm-string {
+        color: #3498db;
+    }
+    .cm-s-easymde .cm-attribute {
+        color: #a6a7fa;
+    }
 }

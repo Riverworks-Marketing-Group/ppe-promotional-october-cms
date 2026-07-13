@@ -1,4 +1,4 @@
-$.oc.module.register('backend.component.inspector.tablecontrolbase', function () {
+oc.Modules.register('backend.component.inspector.tablecontrolbase', function () {
     var TableControlBase = {
         props: {
             row: Object,

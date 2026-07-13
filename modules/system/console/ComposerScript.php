@@ -16,6 +16,8 @@ class ComposerScript
      */
     public static function postAutoloadDump(Event $event)
     {
+        self::clearMeta();
+
         static::passthruArtisan('package:discover');
     }
 
@@ -38,12 +40,7 @@ class ComposerScript
         $package = $event->getOperation()->getPackage();
 
         if (self::isOfType($package, 'plugin')) {
-            static::passthruArtisan("plugin:remove ${package} --composer");
-        }
-
-        // Purge discovered package cache to prevent errors
-        if (file_exists($packagesMeta = __DIR__ . '/../../../storage/framework/packages.php')) {
-            @unlink($packagesMeta);
+            static::passthruArtisan("plugin:remove {$package} --composer");
         }
     }
 
@@ -63,6 +60,25 @@ class ComposerScript
         }
 
         return false;
+    }
+
+    /**
+     * clearMeta purges meta files (discovered package cache, etc) to prevent errors
+     */
+    protected static function clearMeta()
+    {
+        $metaFiles = [
+            'storage/framework/packages.php',
+            'storage/framework/classes.php',
+            'storage/framework/services.php',
+            'storage/cms/manifest.php'
+        ];
+
+        foreach ($metaFiles as $filePath) {
+            if (file_exists($packagesMeta = __DIR__ . '/../../../'.$filePath)) {
+                @unlink($packagesMeta);
+            }
+        }
     }
 
     /**

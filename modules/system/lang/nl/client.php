@@ -26,12 +26,17 @@ return [
         'italic' => 'Cursief',
         'unorderedlist' => 'Ongeordende lijst',
         'orderedlist' => 'Gerangschikte lijst',
+        'snippet' => 'Snippet',
         'video' => 'Video',
         'image' => 'Afbeelding',
         'link' => 'Hyperlink',
         'horizontalrule' => 'Invoegen horizontale lijn',
         'fullscreen' => 'Volledig scherm',
         'preview' => 'Voorbeeldweergave',
+        'strikethrough' => 'Doorhalen',
+        'cleanblock' => 'Blok opschonen',
+        'table' => 'Tabel',
+        'sidebyside' => 'Zij aan zij'
     ],
     'mediamanager' => [
         'insert_link' => 'Media Link invoegen',
@@ -108,5 +113,14 @@ return [
         'file_too_big' => 'Het bestand is te groot ({{filesize}}MB). Maximale bestandsgrootte: {{maxFilesize}}MB.',
         'response_error' => 'De server reageerde met de code {{statusCode}}.',
         'remove_file' => 'Verwijder bestand',
+    ],
+    'inspector' => [
+        'add' => 'Toevoegen',
+        'remove' => 'Verwijderen',
+        'key' => 'Sleutel',
+        'value' => 'Waarde',
+        'ok' => 'Ok',
+        'cancel' => 'Annuleren',
+        'items' => 'Items',
     ],
 ];

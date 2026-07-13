@@ -1,7 +1,9 @@
 <?php namespace System\Console;
 
 use Illuminate\Console\Command;
+use System\Helpers\Cache as CacheHelper;
 use System\Classes\UpdateManager;
+use October\Rain\Composer\Manager as ComposerManager;
 use Exception;
 
 /**
@@ -29,39 +31,48 @@ class OctoberUpdate extends Command
      */
     public function handle()
     {
-        $composerBin = env('COMPOSER_BIN', 'composer');
+        $composer = ComposerManager::instance();
+        $composer->setOutputCommand($this, $this->input);
 
-        $this->output->writeln('<info>Updating October CMS...</info>');
-
-        $this->comment("Executing: {$composerBin} update");
-        $this->output->newLine();
-
-        // Composer update
-        $errCode = null;
-        passthru("$composerBin update", $errCode);
-
-        if ($errCode !== 0) {
-            $this->output->error('Update failed. Check output above');
+        if (!UpdateManager::instance()->canUpdateProject()) {
+            $this->output->error(__("License is unpaid or has expired. Please visit octobercms.com to obtain a license."));
             exit(1);
         }
 
-        // Migrate database
-        $this->comment("Executing: php artisan october:migrate");
-        $this->output->newLine();
+        $this->output->section(__('Updating package manager'));
+        try {
+            $composer->update(['composer/composer']);
+        }
+        catch (Exception $ex) {
+        }
 
+        $this->output->section(__('Updating application files'));
+        $composer->update();
+
+        CacheHelper::instance()->clearMeta();
+
+        $this->output->section(__('Setting build number'));
+        static::passthruArtisan('october:util set build');
+        $this->newLine()->newLine();
+
+        $this->output->section(__('Finishing update process'));
         $errCode = null;
-        passthru('php artisan october:migrate', $errCode);
+        static::passthruArtisan('october:migrate', $errCode);
+        $this->newLine();
 
         if ($errCode !== 0) {
             $this->output->error('Migration failed. Check output above');
             exit(1);
         }
 
-        try {
-            $this->output->success('System Update Complete');
-        }
-        catch (Exception $ex) {
-            // ...
-        }
+        $this->output->success(__('Update process complete'));
+    }
+
+    /**
+     * passthruArtisan
+     */
+    protected static function passthruArtisan($command, &$errCode = null)
+    {
+        passthru('"'.PHP_BINARY.'" artisan ' .$command, $errCode);
     }
 }

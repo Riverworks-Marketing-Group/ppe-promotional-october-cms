@@ -1,23 +1,21 @@
 <?php namespace System\Classes;
 
 use Db;
+use App;
+use Date;
 use File;
 use Yaml;
-use Carbon\Carbon;
-use October\Rain\Database\Updater;
 use Exception;
 
 /**
  * VersionManager manages the versions and database updates for plugins
- *
- * @method static VersionManager instance()
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
  */
 class VersionManager
 {
-    use \October\Rain\Support\Traits\Singleton;
+    use \System\Traits\NoteMaker;
 
     /**
      * Value when no updates are found.
@@ -29,11 +27,6 @@ class VersionManager
      */
     const HISTORY_TYPE_COMMENT = 'comment';
     const HISTORY_TYPE_SCRIPT = 'script';
-
-    /**
-     * @var \Illuminate\Console\OutputStyle
-     */
-    protected $notesOutput;
 
     /**
      * @var array fileVersions cache of plugin versions as files.
@@ -51,19 +44,24 @@ class VersionManager
     protected $databaseHistory;
 
     /**
-     * @var October\Rain\Database\Updater
-     */
-    protected $updater;
-
-    /**
-     * @var System\Classes\PluginManager
+     * @var \System\Classes\PluginManager
      */
     protected $pluginManager;
 
-    protected function init()
+    /**
+     * __construct this class
+     */
+    public function __construct()
     {
-        $this->updater = new Updater;
         $this->pluginManager = PluginManager::instance();
+    }
+
+    /**
+     * instance creates a new instance of this singleton
+     */
+    public static function instance(): static
+    {
+        return App::make('system.versions');
     }
 
     /**
@@ -84,9 +82,10 @@ class VersionManager
 
         // No updates needed
         if ((string) $currentVersion === (string) $databaseVersion) {
-            $this->note('- <info>Nothing to update.</info>');
-            return;
+            return false;
         }
+
+        $this->note($code);
 
         $newUpdates = $this->getNewFileVersions($code, $databaseVersion);
 
@@ -134,6 +133,17 @@ class VersionManager
     }
 
     /**
+     * getLatestVersion returns the latest version for a plugin
+     * @param string $plugin
+     */
+    public function getLatestVersion($pluginCode)
+    {
+        $pluginCode = $this->pluginManager->normalizeIdentifier($pluginCode);
+
+        return $this->getLatestFileVersion($pluginCode);
+    }
+
+    /**
      * applyPluginUpdate applies a single version update to a plugin.
      */
     protected function applyPluginUpdate($code, $version, $details)
@@ -142,9 +152,7 @@ class VersionManager
 
         [$comments, $scripts] = $this->extractScriptsAndComments($details);
 
-        /*
-         * Apply scripts, if any
-         */
+        // Apply scripts, if any
         foreach ($scripts as $script) {
             if ($this->hasDatabaseHistory($code, $version, $script)) {
                 continue;
@@ -153,9 +161,7 @@ class VersionManager
             $this->applyDatabaseScript($code, $version, $script);
         }
 
-        /*
-         * Register the comment and update the version
-         */
+        // Register the comment and update the version
         if (!$this->hasDatabaseHistory($code, $version)) {
             foreach ($comments as $comment) {
                 $this->applyDatabaseComment($code, $version, $comment);
@@ -323,7 +329,21 @@ class VersionManager
 
         $versions = $this->getFileVersions($code);
 
+        // Quick check
         $position = array_search($version, array_keys($versions));
+
+        // Version compare check
+        if ($position === false) {
+            foreach (array_keys($versions) as $index => $fileVersion) {
+                if (version_compare((string) $version, (string) $fileVersion) !== -1) {
+                    $position = $index;
+                }
+            }
+        }
+
+        if ($position === false) {
+            $position = -1;
+        }
 
         return array_slice($versions, ++$position);
     }
@@ -337,8 +357,12 @@ class VersionManager
             return $this->fileVersions[$code];
         }
 
-        $versionFile = $this->getVersionFile($code);
-        $versionInfo = Yaml::parseFile($versionFile);
+        // Attempt to parse version information
+        $versionInfo = [];
+
+        if ($this->hasVersionFile($code)) {
+            $versionInfo = Yaml::parseFile($this->getVersionFile($code));
+        }
 
         if (!is_array($versionInfo)) {
             $versionInfo = [];
@@ -346,7 +370,7 @@ class VersionManager
 
         // Sort result
         uksort($versionInfo, function ($a, $b) {
-            return version_compare($a, $b);
+            return version_compare((string) $a, (string) $b);
         });
 
         // Normalize result
@@ -360,13 +384,17 @@ class VersionManager
     }
 
     /**
-     * getVersionFile returns the absolute path to a version file for a plugin
+     * getVersionFile returns the absolute path to a version file for a plugin, the string
+     * is empty if no file is found or resolved
      */
     protected function getVersionFile($code): string
     {
-        $versionFile = $this->pluginManager->getPluginPath($code) . '/updates/version.yaml';
+        $pluginPath = $this->pluginManager->getPluginPath($code);
+        if (!$pluginPath) {
+            return '';
+        }
 
-        return $versionFile;
+        return $pluginPath . '/updates/version.yaml';
     }
 
     /**
@@ -374,9 +402,11 @@ class VersionManager
      */
     protected function hasVersionFile($code): bool
     {
-        $versionFile = $this->getVersionFile($code);
+        if ($versionFile = $this->getVersionFile($code)) {
+            return File::isFile($versionFile);
+        }
 
-        return File::isFile($versionFile);
+        return false;
     }
 
     //
@@ -414,13 +444,13 @@ class VersionManager
             Db::table('system_plugin_versions')->insert([
                 'code' => $code,
                 'version' => $version,
-                'created_at' => new Carbon
+                'created_at' => Date::now()
             ]);
         }
         elseif ($version && $currentVersion) {
             Db::table('system_plugin_versions')->where('code', $code)->update([
                 'version' => $version,
-                'created_at' => new Carbon
+                'created_at' => Date::now()
             ]);
         }
         elseif ($currentVersion) {
@@ -440,7 +470,7 @@ class VersionManager
             'type' => self::HISTORY_TYPE_COMMENT,
             'version' => $version,
             'detail' => $comment,
-            'created_at' => new Carbon
+            'created_at' => Date::now()
         ]);
     }
 
@@ -470,18 +500,18 @@ class VersionManager
         }
 
         try {
-            $this->updater->setUp($updateFile);
+            $this->getUpdater()->setUp($updateFile);
 
             Db::table('system_plugin_history')->insert([
                 'code' => $code,
                 'type' => self::HISTORY_TYPE_SCRIPT,
                 'version' => $version,
                 'detail' => $script,
-                'created_at' => new Carbon
+                'created_at' => Date::now()
             ]);
         }
         catch (Exception $ex) {
-            $this->note('<error>Rollback failed! Reason: "' . $ex->getMessage() . '"</error>');
+            $this->note('- <error>v' . $version . ':  Migration "' . $script . '" failed</error>');
             throw $ex;
         }
     }
@@ -494,7 +524,7 @@ class VersionManager
         // Execute the database PHP script
         $updateFile = $this->pluginManager->getPluginPath($code) . '/updates/' . $script;
 
-        $this->updater->packDown($updateFile);
+        $this->getUpdater()->packDown($updateFile);
 
         Db::table('system_plugin_history')
             ->where('code', $code)
@@ -584,33 +614,12 @@ class VersionManager
         return [$comments, $scripts];
     }
 
-    //
-    // Notes
-    //
-
     /**
-     * note raises a note event for the migrator
-     * @param  string  $message
-     * @return void
+     * getUpdater returns the updater service
+     * @return \October\Rain\Database\Updater
      */
-    protected function note($message)
+    protected function getUpdater()
     {
-        if ($this->notesOutput !== null) {
-            $this->notesOutput->writeln($message);
-        }
-
-        return $this;
-    }
-
-    /**
-     * setNotesOutput sets an output stream for writing notes
-     * @param  Illuminate\Console\Command $output
-     * @return self
-     */
-    public function setNotesOutput($output)
-    {
-        $this->notesOutput = $output;
-
-        return $this;
+        return App::make('db.updater');
     }
 }

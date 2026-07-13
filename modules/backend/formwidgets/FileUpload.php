@@ -1,9 +1,9 @@
 <?php namespace Backend\FormWidgets;
 
 use Input;
+use System;
 use Response;
 use Validator;
-use Backend\Widgets\Form;
 use Backend\Classes\FormField;
 use Backend\Classes\FormWidgetBase;
 use System\Models\File as FileModel;
@@ -30,7 +30,7 @@ class FileUpload extends FormWidgetBase
     use \Backend\Traits\FormModelWidget;
 
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
@@ -44,7 +44,7 @@ class FileUpload extends FormWidgetBase
     public $imageHeight = 190;
 
     /**
-     * @var mixed fileTypes accpetd
+     * @var mixed fileTypes accepted
      */
     public $fileTypes = false;
 
@@ -66,18 +66,10 @@ class FileUpload extends FormWidgetBase
     /**
      * @var string Defines a mount point for the editor toolbar.
      * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::stateElementName
+     * Format: stateElementName
      * Only works in Vue applications and form document layouts.
      */
     public $externalToolbarAppState = null;
-
-    /**
-     * @var string Defines an event bus for an external toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::eventBus
-     * Only works in Vue applications and form document layouts.
-     */
-    public $externalToolbarEventBus = null;
 
     /**
      * @var array thumbOptions used for generating thumbnails
@@ -93,14 +85,12 @@ class FileUpload extends FormWidgetBase
     public $useCaption = true;
 
     /**
-     * @var boolean attachOnUpload automatically attaches the uploaded file on upload
-     * if the parent record exists instead of using deferred binding to attach on save
-     * of the parent record. Defaults to false.
+     * @var bool deferredBinding defers the upload action using a session key
      */
-    public $attachOnUpload = false;
+    public $deferredBinding = true;
 
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -109,7 +99,7 @@ class FileUpload extends FormWidgetBase
     protected $defaultAlias = 'fileupload';
 
     /**
-     * @var Backend\Widgets\Form configFormWidget is the embedded form for modifying the
+     * @var \Backend\Widgets\Form configFormWidget is the embedded form for modifying the
      * properties of the selected file.
      */
     protected $configFormWidget;
@@ -130,16 +120,22 @@ class FileUpload extends FormWidgetBase
             'mimeTypes',
             'thumbOptions',
             'useCaption',
-            'attachOnUpload',
-            'externalToolbarAppState',
-            'externalToolbarEventBus'
+            'deferredBinding',
+            'externalToolbarAppState'
         ]);
+
+        // @deprecated API
+        if ($this->getConfig('attachOnUpload') === true) {
+            $this->deferredBinding = false;
+        }
 
         if ($this->formField->disabled) {
             $this->previewMode = true;
         }
 
-        $this->getConfigFormWidget();
+        if (post('fileupload_flag')) {
+            $this->getConfigFormWidget();
+        }
     }
 
     /**
@@ -169,9 +165,10 @@ class FileUpload extends FormWidgetBase
             throw new ApplicationException('Maximum allowed size for uploaded files: ' . $maxPhpSetting);
         }
 
-        $this->vars['size'] = $this->formField->size;
+        $this->vars['name'] = $this->getFieldName();
         $this->vars['fileList'] = $fileList = $this->getFileList();
         $this->vars['singleFile'] = $fileList->first();
+        $this->vars['size'] = $this->formField->size;
         $this->vars['displayMode'] = $this->getDisplayMode();
         $this->vars['emptyIcon'] = $this->getConfig('emptyIcon', 'icon-upload');
         $this->vars['imageHeight'] = $this->imageHeight;
@@ -182,19 +179,18 @@ class FileUpload extends FormWidgetBase
         $this->vars['cssDimensions'] = $this->getCssDimensions();
         $this->vars['useCaption'] = $this->useCaption;
         $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
-        $this->vars['externalToolbarEventBus'] = $this->externalToolbarEventBus;
     }
 
     /**
      * getFileRecord for this request, returns false if none available
-     * @return System\Models\File|false
+     * @return System\Models\File|bool
      */
     protected function getFileRecord()
     {
         $record = false;
 
-        if (!empty(post('file_id'))) {
-            $record = $this->getRelationModel()::find(post('file_id')) ?: false;
+        if ($fileId = post('file_id')) {
+            $record = $this->getRelationModel()->find($fileId) ?: false;
         }
 
         return $record;
@@ -212,9 +208,9 @@ class FileUpload extends FormWidgetBase
         $config = $this->makeConfig('~/modules/system/models/file/fields.yaml');
         $config->model = $this->getFileRecord() ?: $this->getRelationModel();
         $config->alias = $this->alias . $this->defaultAlias;
-        $config->arrayName = $this->getFieldName();
+        $config->arrayName = 'FileUploadWidget';
 
-        $widget = $this->makeWidget(Form::class, $config);
+        $widget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
         $widget->bindToController();
 
         return $this->configFormWidget = $widget;
@@ -225,21 +221,52 @@ class FileUpload extends FormWidgetBase
      */
     protected function getFileList()
     {
-        $list = $this
-            ->getRelationObject()
-            ->withDeferred($this->getSessionKey())
-            ->orderBy('sort_order')
-            ->get()
-        ;
+        if ($eagerList = $this->getFileListFromRelation()) {
+            $list = $eagerList;
+        }
+        else {
+            $list = $this
+                ->getRelationObject()
+                ->withDeferred($this->getSessionKey())
+                ->orderBy('sort_order')
+                ->get()
+            ;
+        }
 
-        /*
-         * Decorate each file with thumb and custom download path
-         */
+        // Decorate each file with thumb and custom download path
         $list->each(function ($file) {
             $this->decorateFileAttributes($file);
         });
 
         return $list;
+    }
+
+    /**
+     * getFileListFromRelation loads the file list from the model relation in memory
+     * only if the request is not in a postback state
+     */
+    protected function getFileListFromRelation()
+    {
+        // Field name for this widget detected in postback
+        if (post($this->getFieldName()) !== null) {
+            return;
+        }
+
+        [$model, $attribute] = $this->resolveModelAttribute($this->valueFrom);
+        if (!$model->hasRelation($attribute)) {
+            return;
+        }
+
+        $value = $model->{$attribute};
+        if (!$value) {
+            return $model->newCollection();
+        }
+
+        if ($model->isRelationTypeSingular($attribute)) {
+            return $model->newCollection([$value]);
+        }
+
+        return $value;
     }
 
     /**
@@ -254,8 +281,7 @@ class FileUpload extends FormWidgetBase
             return $mode;
         }
 
-        $relationType = $this->getRelationType();
-        $mode .= ($relationType == 'attachMany' || $relationType == 'morphMany') ? '-multi' : '-single';
+        $mode .= $this->isRelationTypeSingular() ? '-single' : '-multi';
 
         return $mode;
     }
@@ -309,6 +335,12 @@ class FileUpload extends FormWidgetBase
             $types = explode(',', $types);
         }
 
+        if (System::checkSafeMode()) {
+            $types = array_filter($types, function ($value) {
+                return !in_array(strtolower(trim($value, ' .')), ['less', 'sass', 'scss']);
+            });
+        }
+
         $types = array_map(function ($value) use ($includeDot) {
             $value = trim($value);
 
@@ -343,6 +375,7 @@ class FileUpload extends FormWidgetBase
     public function onSortAttachments()
     {
         if ($sortData = post('sortOrder')) {
+            asort($sortData);
             $ids = array_keys($sortData);
             $orders = array_values($sortData);
 
@@ -367,6 +400,7 @@ class FileUpload extends FormWidgetBase
         $this->vars['file'] = $file;
         $this->vars['displayMode'] = $this->getDisplayMode();
         $this->vars['cssDimensions'] = $this->getCssDimensions();
+        $this->vars['configFormWidget'] = $this->getConfigFormWidget();
 
         return $this->makePartial('config_form');
     }
@@ -379,7 +413,7 @@ class FileUpload extends FormWidgetBase
         try {
             $formWidget = $this->getConfigFormWidget();
 
-            $file = $formWidget->model;
+            $file = $formWidget->getModel();
             if (!$file) {
                 throw new ApplicationException('Unable to find file, it may no longer exist');
             }
@@ -401,8 +435,8 @@ class FileUpload extends FormWidgetBase
      */
     protected function loadAssets()
     {
-        $this->addCss('css/fileupload.css', 'core');
-        $this->addJs('js/fileupload.js', 'core');
+        $this->addCss('css/fileupload.css');
+        $this->addJs('js/fileupload.js');
     }
 
     /**
@@ -424,7 +458,7 @@ class FileUpload extends FormWidgetBase
             }
 
             $fileModel = $this->getRelationModel();
-            $uploadedFile = Input::file('file_data');
+            $uploadedFile = files('file_data');
 
             $validationRules = ['max:'.($this->maxFilesize * 1024)];
             if ($fileTypes = $this->getAcceptedFileTypes()) {
@@ -450,22 +484,31 @@ class FileUpload extends FormWidgetBase
 
             $fileRelation = $this->getRelationObject();
 
+            // Check and clean vector files
+            // @deprecated v4 this should be moved to a post processing method on the file model
+            $extension = strtolower($uploadedFile->getClientOriginalExtension());
+            // @deprecated media.clean_vectors set default to true in v4
+            if ($extension === 'svg' && \Config::get('media.clean_vectors', false)) {
+                // getRealPath() can be empty for some environments (IIS)
+                $realPath = empty(trim($uploadedFile->getRealPath()))
+                    ? $uploadedFile->getPath() . DIRECTORY_SEPARATOR . $uploadedFile->getFileName()
+                    : $uploadedFile->getRealPath();
+
+                \File::put($realPath, \Html::cleanVector(\File::get($realPath)));
+            }
+
             $file = $fileModel;
             $file->data = $uploadedFile;
             $file->is_public = $fileRelation->isPublic();
             $file->save();
 
-            /**
-             * Attach directly to the parent model if it exists and attachOnUpload has been set to true
-             * else attach via deferred binding
-             */
+            // Determine the session key and if deferred binding should be used
             $parent = $fileRelation->getParent();
-            if ($this->attachOnUpload && $parent && $parent->exists) {
-                $fileRelation->add($file);
-            }
-            else {
-                $fileRelation->add($file, $this->getSessionKey());
-            }
+            $attachOnUpload = $this->deferredBinding === false && $parent && $parent->exists;
+            $sessionKey = $attachOnUpload ? null : $this->getSessionKey();
+
+            // Attach the file
+            $fileRelation->add($file, $sessionKey);
 
             $file = $this->decorateFileAttributes($file);
 
@@ -495,7 +538,7 @@ class FileUpload extends FormWidgetBase
     {
         $path = $thumb = $file->getPath();
 
-        if ($this->imageWidth || $this->imageHeight) {
+        if ($this->shouldGenerateThumb()) {
             $thumb = $file->getThumb($this->imageWidth, $this->imageHeight, $this->thumbOptions);
         }
 
@@ -503,6 +546,18 @@ class FileUpload extends FormWidgetBase
         $file->thumbUrl = $thumb;
 
         return $file;
+    }
+
+    /**
+     * shouldGenerateThumb determines if the resizer should be used
+     */
+    protected function shouldGenerateThumb()
+    {
+        if ($this->thumbOptions === false) {
+            return false;
+        }
+
+        return $this->imageWidth || $this->imageHeight;
     }
 
     /**

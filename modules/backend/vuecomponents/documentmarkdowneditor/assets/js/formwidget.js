@@ -1,26 +1,31 @@
-$.oc.module.register('backend.vuecomponents.documentmarkdowneditor.formwidget', function () {
+oc.Modules.register('backend.vuecomponents.documentmarkdowneditor.formwidget', function() {
     'use strict';
 
-    var FormWidget = function () {
-        function FormWidget(element, options, changeCallback) {
-            babelHelpers.classCallCheck(this, FormWidget);
+    class FormWidget {
+        constructor(element, options, changeCallback) {
+            const widgetConnectorClass = Vue.extend(
+                Vue.options.components['backend-component-documentmarkdowneditor-formwidgetconnector']
+            );
 
-            var widgetConnectorClass = Vue.extend(Vue.options.components['backend-component-documentmarkdowneditor-formwidgetconnector']);
+            this.element = element;
 
             this.connectorInstance = new widgetConnectorClass({
                 propsData: {
                     textarea: element,
                     useMediaManager: options.useMediaManager,
+                    sideBySide: options.sideBySide,
                     options: options,
                     lang: $(element).closest('.field-markdowneditor').data()
                 }
             });
 
             if (changeCallback) {
-                this.connectorInstance.$on('change', function () {
+                this.connectorInstance.$on('change', function() {
                     changeCallback();
                 });
             }
+
+            this.element.addEventListener('change', this.onChangeTextarea);
 
             this.connectorInstance.$on('focus', function () {
                 $(element).closest('.field-markdowneditor').addClass('editor-focus');
@@ -34,19 +39,28 @@ $.oc.module.register('backend.vuecomponents.documentmarkdowneditor.formwidget', 
             element.parentNode.appendChild(this.connectorInstance.$el);
         }
 
-        babelHelpers.createClass(FormWidget, [{
-            key: 'remove',
-            value: function remove() {
-                if (this.connectorInstance) {
-                    this.connectorInstance.$destroy();
-                    $(this.connectorInstance.$el).remove();
-                }
+        onChangeTextarea = () => {
+            this.setContent(this.element.value);
+        }
 
-                this.connectorInstance = null;
+        setContent(str) {
+            if (this.connectorInstance) {
+                this.connectorInstance.value = this.element.value;
             }
-        }]);
-        return FormWidget;
-    }();
+        }
+
+        remove() {
+            this.element.removeEventListener('change', this.onChangeTextarea);
+
+            if (this.connectorInstance) {
+                this.connectorInstance.$destroy();
+                $(this.connectorInstance.$el).remove();
+            }
+
+            this.connectorInstance = null;
+            this.element = null;
+        }
+    }
 
     return FormWidget;
 });

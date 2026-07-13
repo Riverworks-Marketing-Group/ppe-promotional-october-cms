@@ -5,7 +5,7 @@ use Backend\Classes\VueComponentBase;
 use Backend\Models\Preference as BackendPreference;
 
 /**
- * Code editor Vue component
+ * CodeEditor Vue component
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -13,7 +13,7 @@ use Backend\Models\Preference as BackendPreference;
 class CodeEditor extends VueComponentBase
 {
     /**
-     * Adds component specific asset files. Use $this->addJs() and $this->addCss()
+     * loadAssets adds component specific asset files. Use $this->addJs() and $this->addCss()
      * to register new assets to include on the page.
      * The default component script and CSS file are loaded automatically.
      * @return void
@@ -22,11 +22,11 @@ class CodeEditor extends VueComponentBase
     {
         // This Vue component uses Ace dependencies from the form widget
         //
-        $this->addJs('../../../formwidgets/codeeditor/assets/js/build-min.js', 'core');
+        $this->addJs('../../../formwidgets/codeeditor/assets/js/build-min.js');
     }
 
     /**
-     * Prepares variables required by the component's partials
+     * prepareVars required by the component's partials
      */
     protected function prepareVars()
     {

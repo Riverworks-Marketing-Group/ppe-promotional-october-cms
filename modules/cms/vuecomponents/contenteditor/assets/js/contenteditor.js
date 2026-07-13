@@ -1,8 +1,14 @@
 Vue.component('cms-editor-component-content-editor', {
-    extends: $.oc.module.import('cms.editor.extension.documentcomponent.base'),
-    data: function data() {
-        var EditorModelDefinition = $.oc.module.import('backend.vuecomponents.monacoeditor.modeldefinition');
-        var defMarkup = new EditorModelDefinition('html', this.trans('cms::lang.content.editor_content'), {}, 'markup', 'backend-icon-background monaco-document html');
+    extends: oc.Modules.import('cms.editor.extension.documentcomponent.base'),
+    data: function() {
+        const EditorModelDefinition = oc.Modules.import('backend.vuecomponents.monacoeditor.modeldefinition');
+        const defMarkup = new EditorModelDefinition(
+            'html',
+            this.trans('cms::lang.content.editor_content'),
+            {},
+            'markup',
+            'backend-icon-background monaco-document html'
+        );
 
         return {
             documentData: {
@@ -19,50 +25,59 @@ Vue.component('cms-editor-component-content-editor', {
     },
     computed: {
         toolbarElements: function computeToolbarElements() {
-            return this.postProcessToolbarElements([{
-                type: 'button',
-                icon: 'octo-icon-save',
-                label: this.trans('backend::lang.form.save'),
-                hotkey: 'ctrl+s, cmd+s',
-                tooltip: this.trans('backend::lang.form.save'),
-                tooltipHotkey: '⌃S, ⌘S',
-                command: 'save'
-            }, {
-                type: 'button',
-                icon: 'octo-icon-settings',
-                label: this.trans('editor::lang.common.settings'),
-                command: 'settings',
-                hidden: !this.hasSettingsForm
-            }, {
-                type: 'separator'
-            }, {
-                type: 'button',
-                icon: 'octo-icon-info',
-                label: this.trans('cms::lang.editor.info'),
-                command: 'show-template-info',
-                disabled: this.isNewDocument
-            }, {
-                type: 'separator',
-                visibilityTag: 'hide-for-direct-document'
-            }, {
-                type: 'button',
-                icon: 'octo-icon-delete',
-                disabled: this.isNewDocument,
-                command: 'delete',
-                hotkey: 'shift+option+d',
-                tooltip: this.trans('backend::lang.form.delete'),
-                tooltipHotkey: '⇧⌥D'
-            }, this.toolbarExtensionPoint, {
-                type: 'button',
-                icon: this.documentHeaderCollapsed ? 'octo-icon-angle-down' : 'octo-icon-angle-up',
-                command: 'document:toggleToolbar',
-                fixedRight: true,
-                tooltip: this.trans('editor::lang.common.toggle_document_header')
-            }]);
+            return this.postProcessToolbarElements([
+                {
+                    type: 'button',
+                    icon: 'icon-save-cloud',
+                    label: this.trans('backend::lang.form.save'),
+                    hotkey: 'ctrl+s, cmd+s',
+                    tooltip: this.trans('backend::lang.form.save'),
+                    tooltipHotkey: '⌃S, ⌘S',
+                    command: 'save'
+                },
+                {
+                    type: 'button',
+                    icon: 'icon-settings',
+                    label: this.trans('editor::lang.common.settings'),
+                    command: 'settings',
+                    hidden: !this.hasSettingsForm
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    type: 'button',
+                    icon: 'icon-info-circle',
+                    label: this.trans('cms::lang.editor.info'),
+                    command: 'show-template-info',
+                    disabled: this.isNewDocument
+                },
+                {
+                    type: 'separator',
+                    visibilityTag: 'hide-for-direct-document'
+                },
+                {
+                    type: 'button',
+                    icon: 'icon-delete',
+                    disabled: this.isNewDocument,
+                    command: 'delete',
+                    hotkey: 'shift+option+d',
+                    tooltip: this.trans('backend::lang.form.delete'),
+                    tooltipHotkey: '⇧⌥D'
+                },
+                this.toolbarExtensionPoint,
+                {
+                    type: 'button',
+                    icon: this.documentHeaderCollapsed ? 'icon-angle-down' : 'icon-angle-up',
+                    command: 'document:toggleToolbar',
+                    fixedRight: true,
+                    tooltip: this.trans('editor::lang.common.toggle_document_header')
+                }
+            ]);
         },
 
-        isHtmlDocument: function computeIsHtmlDocument() {
-            return this.savedDocumentLanguage === 'html';
+        isRicheditorDocument: function computeIsRicheditorDocument() {
+            return this.savedDocumentLanguage === 'richeditor';
         },
 
         isMarkdownDocument: function isMarkdownDocument() {
@@ -70,7 +85,7 @@ Vue.component('cms-editor-component-content-editor', {
         }
     },
     methods: {
-        getRootProperties: function getRootProperties() {
+        getRootProperties: function() {
             return ['components', 'fileName', 'markup'];
         },
 
@@ -102,8 +117,16 @@ Vue.component('cms-editor-component-content-editor', {
         },
 
         getDocumentLanguage: function getDocumentLanguage(fileName) {
+            if (!fileName) {
+                return 'html';
+            }
+
             if (fileName.endsWith('.txt')) {
                 return 'plaintext';
+            }
+
+            if (fileName.endsWith('.html')) {
+                return 'richeditor';
             }
 
             if (fileName.endsWith('.md')) {
@@ -122,23 +145,17 @@ Vue.component('cms-editor-component-content-editor', {
         },
 
         onParentTabSelected: function onParentTabSelected() {
-            var _this = this;
-
             if (this.$refs.editor) {
-                this.$nextTick(function () {
-                    return _this.$refs.editor.layout();
-                });
+                this.$nextTick(() => this.$refs.editor.layout());
             }
 
             if (this.$refs.markdownEditor) {
-                this.$nextTick(function () {
-                    return _this.$refs.markdownEditor.refresh();
-                });
+                this.$nextTick(() => this.$refs.markdownEditor.refresh());
             }
         }
     },
     watch: {
-        isHtmlDocument: function watchIsHtmlDocument(value) {
+        isRicheditorDocument: function watchIsHtmlDocument(value) {
             if (!value) {
                 this.toolbarExtensionPoint = [];
             }

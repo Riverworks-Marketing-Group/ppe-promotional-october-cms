@@ -4,6 +4,8 @@ use Lang;
 use Flash;
 use Request;
 use Form as FormHelper;
+use October\Rain\Html\Helper as HtmlHelper;
+use Backend\Classes\FormField;
 use Backend\Classes\ControllerBehavior;
 use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use October\Rain\Database\Model;
@@ -24,25 +26,24 @@ use ApplicationException;
  * values as either a YAML file, located in the controller view directory,
  * or directly as a PHP array.
  *
+ * @see https://docs.octobercms.com/3.x/extend/forms/relation-controller.html Relation Controller Documentation
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
 class RelationController extends ControllerBehavior
 {
     use \Backend\Traits\FormModelSaver;
+    use \Backend\Behaviors\RelationController\HasOverrides;
     use \Backend\Behaviors\RelationController\HasViewMode;
     use \Backend\Behaviors\RelationController\HasManageMode;
     use \Backend\Behaviors\RelationController\HasPivotMode;
+    use \Backend\Behaviors\RelationController\HasExtraConfig;
+    use \Backend\Behaviors\RelationController\HasNestedRelations;
 
     /**
      * @var const PARAM_FIELD postback parameter for the active relationship field
      */
     const PARAM_FIELD = '_relation_field';
-
-    /**
-     * @var const PARAM_MODE postback parameter for the active management mode
-     */
-    const PARAM_MODE = '_relation_mode';
 
     /**
      * @var const PARAM_EXTRA_CONFIG postback parameter for read only mode
@@ -62,7 +63,7 @@ class RelationController extends ControllerBehavior
     /**
      * @var array requiredProperties
      */
-    protected $requiredProperties = ['relationConfig'];
+    protected $requiredProperties = [];
 
     /**
      * @var array requiredRelationProperties that must exist for each relationship definition
@@ -85,11 +86,6 @@ class RelationController extends ControllerBehavior
     protected $originalConfig;
 
     /**
-     * @var array extraConfig provided by the relationRender method
-     */
-    protected $extraConfig;
-
-    /**
      * @var bool initialized informs if everything is ready
      */
     protected $initialized = false;
@@ -110,6 +106,11 @@ class RelationController extends ControllerBehavior
     public $relationModel;
 
     /**
+     * @var Model relationParent
+     */
+    public $relationParent;
+
+    /**
      * @var Model relationObject
      */
     public $relationObject;
@@ -120,7 +121,7 @@ class RelationController extends ControllerBehavior
     protected $model;
 
     /**
-     * @var Model field for the relationship as defined in the configuration
+     * @var string field for the relationship as defined in the configuration
      */
     protected $field;
 
@@ -140,14 +141,19 @@ class RelationController extends ControllerBehavior
     protected $eventTarget;
 
     /**
-     * @var string sessionKey used for deferred bindings
+     * @var string sessionKey used by forms for deferred bindings
      */
     public $sessionKey;
 
     /**
-     * @var bool readOnly disables the ability to add, update, delete or create relations
+     * @var string relationSessionKey used for binding relations
      */
-    public $readOnly = false;
+    public $relationSessionKey;
+
+    /**
+     * @var bool|null readOnly disables the ability to add, update, delete or create relations
+     */
+    public $readOnly = null;
 
     /**
      * @var bool deferredBinding defers all binding actions using a session key
@@ -155,31 +161,53 @@ class RelationController extends ControllerBehavior
     public $deferredBinding = false;
 
     /**
+     * @var string popupSize as, either giant, huge, large, small, tiny or adaptive
+     */
+    public $popupSize = 'huge';
+
+    /**
+     * @var string externalToolbarAppState defines a mount point for the editor toolbar.
+     * Must include a module name that exports the Vue application and a state element name.
+     * Format: stateElementName
+     * Only works in Vue applications and form document layouts.
+     */
+    public $externalToolbarAppState;
+
+    /**
      * @var array customMessages contains default messages that you can override
      */
     protected $customMessages = [
-        'buttonCreate' => 'backend::lang.relation.create_name',
-        'buttonUpdate' => 'backend::lang.relation.update_name',
-        'buttonAdd' => 'backend::lang.relation.add_name',
-        'buttonLink' => 'backend::lang.relation.link_name',
-        'buttonDelete' => 'backend::lang.relation.delete',
-        'buttonRemove' => 'backend::lang.relation.remove',
-        'buttonUnlink' => 'backend::lang.relation.unlink',
-        'confirmDelete' => 'backend::lang.relation.delete_confirm',
-        'confirmUnlink' => 'backend::lang.relation.unlink_confirm',
-        'titlePreviewForm' => 'backend::lang.relation.preview_name',
-        'titleCreateForm' => 'backend::lang.relation.create_name',
-        'titleUpdateForm' => 'backend::lang.relation.update_name',
-        'titleLinkForm' => 'backend::lang.relation.link_a_new',
-        'titleAddForm' => 'backend::lang.relation.add_a_new',
-        'titlePivotForm' => 'backend::lang.relation.related_data',
-        'flashCreate' => 'backend::lang.form.create_success',
-        'flashUpdate' => 'backend::lang.form.update_success',
-        'flashDelete' => 'backend::lang.form.delete_success',
-        'flashAdd' => 'backend::lang.relation.add_success',
-        'flashLink' => 'backend::lang.relation.link_success',
-        'flashRemove' => 'backend::lang.relation.remove_success',
-        'flashUnlink' => 'backend::lang.relation.unlink_success',
+        'buttonCreate' => "Create :name",
+        'buttonCreateForm' => "Create",
+        'buttonCancelForm' => "Cancel",
+        'buttonCloseForm' => "Close",
+        'buttonUpdate' => "Update :name",
+        'buttonUpdateForm' => "Update",
+        'buttonAdd' => "Add :name",
+        'buttonAddMany' => "Add Selected",
+        'buttonAddForm' => "Add",
+        'buttonLink' => "Link :name",
+        'buttonDelete' => "Delete",
+        'buttonDeleteMany' => "Delete Selected",
+        'buttonRemove' => "Remove",
+        'buttonRemoveMany' => "Remove Selected",
+        'buttonUnlink' => "Unlink",
+        'buttonUnlinkMany' => "Unlink Selected",
+        'confirmDelete' => "Are you sure?",
+        'confirmUnlink' => "Are you sure?",
+        'titlePreviewForm' => "Preview :name",
+        'titleCreateForm' => "Create :name",
+        'titleUpdateForm' => "Update :name",
+        'titleLinkForm' => "Link a New :name",
+        'titleAddForm' => "Add a New :name",
+        'titlePivotForm' => "Related :name Data",
+        'flashCreate' => ":name Created",
+        'flashUpdate' => ":name Updated",
+        'flashDelete' => ":name Deleted",
+        'flashAdd' => ":name Added",
+        'flashLink' => ":name Linked",
+        'flashRemove' => ":name Removed",
+        'flashUnlink' => ":name Unlinked",
     ];
 
     /**
@@ -190,10 +218,8 @@ class RelationController extends ControllerBehavior
     {
         parent::__construct($controller);
 
-        /*
-         * Build configuration
-         */
-        $this->config = $this->originalConfig = $this->makeConfig($controller->relationConfig, $this->requiredConfig);
+        // Build configuration
+        $this->setConfig($controller->relationConfig ?? [], $this->requiredConfig);
     }
 
     /**
@@ -201,8 +227,8 @@ class RelationController extends ControllerBehavior
      */
     public function beforeDisplay()
     {
-        $this->addJs('js/october.relation.js', 'core');
-        $this->addCss('css/relation.css', 'core');
+        $this->addJs('js/october.relation.js');
+        $this->addCss('css/relation.css');
     }
 
     /**
@@ -232,35 +258,48 @@ class RelationController extends ControllerBehavior
     {
         $this->vars['relationLabel'] = $this->config->label ?: $this->field;
         $this->vars['relationField'] = $this->field;
+        $this->vars['relationPopupSize'] = $this->popupSize;
+        $this->vars['relationReadOnly'] = $this->readOnly;
         $this->vars['relationType'] = $this->relationType;
         $this->vars['relationSearchWidget'] = $this->searchWidget;
         $this->vars['relationToolbarWidget'] = $this->toolbarWidget;
         $this->vars['relationToolbarButtons'] = $this->toolbarButtons;
-        $this->vars['relationSessionKey'] = $this->relationGetSessionKey();
+        $this->vars['relationSessionKey'] = $this->relationSessionKey;
         $this->vars['relationExtraConfig'] = $this->extraConfig;
 
         // Manage
         $this->vars['relationManageId'] = $this->manageId;
         $this->vars['relationManageTitle'] = $this->manageTitle;
         $this->vars['relationManageFilterWidget'] = $this->manageFilterWidget;
-        $this->vars['relationManageWidget'] = $this->manageWidget;
+        $this->vars['relationManageFormWidget'] = $this->manageFormWidget;
+        $this->vars['relationManageListWidget'] = $this->manageListWidget;
+        $this->vars['relationManageModel'] = $this->manageModel;
         $this->vars['relationManageMode'] = $this->manageMode;
 
         // View
         $this->vars['relationViewFilterWidget'] = $this->viewFilterWidget;
-        $this->vars['relationViewMode'] = $this->viewMode;
-        $this->vars['relationViewWidget'] = $this->viewWidget;
+        $this->vars['relationViewFormWidget'] = $this->viewFormWidget;
+        $this->vars['relationViewListWidget'] = $this->viewListWidget;
         $this->vars['relationViewModel'] = $this->viewModel;
+        $this->vars['relationViewMode'] = $this->viewMode;
 
         // Pivot
+        $this->vars['relationPivotId'] = $this->pivotId;
         $this->vars['relationPivotTitle'] = $this->pivotTitle;
         $this->vars['relationPivotWidget'] = $this->pivotWidget;
+
+        // Misc
+        $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
+        $this->vars['formSessionKey'] = post('_form_session_key', post('_session_key', FormHelper::getSessionKey()));
+
+        // @deprecated
+        $this->vars['relationManageWidget'] = $this->relationGetManageWidget();
+        $this->vars['relationViewWidget'] = $this->relationGetViewWidget();
     }
 
     /**
-     * beforeAjax is needed because the controller action is responsible for supplying
-     * the parent model so it's action must be fired. Additionally, each AJAX request
-     * must supply the relation's field name (_relation_field).
+     * beforeAjax is needed because each AJAX request must initialize the
+     * relation's field name (_relation_field).
      */
     protected function beforeAjax()
     {
@@ -268,12 +307,12 @@ class RelationController extends ControllerBehavior
             return;
         }
 
-        $this->controller->pageAction();
         if ($fatalError = $this->controller->getFatalError()) {
             throw new ApplicationException($fatalError);
         }
 
         $this->validateField();
+        $this->setExtraConfigForChain();
         $this->prepareVars();
         $this->initialized = true;
     }
@@ -290,6 +329,26 @@ class RelationController extends ControllerBehavior
      */
     public function initRelation($model, $field = null)
     {
+        if ($extraConfig = post(self::PARAM_EXTRA_CONFIG)) {
+            $this->setExtraConfig($extraConfig);
+            $this->initNestedRelation($model, $field);
+        }
+
+        $this->initRelationInternal($model, $field);
+    }
+
+    /**
+     * initRelationInternal is an internal method for initRelation
+     * @param Model $model
+     * @param string $field
+     * @return void
+     */
+    protected function initRelationInternal($model, $field = null)
+    {
+        if ($this->originalConfig === null) {
+            $this->originalConfig = $this->controller->relationGetConfig();
+        }
+
         if ($field === null) {
             $field = post(self::PARAM_FIELD);
         }
@@ -315,31 +374,38 @@ class RelationController extends ControllerBehavior
             ]));
         }
 
+        // Configuration details
         if (!$this->relationHasField($field)) {
             throw new ApplicationException(Lang::get('backend::lang.relation.missing_definition', compact('field')));
         }
 
-        if ($extraConfig = post(self::PARAM_EXTRA_CONFIG)) {
-            $this->applyExtraConfig($extraConfig);
+        $this->applyExtraConfig($field);
+        $this->alias = camel_case('relation ' . HtmlHelper::nameToId($field));
+        $this->config = $this->makeConfig($this->originalConfig->{$field}, $this->requiredRelationProperties);
+        $this->controller->relationExtendConfig($this->config, $this->field, $this->model);
+        $this->manageId = $this->getManageIdForField($field);
+        $this->pivotId = post('pivot_id');
+        $this->foreignId = post('foreign_id');
+        [$this->sessionKey, $this->relationSessionKey] = $this->getSessionKeysForField($field);
+
+        // Relationship details
+        [$nestedModel, $nestedField] = $this->makeNestedRelationModel($this->model, $this->config->valueFrom ?? $field);
+        if (!$nestedModel->hasRelation($nestedField)) {
+            throw new ApplicationException(Lang::get('backend::lang.model.missing_relation', ['class' => get_class($nestedModel), 'relation' => $nestedField]));
         }
 
-        $this->alias = camel_case('relation ' . $field);
-        $this->config = $this->makeConfig($this->getConfig($field), $this->requiredRelationProperties);
-        $this->controller->relationExtendConfig($this->config, $this->field, $this->model);
-
-        /*
-         * Relationship details
-         */
-        $this->relationName = $field;
-        $this->relationType = $this->model->getRelationType($field);
-        $this->relationObject = $this->model->{$field}();
+        $this->relationParent = $nestedModel;
+        $this->relationName = $nestedField;
+        $this->relationType = $nestedModel->getRelationType($nestedField);
+        $this->relationObject = $nestedModel->{$nestedField}();
         $this->relationModel = $this->relationObject instanceof HasOneOrMany
             ? $this->relationObject->make()
             : $this->relationObject->getRelated();
 
-        $this->manageId = post('manage_id');
-        $this->foreignId = post('foreign_id');
         $this->readOnly = $this->getConfig('readOnly');
+        $this->popupSize = $this->getConfig('popupSize', 950);
+        $this->externalToolbarAppState = $this->getConfig('externalToolbarAppState');
+        $this->eventTarget = $this->evalEventTarget();
         $this->deferredBinding = $this->evalDeferredBinding();
         $this->viewMode = $this->evalViewMode();
         $this->manageMode = $this->evalManageMode();
@@ -347,53 +413,55 @@ class RelationController extends ControllerBehavior
         $this->pivotTitle = $this->evalPivotTitle();
         $this->toolbarButtons = $this->evalToolbarButtons();
 
-        /*
-         * Toolbar widget
-         */
+        // Toolbar widget
         if ($this->toolbarWidget = $this->makeToolbarWidget()) {
             $this->toolbarWidget->bindToController();
         }
 
-        /*
-         * Search widget
-         */
+        // Search widget
         if ($this->searchWidget = $this->makeSearchWidget()) {
             $this->searchWidget->bindToController();
         }
 
-        /*
-         * Filter widgets (optional)
-         */
-        if ($this->manageFilterWidget = $this->makeFilterWidget('manage')) {
-            $this->controller->relationExtendManageFilterWidget($this->manageFilterWidget, $this->field, $this->model);
-            $this->manageFilterWidget->bindToController();
-        }
-
-        if ($this->viewFilterWidget = $this->makeFilterWidget('view')) {
+        // View widgets
+        if ($this->viewFilterWidget = $this->makeFilterWidgetFor('view')) {
             $this->controller->relationExtendViewFilterWidget($this->viewFilterWidget, $this->field, $this->model);
             $this->viewFilterWidget->bindToController();
         }
 
-        /*
-         * View widget
-         */
-        if ($this->viewWidget = $this->makeViewWidget()) {
-            $this->controller->relationExtendViewWidget($this->viewWidget, $this->field, $this->model);
-            $this->viewWidget->bindToController();
+        if ($this->viewListWidget = $this->makeViewListWidget()) {
+            $this->controller->relationExtendViewListWidget($this->viewListWidget, $this->field, $this->model);
+            $this->controller->relationExtendViewWidget($this->viewListWidget, $this->field, $this->model);
+            $this->viewListWidget->bindToController();
         }
 
-        /*
-         * Manage widget
-         */
-        if ($this->manageWidget = $this->makeManageWidget()) {
-            $this->controller->relationExtendManageWidget($this->manageWidget, $this->field, $this->model);
-            $this->manageWidget->bindToController();
+        if ($this->viewFormWidget = $this->makeViewFormWidget()) {
+            $this->controller->relationExtendViewFormWidget($this->viewFormWidget, $this->field, $this->model);
+            $this->controller->relationExtendViewWidget($this->viewFormWidget, $this->field, $this->model);
+            $this->viewFormWidget->bindToController();
         }
 
-        /*
-         * Pivot widget
-         */
-        if ($this->manageMode === 'pivot' && $this->pivotWidget = $this->makePivotWidget()) {
+        // Manage widgets
+        if ($this->manageFilterWidget = $this->makeFilterWidgetFor('manage')) {
+            $this->controller->relationExtendManageFilterWidget($this->manageFilterWidget, $this->field, $this->model);
+            $this->manageFilterWidget->bindToController();
+        }
+
+        if ($this->manageListWidget = $this->makeManageListWidget()) {
+            $this->controller->relationExtendManageListWidget($this->manageListWidget, $this->field, $this->model);
+            $this->controller->relationExtendManageWidget($this->manageListWidget, $this->field, $this->model);
+            $this->manageListWidget->bindToController();
+        }
+
+        if ($this->manageFormWidget = $this->makeManageFormWidget()) {
+            $this->controller->relationExtendManageFormWidget($this->manageFormWidget, $this->field, $this->model);
+            $this->controller->relationExtendManageWidget($this->manageFormWidget, $this->field, $this->model);
+            $this->manageFormWidget->bindToController();
+        }
+
+        // Pivot widget
+        if ($this->pivotWidget = $this->makePivotFormWidget()) {
+            $this->controller->relationExtendPivotFormWidget($this->pivotWidget, $this->field, $this->model);
             $this->controller->relationExtendPivotWidget($this->pivotWidget, $this->field, $this->model);
             $this->pivotWidget->bindToController();
         }
@@ -404,20 +472,38 @@ class RelationController extends ControllerBehavior
      */
     public function relationHasField(string $field): bool
     {
-        return (bool) $this->getConfig($field);
+        if ($this->originalConfig === null) {
+            $this->config = $this->originalConfig = $this->controller->relationGetConfig();
+        }
+
+        return (bool) ($this->originalConfig->{$field} ?? false);
     }
 
     /**
-     * Renders the relationship manager.
+     * relationRegisterField registers a new relation dynamically
+     */
+    public function relationRegisterField(string $relationName, array $config)
+    {
+        if ($this->originalConfig === null) {
+            $this->config = $this->originalConfig = $this->controller->relationGetConfig();
+        }
+
+        $this->originalConfig->{$relationName} = $config;
+    }
+
+    /**
+     * relationRender renders the relationship manager.
      * @param string $field The relationship field.
      * @param array $options
      * @return string Rendered HTML for the relationship manager.
      */
-    public function relationRender($field, $options = [])
+    public function relationRender($field = null, $options = [])
     {
-        /*
-         * Session key
-         */
+        if ($field === null) {
+            $field = $this->field;
+        }
+
+        // Session key
         if (is_string($options)) {
             $options = ['sessionKey' => $options];
         }
@@ -426,23 +512,17 @@ class RelationController extends ControllerBehavior
             $this->sessionKey = $options['sessionKey'];
         }
 
-        /*
-         * Apply options and extra config
-         */
-        $allowConfig = ['readOnly', 'recordUrl', 'recordOnClick'];
+        // Apply options and extra config
+        $allowConfig = ['readOnly', 'readOnlyDefault', 'recordUrl', 'recordOnClick'];
         $extraConfig = array_only($options, $allowConfig);
-        $this->extraConfig = $extraConfig;
-        $this->applyExtraConfig($extraConfig, $field);
+        $this->setExtraConfigForRender($extraConfig);
+        $this->applyExtraConfig($field);
 
-        /*
-         * Initialize
-         */
+        // Initialize
         $this->validateField($field);
         $this->prepareVars();
 
-        /*
-         * Determine the partial to use based on the supplied section option
-         */
+        // Determine the partial to use based on the supplied section option
         $section = $options['section'] ?? null;
         switch (strtolower($section)) {
             case 'toolbar':
@@ -457,7 +537,7 @@ class RelationController extends ControllerBehavior
     }
 
     /**
-     * Refreshes the relation container only, useful for returning in custom AJAX requests.
+     * relationRefresh refreshes the relation container only, useful for returning in custom AJAX requests.
      * @param  string $field Relation definition.
      * @return array The relation element selector as the key, and the relation view contents are the value.
      */
@@ -478,7 +558,7 @@ class RelationController extends ControllerBehavior
     }
 
     /**
-     * Renders the toolbar only.
+     * relationRenderToolbar renders the toolbar only.
      * @param string $field The relationship field.
      * @return string Rendered HTML for the toolbar.
      */
@@ -488,7 +568,7 @@ class RelationController extends ControllerBehavior
     }
 
     /**
-     * Renders the view only.
+     * relationRenderView renders the view only.
      * @param string $field The relationship field.
      * @return string Rendered HTML for the view.
      */
@@ -522,7 +602,7 @@ class RelationController extends ControllerBehavior
     {
         $id = class_basename($this);
         if ($this->field) {
-            $id .= '-' . $this->field;
+            $id .= '-' . HtmlHelper::nameToId($this->field);
         }
 
         if ($suffix !== null) {
@@ -533,23 +613,21 @@ class RelationController extends ControllerBehavior
     }
 
     /**
-     * relationGetSessionKey returns the active session key.
+     * relationGetSessionKey returns the active session key for relation binding.
      */
-    public function relationGetSessionKey($force = false)
+    public function relationGetSessionKey()
     {
-        if ($this->sessionKey && !$force) {
-            return $this->sessionKey;
-        }
+        return $this->relationSessionKey;
+    }
 
-        if (post('_relation_session_key')) {
-            return $this->sessionKey = post('_relation_session_key');
-        }
-
-        if (post('_session_key')) {
-            return $this->sessionKey = post('_session_key');
-        }
-
-        return $this->sessionKey = FormHelper::getSessionKey();
+    /**
+     * relationGetConfig returns the configuration used by this behavior. You may override this
+     * method in your controller as an alternative to defining a relationConfig property.
+     * @return object
+     */
+    public function relationGetConfig()
+    {
+        return $this->config;
     }
 
     /**
@@ -565,19 +643,20 @@ class RelationController extends ControllerBehavior
     //
 
     /**
-     * makeFilterWidget
+     * makeFilterWidgetFor
      * @param $type string Either 'manage' or 'view'
      * @return \Backend\Classes\WidgetBase|null
      */
-    protected function makeFilterWidget($type)
+    protected function makeFilterWidgetFor($type)
     {
         if (!$this->getConfig($type . '[filter]')) {
             return null;
         }
 
-        $filterConfig = $this->makeConfig($this->getConfig($type . '[filter]'));
+        $filterConfig = $this->makeConfig($this->getConfig("{$type}[filter]"));
+        $filterConfig->model = $this->relationModel;
         $filterConfig->alias = $this->alias . ucfirst($type) . 'Filter';
-        $filterConfig->extraData = ['_relation_field' => $this->field];
+        $filterConfig->customPageName = $this->getConfig("{$type}[customPageName]", false);
         $filterWidget = $this->makeWidget(\Backend\Widgets\Filter::class, $filterConfig);
 
         return $filterWidget;
@@ -590,26 +669,20 @@ class RelationController extends ControllerBehavior
     {
         $defaultConfig = [];
 
-        /*
-         * Add buttons to toolbar
-         */
+        // Add buttons to toolbar
         $defaultButtons = null;
 
         if (!$this->readOnly && $this->toolbarButtons) {
-            $defaultButtons = '~/modules/backend/behaviors/relationcontroller/partials/_toolbar.htm';
+            $defaultButtons = '~/modules/backend/behaviors/relationcontroller/partials/_toolbar.php';
         }
 
         $defaultConfig['buttons'] = $this->getConfig('view[toolbarPartial]', $defaultButtons);
 
-        /*
-         * Make config
-         */
+        // Make config
         $toolbarConfig = $this->makeConfig($this->getConfig('toolbar', $defaultConfig));
         $toolbarConfig->alias = $this->alias . 'Toolbar';
 
-        /*
-         * Add search to toolbar
-         */
+        // Add search to toolbar
         $useSearch = $this->viewMode === 'multi' && $this->getConfig('view[showSearch]');
 
         if ($useSearch) {
@@ -618,9 +691,7 @@ class RelationController extends ControllerBehavior
             ];
         }
 
-        /*
-         * No buttons, no search should mean no toolbar
-         */
+        // No buttons, no search should mean no toolbar
         if (empty($toolbarConfig->search) && empty($toolbarConfig->buttons)) {
             return;
         }
@@ -647,93 +718,12 @@ class RelationController extends ControllerBehavior
         $widget = $this->makeWidget(\Backend\Widgets\Search::class, $config);
         $widget->cssClasses[] = 'recordfinder-search';
 
-        /*
-         * Persist the search term across AJAX requests only
-         */
+        // Persist the search term across AJAX requests only
         if (!Request::ajax()) {
             $widget->setActiveTerm(null);
         }
 
         return $widget;
-    }
-
-    //
-    // Overrides
-    //
-
-    /**
-     * relationExtendConfig provides an opportunity to manipulate the field configuration.
-     * @param object $config
-     * @param string $field
-     * @param \October\Rain\Database\Model $model
-     */
-    public function relationExtendConfig($config, $field, $model)
-    {
-    }
-
-    /**
-     * relationExtendViewWidget provides an opportunity to manipulate the view widget.
-     * @param Backend\Classes\WidgetBase $widget
-     * @param string $field
-     * @param \October\Rain\Database\Model $model
-     */
-    public function relationExtendViewWidget($widget, $field, $model)
-    {
-    }
-
-    /**
-     * relationExtendManageWidget provides an opportunity to manipulate the manage widget.
-     * @param Backend\Classes\WidgetBase $widget
-     * @param string $field
-     * @param \October\Rain\Database\Model $model
-     */
-    public function relationExtendManageWidget($widget, $field, $model)
-    {
-    }
-
-    /**
-     * relationExtendPivotWidget provides an opportunity to manipulate the pivot widget.
-     * @param Backend\Classes\WidgetBase $widget
-     * @param string $field
-     * @param \October\Rain\Database\Model $model
-     */
-    public function relationExtendPivotWidget($widget, $field, $model)
-    {
-    }
-
-    /**
-     * relationExtendManageFilterWidget provides an opportunity to manipulate the manage filter widget.
-     * @param \Backend\Widgets\Filter $widget
-     * @param string $field
-     * @param \October\Rain\Database\Model $model
-     */
-    public function relationExtendManageFilterWidget($widget, $field, $model)
-    {
-    }
-
-    /**
-     * relationExtendViewFilterWidget provides an opportunity to manipulate the view filter widget.
-     * @param \Backend\Widgets\Filter $widget
-     * @param string $field
-     * @param \October\Rain\Database\Model $model
-     */
-    public function relationExtendViewFilterWidget($widget, $field, $model)
-    {
-    }
-
-    /**
-     * relationExtendRefreshResults is needed because the view widget is often
-     * refreshed when the manage widget makes a change, you can use this method
-     * to inject additional containers when this process occurs. Return an array
-     * with the extra values to send to the browser, eg:
-     *
-     * return ['#myCounter' => 'Total records: 6'];
-     *
-     * @param string $field
-     * @return array
-     */
-    public function relationExtendRefreshResults($field)
-    {
     }
 
     //
@@ -767,7 +757,7 @@ class RelationController extends ControllerBehavior
             return false;
         }
 
-        return $this->getConfig('deferredBinding') || !$this->model->exists;
+        return $this->getConfig('deferredBinding') || !$this->relationParent->exists;
     }
 
     /**
@@ -796,9 +786,9 @@ class RelationController extends ControllerBehavior
             case 'morphMany':
                 return ['create', 'delete'];
 
-            case 'morphToMany':
-            case 'morphedByMany':
             case 'belongsToMany':
+            case 'morphedByMany':
+            case 'morphToMany':
                 return ['create', 'add', 'delete', 'remove'];
 
             case 'hasOne':
@@ -818,84 +808,50 @@ class RelationController extends ControllerBehavior
     {
         $config = $this->config->{$mode} ?? [];
 
-        if (($context = array_get($config, 'context')) && is_array($context)) {
-            $context = $exists
-                ? array_get($context, 'update')
-                : array_get($context, 'create');
+        $context = FormField::CONTEXT_CREATE;
+
+        if ($exists) {
+            $context = FormField::CONTEXT_UPDATE;
         }
 
-        if (!$context) {
-            $context = $exists ? 'update' : 'create';
+        if ($this->readOnly) {
+            $context = FormField::CONTEXT_PREVIEW;
+        }
+
+        if ($configContext = array_get($config, 'context')) {
+            $context = is_array($configContext)
+                ? array_get($configContext, $context, $context)
+                : $configContext;
         }
 
         return $context;
     }
 
     /**
-     * applyExtraConfig
-     */
-    protected function applyExtraConfig($config, $field = null)
-    {
-        if (!$field) {
-            $field = $this->field;
-        }
-
-        if (!$config || !isset($this->originalConfig->{$field})) {
-            return;
-        }
-
-        if (
-            !is_array($config) &&
-            (!$config = @json_decode(@base64_decode($config), true))
-        ) {
-            return;
-        }
-
-        $parsedConfig = array_only($config, ['readOnly']);
-        $parsedConfig['view'] = array_only($config, ['recordUrl', 'recordOnClick']);
-
-        $this->originalConfig->{$field} = array_replace_recursive(
-            $this->originalConfig->{$field},
-            $parsedConfig
-        );
-    }
-
-    /**
      * makeConfigForMode returns the configuration for a mode (view, manage, pivot) for an
      * expected type (list, form) and uses fallback configuration
      */
-    protected function makeConfigForMode($mode = 'view', $type = 'list', $throwException = true)
+    protected function makeConfigForMode($mode = 'view', $type = 'list')
     {
         $config = null;
 
-        /*
-         * Look for $this->config->view['list']
-         */
+        // Look for $this->config->view['list']
         if (
             isset($this->config->{$mode}) &&
             array_key_exists($type, $this->config->{$mode})
         ) {
             $config = $this->config->{$mode}[$type];
         }
-        /*
-         * Look for $this->config->list
-         */
+        // Look for $this->config->list
         elseif (isset($this->config->{$type})) {
             $config = $this->config->{$type};
         }
 
-        /*
-         * Apply substitutes:
-         *
-         * - view.list => manage.list
-         */
-        if (!$config) {
+        // Apply substitutes:
+        // - view.list => manage.list
+        if ($config === null) {
             if ($mode === 'manage' && $type === 'list') {
                 return $this->makeConfigForMode('view', $type);
-            }
-
-            if ($throwException) {
-                throw new ApplicationException('Missing configuration for '.$mode.'.'.$type.' in RelationController definition '.$this->field);
             }
 
             return false;
@@ -909,7 +865,7 @@ class RelationController extends ControllerBehavior
      */
     protected function getCustomLang(string $name, string $default = null, array $extras = []): string
     {
-        $foundKey = $this->getConfig("customMessages[${name}]");
+        $foundKey = $this->getConfig("customMessages[{$name}]");
 
         if ($foundKey === null) {
             $foundKey = $this->originalConfig->customMessages[$name] ?? null;

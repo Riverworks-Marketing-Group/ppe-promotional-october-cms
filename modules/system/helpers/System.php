@@ -4,6 +4,7 @@ use App;
 use File;
 use Config;
 use Schema;
+use Manifest;
 
 /**
  * System Helper
@@ -14,6 +15,16 @@ use Schema;
  */
 class System
 {
+    /**
+     * @var string MANIFEST_MODULES for manifest storage
+     */
+    const MANIFEST_MODULES = 'modules.all';
+
+    /**
+     * @var string MANIFEST_DB_CHECK for manifest storage
+     */
+    const MANIFEST_DB_CHECK = 'database.check';
+
     /**
      * @var bool hasDatabaseCache helps multiple calls to hasDatabase()
      */
@@ -31,6 +42,11 @@ class System
     {
         if ($this->listModulesCache !== null) {
             return $this->listModulesCache;
+        }
+
+        // Check manifest
+        if (Manifest::has(self::MANIFEST_MODULES)) {
+            return (array) Manifest::get(self::MANIFEST_MODULES);
         }
 
         $loadModules = Config::get('system.load_modules');
@@ -53,7 +69,13 @@ class System
         }
 
         // System comes first
-        $result = array_unique(array_merge(['System'], $result));
+        if ($systemKey = array_search('System', $result)) {
+            unset($result[$systemKey]);
+            array_unshift($result, 'System');
+        }
+
+        // Store result
+        Manifest::put(self::MANIFEST_MODULES, $result);
 
         return $this->listModulesCache = $result;
     }
@@ -77,8 +99,24 @@ class System
             return $this->hasDatabaseCache;
         }
 
-        return $this->hasDatabaseCache = App::hasDatabase() &&
+        if (Manifest::get(self::MANIFEST_DB_CHECK) === true) {
+            return $this->hasDatabaseCache = true;
+        }
+
+        $loadedValue = App::hasDatabase() &&
             Schema::hasTable(Config::get('database.migrations', 'migrations'));
+
+        Manifest::put(self::MANIFEST_DB_CHECK, (bool) $loadedValue);
+
+        return $this->hasDatabaseCache = $loadedValue;
+    }
+
+    /**
+     * checkProjectValid
+     */
+    public function checkProjectValid($flag = 2): bool
+    {
+        return (\System\Models\Parameter::getProjectStatusFlag() & $flag) === $flag;
     }
 
     /**

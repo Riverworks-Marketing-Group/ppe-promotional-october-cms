@@ -1,13 +1,13 @@
 .component-backend-inspector-group {
     .group-name {
         position: relative;
-        background: white;
+        background: transparent;
         padding-top: 6px;
         padding-bottom: 6px;
         cursor: pointer;
-        font-weight: 500;
-        color: @color-text-grey-1;
-        .user-select(none);
+        font-weight: 600;
+        color: @toolbar-color;
+        user-select: none;
 
         span {
             display: block;
@@ -25,8 +25,8 @@
                 left: 0;
                 top: 7px;
                 background-position: -182px 0;
-                .transform(~'rotate(-90deg)');
-                .transition(transform 0.3s);
+                transform: rotate(-90deg);
+                transition: transform 0.3s;
             }
         }
 
@@ -46,11 +46,11 @@
         }
 
         &.expanded span:before {
-            .transform(~'rotate(0)');
+            transform: rotate(0);
         }
 
         &.collapsed {
-            border-bottom: 1px solid @color-grey-3;
+            border-bottom: 1px solid @primary-border;
         }
 
         &.hide-bottom-border-collapsed.collapsed {

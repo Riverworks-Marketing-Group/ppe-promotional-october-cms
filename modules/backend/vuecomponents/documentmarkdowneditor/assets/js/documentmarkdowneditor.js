@@ -1,6 +1,6 @@
-$.oc.module.register('backend.component.documentmarkdowneditor', function () {
-    var utils = $.oc.module.import('backend.vuecomponents.documentmarkdowneditor.utils');
-    var octoberCommands = $.oc.module.import('backend.vuecomponents.documentmarkdowneditor.octobercommands');
+oc.Modules.register('backend.component.documentmarkdowneditor', function () {
+    const utils = oc.Modules.import('backend.vuecomponents.documentmarkdowneditor.utils');
+    const octoberCommands = oc.Modules.import('backend.vuecomponents.documentmarkdowneditor.octobercommands');
 
     Vue.component('backend-component-documentmarkdowneditor', {
         props: {
@@ -17,24 +17,32 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                 type: Boolean,
                 default: false
             },
+            sideBySide: {
+                type: Boolean,
+                default: true
+            },
             builtInMode: {
                 type: Boolean,
                 default: false
             },
             value: String,
-            externalToolbarEventBus: String
+            externalToolbarAppState: String
         },
-        data: function data() {
-            var imageDropdownItems = [{
-                command: 'oc-upload-image',
-                label: 'command_upload_from_computer'
-            }];
-            var fileDropdownItems = [{
-                command: 'oc-upload-file',
-                label: 'command_upload_from_computer'
-            }];
+        data: function() {
+            const imageDropdownItems = [];
+            const fileDropdownItems = [];
 
             if (this.useMediaManager) {
+                imageDropdownItems.push({
+                    command: 'oc-upload-image',
+                    label: 'command_upload_from_computer'
+                });
+
+                fileDropdownItems.push({
+                    command: 'oc-upload-file',
+                    label: 'command_upload_from_computer'
+                });
+
                 imageDropdownItems.push({
                     command: 'oc-browse-image',
                     label: 'browse'
@@ -56,19 +64,126 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                 label: 'by_url'
             });
 
-            return {
+            const result = {
                 editor: null,
                 editorId: null,
                 $buttons: null,
                 updateDebounceTimeoutId: null,
                 lastCachedValue: this.value,
+                lastCachedPreview: null,
                 config: null,
-                defaultButtons: ['bold', 'italic', 'strikethrough', 'heading-1', 'heading-2', 'heading-3', '|', 'code', 'quote', 'unordered-list', 'ordered-list', 'clean-block', '|', 'link', 'image', {
-                    name: 'attachment',
-                    action: 'attachment',
-                    className: 'fa fa-bold',
-                    title: 'add_file_title'
-                }, 'table', 'horizontal-rule', 'side-by-side'],
+                defaultButtons: [
+                    {
+                        name: 'bold',
+                        action: EasyMDE.toggleBold,
+                        className: 'fa fa-bold',
+                        title: oc.lang.get('markdowneditor.bold')
+                    },
+                    {
+                        name: 'italic',
+                        action: EasyMDE.toggleItalic,
+                        className: 'fa fa-italic',
+                        title: oc.lang.get('markdowneditor.italic')
+                    },
+                    {
+                        name: 'strikethrough',
+                        action: EasyMDE.toggleStrikethrough,
+                        className: 'fa fa-strikethrough',
+                        title: oc.lang.get('markdowneditor.strikethrough')
+                    },
+                    {
+                        name: 'heading-1',
+                        action: EasyMDE.toggleHeading1,
+                        className: 'fa fa-header header-1',
+                        title: oc.lang.get('markdowneditor.header1')
+                    },
+                    {
+                        name: 'heading-2',
+                        action: EasyMDE.toggleHeading2,
+                        className: 'fa fa-header header-2',
+                        title: oc.lang.get('markdowneditor.header2')
+                    },
+                    {
+                        name: 'heading-3',
+                        action: EasyMDE.toggleHeading3,
+                        className: 'fa fa-header header-3',
+                        title: oc.lang.get('markdowneditor.header3')
+                    },
+                    '|',
+                    {
+                        name: 'code',
+                        action: EasyMDE.toggleCodeBlock,
+                        className: 'fa fa-code',
+                        title: oc.lang.get('markdowneditor.code')
+                    },
+                    {
+                        name: 'quote',
+                        action: EasyMDE.toggleBlockquote,
+                        className: 'fa fa-code',
+                        title: oc.lang.get('markdowneditor.quote')
+                    },
+                    {
+                        name: 'unordered-list',
+                        action: EasyMDE.toggleUnorderedList,
+                        className: 'fa fa-list-ul',
+                        title: oc.lang.get('markdowneditor.unorderedlist')
+                    },
+                    {
+                        name: 'ordered-list',
+                        action: EasyMDE.toggleOrderedList,
+                        className: 'fa fa-list-ol',
+                        title: oc.lang.get('markdowneditor.orderedlist')
+                    },
+                    {
+                        name: 'clean-block',
+                        action: EasyMDE.cleanBlock,
+                        className: 'fa fa-eraser',
+                        title: oc.lang.get('markdowneditor.cleanblock')
+                    },
+                    '|',
+                    {
+                        name: 'snippet',
+                        action: 'snippet',
+                        className: 'fa fa-newspaper',
+                        title: oc.lang.get('markdowneditor.snippet')
+                    },
+                    {
+                        name: 'link',
+                        action: EasyMDE.drawLink,
+                        className: 'fa fa-link',
+                        title: oc.lang.get('markdowneditor.link')
+                    },
+                    {
+                        name: 'image',
+                        action: EasyMDE.drawImage,
+                        className: 'fa fa-picture',
+                        title: oc.lang.get('markdowneditor.image')
+                    },
+                    {
+                        name: 'attachment',
+                        action: 'attachment',
+                        className: 'fa fa-bold',
+                        title: 'add_file_title'
+                    },
+                    {
+                        name: 'table',
+                        action: EasyMDE.drawTable,
+                        className: 'fa fa-table',
+                        title: oc.lang.get('markdowneditor.table')
+                    },
+                    {
+                        name: 'horizontal-rule',
+                        action: EasyMDE.drawHorizontalRule,
+                        className: 'fa fa-minus',
+                        title: oc.lang.get('markdowneditor.horizontalrule')
+                    },
+                    {
+                        name: 'side-by-side',
+                        action: EasyMDE.toggleSideBySide,
+                        className: 'fa fa-columns no-disable no-mobile',
+                        title: oc.lang.get('markdowneditor.sidebyside')
+                    }
+                ],
                 buttonConfig: {
                     heading: {
                         ignore: true
@@ -88,8 +203,13 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                     fullscreen: {
                         ignore: true
                     },
+                    snippet: {
+                        ignorePressState: true,
+                        cmd: 'oc-snippet'
+                    },
                     link: {
-                        ignorePressState: true
+                        ignorePressState: true,
+                        cmd: oc.pageLookup ? 'oc-link' : 'link'
                     },
                     image: {
                         dropdown: imageDropdownItems,
@@ -107,13 +227,16 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                     code: 'text-code-block',
                     'unordered-list': 'text-format-ul',
                     'ordered-list': 'text-format-ol',
-                    'clean-block': 'eraser',
+                    'clean-block': 'text-eraser',
                     image: 'text-image',
                     table: 'text-insert-table',
                     'horizontal-rule': 'horizontal-line',
-                    'side-by-side': 'window-split'
+                    'side-by-side': 'window-split',
+                    snippet: 'newspaper'
                 }
             };
+
+            return result;
         },
         computed: {
             cssClass: function computeCssClass() {
@@ -137,18 +260,16 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
             },
 
             externalToolbarEventBusObj: function computeExternalToolbarEventBusObj() {
-                if (!this.externalToolbarEventBus) {
+                if (!this.externalToolbarAppState) {
                     return null;
                 }
 
-                // Expected format: tailor.app::eventBus
-                var parts = this.externalToolbarEventBus.split('::');
-                if (parts.length !== 2) {
-                    throw new Error('Invalid externalToolbarEventBus format. Expected format: module.name::stateElementName');
-                }
+                const point = $.oc.vueUtils.getToolbarExtensionPoint(
+                    this.externalToolbarAppState,
+                    this.$el
+                );
 
-                var module = $.oc.module.import(parts[0]);
-                return module.state[parts[1]];
+                return point ? point.bus : null;
             },
 
             hasExternalToolbar: function computeHasExternalToolbar() {
@@ -162,34 +283,35 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                 }
 
                 this.toolbarContainer.splice(0, this.toolbarContainer.length);
-                var that = this;
+                const that = this;
 
                 if (!this.builtInMode || this.hasExternalToolbar) {
                     utils.addSeparator(that);
                 }
 
-                this.$buttons.each(function () {
-                    var $button = $(this);
+                this.$buttons.each(function() {
+                    const $button = $(this);
 
                     if ($button.hasClass('separator')) {
                         utils.addSeparator(that);
                         return;
                     }
 
-                    var cmd = utils.getButtonCommand($button);
+                    const cmd = utils.getButtonCommand($button);
                     if (that.buttonConfig[cmd] && that.buttonConfig[cmd].ignore) {
                         return;
                     }
 
-                    var hasCustomDropdown = that.buttonConfig[cmd] && that.buttonConfig[cmd].dropdown;
+                    const hasCustomDropdown = that.buttonConfig[cmd] && that.buttonConfig[cmd].dropdown;
                     if (!hasCustomDropdown) {
                         utils.buttonFromButton(that, $button);
-                    } else {
+                    }
+                    else {
                         utils.dropdownFromButton(that, $button);
                     }
                 });
 
-                var lastIndex = this.toolbarContainer.length - 1;
+                const lastIndex = this.toolbarContainer.length - 1;
                 if (this.toolbarContainer[lastIndex].type === 'separator') {
                     this.toolbarContainer.pop();
                 }
@@ -206,7 +328,10 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                     clearTimeout(this.updateDebounceTimeoutId);
                 }
 
-                this.updateDebounceTimeoutId = setTimeout(this.extendToolbar, 30);
+                this.updateDebounceTimeoutId = setTimeout(
+                    this.hasExternalToolbar ? this.extendExternalToolbar : this.extendToolbar,
+                    30
+                );
             },
 
             trans: function trans(key) {
@@ -253,14 +378,14 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                 this.externalToolbarEventBusObj.$off('extendapptoolbar', this.extendExternalToolbar);
             },
 
-            onToolbarExternalCommand: function onToolbarExternalCommand(command) {
+            onToolbarExternalCommand: function (command) {
                 if ($(this.$el).is(":visible")) {
                     this.onToolbarCommand(command);
                 }
             },
 
-            onToolbarCommand: function onToolbarCommand(commandData) {
-                var command = utils.parseCommandString(commandData.command);
+            onToolbarCommand: function(commandData) {
+                const command = utils.parseCommandString(commandData.command);
                 if (command === null) {
                     return;
                 }
@@ -269,8 +394,7 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                     this.onOctoberCommand(command);
                 }
 
-                var $button = $(this.$el).find('.editor-toolbar button[class*="' + command.editorCommand + '"]');
-
+                let $button = $(this.$el).find('.editor-toolbar button[class*="' + command.editorCommand + '"]');
                 if (!$button.length) {
                     return;
                 }
@@ -304,8 +428,6 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
         },
         mounted: function onMounted() {
             this.editorId = $.oc.domIdManager.generate('markdowneditor');
-            this.$on('toolbarcmd', this.onToolbarCommand);
-
             this.editor = new EasyMDE({
                 element: this.$refs.textarea,
                 toolbar: this.defaultButtons,
@@ -313,9 +435,36 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                 sideBySideFullscreen: false,
                 autoDownloadFontAwesome: false,
                 syncSideBySidePreviewScroll: true,
+                initialValue: this.value,
                 status: true,
-                previewRender: function previewRender(plainText) {
-                    return DOMPurify.sanitize(marked(plainText));
+                sanitizerFunction: function(htmlText) {
+                    return DOMPurify.sanitize(htmlText);
+                },
+                previewRender: function(plainText) {
+                    // Optimization: prevent rendering same thing twice
+                    if (this.lastCachedPreview == plainText) {
+                        return null;
+                    }
+                    this.lastCachedPreview = plainText;
+
+                    // Process page lookup links
+                    if (oc.pageLookup) {
+                        plainText = oc.pageLookup.processLinks(plainText);
+                    }
+
+                    // Process snippets
+                    if (oc.snippetLookup) {
+                        plainText = oc.snippetLookup.processSnippets(plainText);
+
+                        // Disable the preview update
+                        if (oc.snippetLookup.pauseRendering) {
+                            return null;
+                        }
+                    }
+
+                    // Inherit default logic, includes logic processing
+                    // anchors so links open in a new window
+                    return this.parent.markdown(plainText);
                 }
             });
 
@@ -323,17 +472,23 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
             this.editor.codemirror.on('change', this.onChange);
             this.editor.codemirror.on('focus', this.onFocus);
             this.editor.codemirror.on('blur', this.onBlur);
+            $(window).on('oc.updateUi', this.refresh);
+            this.$on('toolbarcmd', this.onToolbarCommand);
 
-            if (!this.hasExternalToolbar) {
-                this.extendToolbar();
-            } else {
-                this.extendExternalToolbar();
-            }
+            Vue.nextTick(() => {
+                if (this.hasExternalToolbar) {
+                    this.extendExternalToolbar();
+                }
+                else {
+                    this.extendToolbar();
+                }
 
-            this.mountEventBus();
-            this.enableSideBySide();
+                this.mountEventBus();
 
-            this.editor.value(this.value);
+                if (this.sideBySide) {
+                    this.enableSideBySide();
+                }
+            });
         },
         beforeDestroy: function beforeDestroy() {
             if (this.editor) {
@@ -344,6 +499,7 @@ $.oc.module.register('backend.component.documentmarkdowneditor', function () {
                 this.editor.codemirror.off('blur', this.onBlur);
             }
 
+            $(window).off('oc.updateUi', this.refresh);
             this.unmountEventBus();
 
             this.editor = null;

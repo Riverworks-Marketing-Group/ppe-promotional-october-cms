@@ -1,4 +1,4 @@
-$.oc.module.register('backend.component.documentmarkdowneditor.formwidgetconnector', function () {
+oc.Modules.register('backend.component.documentmarkdowneditor.formwidgetconnector', function () {
     Vue.component('backend-component-documentmarkdowneditor-formwidgetconnector', {
         props: {
             textarea: null,
@@ -7,31 +7,38 @@ $.oc.module.register('backend.component.documentmarkdowneditor.formwidgetconnect
                 type: Boolean,
                 default: false
             },
+            sideBySide: {
+                type: Boolean,
+                default: true
+            },
             options: Object
         },
-        data: function data() {
-            var toolbarExtensionPoint = [];
+        data: function () {
+            const toolbarExtensionPoint = [];
 
             return {
-                toolbarExtensionPoint: toolbarExtensionPoint,
+                toolbarExtensionPoint,
                 fullScreen: false,
                 value: ''
             };
         },
         computed: {
             toolbarElements: function computeToolbarElements() {
-                return [this.toolbarExtensionPoint, {
-                    type: 'button',
-                    icon: this.fullScreen ? 'octo-icon-fullscreen-collapse' : 'octo-icon-fullscreen',
-                    command: 'document:toggleFullscreen',
-                    pressed: this.fullScreen,
-                    fixedRight: true,
-                    tooltip: this.lang.langFullscreen
-                }];
+                return [
+                    this.toolbarExtensionPoint,
+                    {
+                        type: 'button',
+                        icon: this.fullScreen ? 'icon-fullscreen-collapse' : 'icon-fullscreen',
+                        command: 'document:toggleFullscreen',
+                        pressed: this.fullScreen,
+                        fixedRight: true,
+                        tooltip: this.lang.langFullscreen
+                    }
+                ]
             },
 
-            externalToolbarEventBus: function computeExternalToolbarEventBus() {
-                return this.options.externalToolbarEventBus;
+            externalToolbarAppState: function computeExternalToolbarAppState() {
+                return this.options.externalToolbarAppState;
             },
 
             toolbarExtensionPointProxy: function computeToolbarExtensionPointProxy() {
@@ -39,14 +46,12 @@ $.oc.module.register('backend.component.documentmarkdowneditor.formwidgetconnect
                     return this.toolbarExtensionPoint;
                 }
 
-                // Expected format: tailor.app::toolbarExtensionPoint
-                var parts = this.options.externalToolbarAppState.split('::');
-                if (parts.length !== 2) {
-                    throw new Error('Invalid externalToolbarAppState format. Expected format: module.name::stateElementName');
-                }
+                const point = $.oc.vueUtils.getToolbarExtensionPoint(
+                    this.options.externalToolbarAppState,
+                    this.textarea
+                );
 
-                var app = $.oc.module.import(parts[0]);
-                return app.state[parts[1]];
+                return point ? point.state : this.toolbarExtensionPoint;
             },
 
             hasExternalToolbar: function computeHasExternalToolbar() {
@@ -54,12 +59,10 @@ $.oc.module.register('backend.component.documentmarkdowneditor.formwidgetconnect
             }
         },
         mounted: function onMounted() {
-            var _this = this;
-
             this.value = this.textarea.value;
 
-            Vue.nextTick(function () {
-                _this.$refs.markdownEditor.clearHistory();
+            Vue.nextTick(() => {
+                this.$refs.markdownEditor.clearHistory();
             });
         },
         methods: {
@@ -72,13 +75,11 @@ $.oc.module.register('backend.component.documentmarkdowneditor.formwidgetconnect
             },
 
             onToolbarCommand: function onToolbarCommand(cmd) {
-                var _this2 = this;
-
                 if (cmd == 'document:toggleFullscreen') {
                     this.fullScreen = !this.fullScreen;
 
-                    Vue.nextTick(function () {
-                        _this2.$refs.markdownEditor.refresh();
+                    Vue.nextTick(() => {
+                        this.$refs.markdownEditor.refresh();
                     });
                 }
             }

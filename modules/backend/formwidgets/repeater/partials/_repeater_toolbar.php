@@ -1,20 +1,20 @@
 <div class="field-repeater-toolbar">
     <?php if ($useGroups): ?>
-        <a
-            href="javascript:;"
+        <button
+            type="button"
             data-repeater-cmd="add-group"
             data-attach-loading>
-            <i class="octo-icon-add-bold"></i>
-            <?= e(trans($prompt)) ?>
-        </a>
+            <i class="icon-add-bold"></i>
+            <?= e(__($prompt)) ?>
+        </button>
     <?php else: ?>
-        <a
-            href="javascript:;"
+        <button
+            type="button"
             data-repeater-cmd="add"
             data-request="<?= $this->getEventHandler('onAddItem') ?>"
             data-attach-loading>
-            <i class="octo-icon-add-bold"></i>
-            <?= e(trans($prompt)) ?>
-        </a>
+            <i class="icon-add-bold"></i>
+            <?= e(__($prompt)) ?>
+        </button>
     <?php endif ?>
 </div>

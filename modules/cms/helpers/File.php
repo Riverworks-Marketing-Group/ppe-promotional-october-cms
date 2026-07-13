@@ -11,7 +11,7 @@ use Cms\Classes\Theme;
 class File
 {
     /**
-     * Validates a CMS object file or directory name.
+     * validateName validates a CMS object file or directory name.
      * CMS object file names can contain only alphanumeric symbols, dashes, underscores and dots.
      * Name can also begin with a component name, eg: MyComponent::filename.
      * @param string $fileName Specifies a path to validate
@@ -23,7 +23,7 @@ class File
     }
 
     /**
-     * Validates whether a file has an allowed extension.
+     * validateExtension validates whether a file has an allowed extension.
      * @param string $fileName Specifies a path to validate
      * @param array $allowedExtensions A list of allowed file extensions
      * @param boolean $allowEmpty Determines whether the file extension could be empty.

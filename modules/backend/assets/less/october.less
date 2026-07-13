@@ -4,6 +4,37 @@
 @import "../../../system/assets/vendor/prettify/theme-desert.css";
 
 //
+// Boot
+//
+
+@import "core/boot.less";
+@import "core/brand.less";
+@import "core/utility.less";
+@import "core/animations.less";
+
+//
+// Backend Components
+//
+
+@import "../foundation/controls/build.less";
+@import "../foundation/elements/build.less";
+@import "../foundation/migrate/build.less";
+
+//
+// Shared Toolbox Components
+//
+
+@import "../../../system/assets/toolbox/elements/build.css";
+
+//
+// Global Widgets
+//
+
+@import "../../widgets/lists/assets/less/list.less";
+@import "../../widgets/filter/assets/less/filter.less";
+@import "../../widgets/form/assets/less/form.less";
+
+//
 // October Controls
 //
 
@@ -15,7 +46,6 @@
 @import "controls/common.less";
 @import "controls/reportwidgets.less";
 @import "controls/treelist.less";
-@import "controls/treeview.less";
 @import "controls/sidenav-tree.less";
 @import "controls/panels.less";
 @import "controls/selector-group.less";
@@ -25,35 +55,12 @@
 @import "controls/svg-icons.less";
 @import "controls/snackbars.less";
 @import "controls/tooltips.less";
-@import "controls/action-buttons.less";
 @import "controls/backend-toolbar-buttons.less";
 @import "controls/menu-mode-selector.less";
-
-//
-// October Elements
-//
-
-@import "elements/content-placeholder.less";
-
-//
-// October Storm UI
-//
-
-@import "../../../system/assets/ui/less/global.less";
-
-//
-// Combines layout and vendor styles
-//
-
-// Core (shared elements)
-@import "core/animations.less";
-
-// Boot variables and mixins
-@import "core/variables.less";
-@import "core/mixins.less";
+@import "controls/color-mode-selector.less";
+@import "controls/onboarding.less";
 
 // Layout
-@import "layout/mixins.less";
 @import "layout/layout.less";
 @import "layout/flexlayout.less";
 @import "layout/mainmenu.items.less";
@@ -62,6 +69,7 @@
 @import "layout/mainmenu.left.less";
 @import "layout/mainmenu.submenu.dropdown.less";
 @import "layout/mainmenu.responsive.less";
+@import "layout/mainmenu.logo.less";
 @import "layout/sidenav.less";
 @import "layout/sidenav-responsive.less";
 @import "layout/sidepanel.less";
@@ -69,5 +77,5 @@
 @import "layout/outerlayout.less";
 @import "layout/fancylayout.less";
 @import "layout/formdocumentlayout.less";
+@import "layout/form-with-sidebar.less";
 @import "layout/flyout.less";
-@import "layout/sprite-icons.less";

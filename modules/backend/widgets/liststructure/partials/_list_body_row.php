@@ -7,6 +7,7 @@
 <tr
     class="<?= $treeLevelClass ?> <?= $this->getRowClass($record) ?>"
     data-tree-id="<?= $record->getKey() ?>"
+    data-tree-root-id="<?= $record->site_root_id ?: $record->getKey() ?>"
     data-tree-level="<?= $treeLevel ?>"
     data-tree-expanded="<?= $expanded ? 'true' : 'false' ?>"
     data-tree-children="<?= $childCount ?>"
@@ -32,7 +33,7 @@
                 $classes[] = 'nolink';
             }
 
-            $isLastWithSetup = $showSetup && $index === $total;
+            $isLastWithoutStructure = $expandLastColumn && !$useStructure && $index === $total;
 
             $styles = '';
             $isTreeCell = $index === 1 && $useStructure;
@@ -41,7 +42,7 @@
                 $styles = 'padding-left:'.$this->getIndentStartSize($treeLevel).'px';
             }
         ?>
-        <td class="<?= implode(' ', $classes) ?>" style="<?= $styles ?>" <?= $isLastWithSetup ? 'colspan="2"' : '' ?>>
+        <td class="<?= implode(' ', $classes) ?>" style="<?= $styles ?>" <?= $isLastWithoutStructure ? 'colspan="2"' : '' ?>>
             <?php if ($isTreeCell): ?>
                 <?= $this->makePartial('list_body_tree', [
                     'treeLevel' => $treeLevel,
@@ -59,6 +60,9 @@
             <?php endif ?>
         </td>
     <?php endforeach ?>
+    <?php if (!$expandLastColumn && !$useStructure): ?>
+        <td></td>
+    <?php endif ?>
 </tr>
 
 <?php if ($showTree && $expanded): ?>

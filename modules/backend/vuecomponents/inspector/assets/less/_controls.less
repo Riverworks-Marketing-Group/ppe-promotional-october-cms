@@ -14,14 +14,16 @@
         width: 100%;
         box-sizing: border-box;
         outline: none;
+        background-color: transparent;
+        color: @input-color;
 
         &[readonly] {
-            color: @color-grey-6-darker!important;
+            color: @input-disabled-color !important;
         }
 
         &.clickable {
             cursor: pointer;
-            .user-select(none);
+            user-select: none;
 
             &[readonly] {
                 cursor: default;
@@ -36,19 +38,11 @@
 
         &.placeholder {
             color: @inspector-placeholder-color;
+            background-color: transparent;
         }
 
-        &::-webkit-input-placeholder {
-            color: @inspector-placeholder-color!important;
-        }
-        &::-moz-placeholder {
-            color: @inspector-placeholder-color!important;
-        }
-        &:-ms-input-placeholder {
-            color: @inspector-placeholder-color!important;
-        }
         &::placeholder {
-            color: @inspector-placeholder-color!important;
+            color: @inspector-placeholder-color !important;
         }
     }
 
@@ -72,7 +66,7 @@
 
         &:before {
             .icon-OctoFont();
-            content: @octo-icon-cross;
+            content: @icon-cross;
             font-size: 13px;
             display: inline-block;
             position: absolute;

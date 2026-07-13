@@ -15,9 +15,21 @@ div.mainmenu-account-avatar {
     vertical-align: middle;
 
     img {
-        width: 40px;
-        height: 40px;
-        vertical-align: top;
+        width: 42px;
+        height: 42px;
         display: block;
+    }
+}
+
+.mainmenu-account {
+    &.active-dropdown div.mainmenu-account-avatar {
+        box-shadow: 0 0 4px 0 @link-color;
+    }
+}
+
+.layout-mainmenu {
+    .control-toolbar .toolbar-item.toolbar-primary {
+        &:before { left: 0; }
+        &:after { right: 0; }
     }
 }

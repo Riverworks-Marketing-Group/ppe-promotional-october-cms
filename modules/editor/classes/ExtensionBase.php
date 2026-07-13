@@ -1,5 +1,6 @@
 <?php namespace Editor\Classes;
 
+use Backend\Helpers\Inspector as InspectorHelper;
 use Backend\VueComponents\TreeView\SectionList;
 
 /**
@@ -11,6 +12,7 @@ use Backend\VueComponents\TreeView\SectionList;
 abstract class ExtensionBase
 {
     use \System\Traits\EventEmitter;
+    use \Editor\Traits\FileSystemFunctions;
 
     /**
      * getNamespace returns unique extension namespace, for example 'cms'.
@@ -105,30 +107,34 @@ abstract class ExtensionBase
     /**
      * runCommand handles client-side requests
      */
-    public function runCommand($command)
+    public function runCommand($command, $controller)
     {
         $commandName = 'command_'.$command;
-        return $this->$commandName();
+        return $this->$commandName($controller);
     }
 
     /**
-     * loadSettingsFile
+     * getExtensionSortOrder affects the extension position in the Editor Navigator
      */
-    protected function loadSettingsFile(string $rootPath, string $documentDirectoryName)
+    public function getExtensionSortOrder()
     {
-        $path = $rootPath.'/'.$documentDirectoryName.'/settings-fields.json';
+        return 10;
+    }
 
-        if (file_exists($path)) {
-            return $this->loadAndLocalizeJsonFile($path);
-        }
-
-        return [];
+    /**
+     * loadSettingsFields
+     */
+    protected function loadSettingsFields(string $fieldsClass): array
+    {
+        return InspectorHelper::getPropertyConfig(
+            (new $fieldsClass)->defineSettingsFields()
+        );
     }
 
     /**
      * loadAndLocalizeJsonFile
      */
-    protected function loadAndLocalizeJsonFile($path)
+    protected function loadAndLocalizeJsonFile(string $path): array
     {
         $contents = json_decode(file_get_contents($path), true);
 

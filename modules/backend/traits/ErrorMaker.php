@@ -1,6 +1,9 @@
 <?php namespace Backend\Traits;
 
+use Log;
 use System\Classes\ErrorHandler;
+use October\Rain\Exception\ApplicationException;
+use Illuminate\Validation\ValidationException;
 
 /**
  * ErrorMaker Trait adds exception based methods to a class, goes well with `System\Traits\ViewMaker`
@@ -11,7 +14,7 @@ use System\Classes\ErrorHandler;
 trait ErrorMaker
 {
     /**
-     * @var string fatalError stores the object used for a fatal error.
+     * @var string|null fatalError stores the object used for a fatal error.
      */
     protected $fatalError;
 
@@ -36,6 +39,13 @@ trait ErrorMaker
      */
     public function handleError($exception)
     {
+        if (
+            !$exception instanceof ApplicationException &&
+            !$exception instanceof ValidationException
+        ) {
+            Log::error($exception);
+        }
+
         $errorMessage = ErrorHandler::getDetailedMessage($exception);
         $this->fatalError = $errorMessage;
         $this->vars['fatalError'] = $errorMessage;

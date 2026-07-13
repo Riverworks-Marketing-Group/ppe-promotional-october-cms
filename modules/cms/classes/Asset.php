@@ -3,6 +3,7 @@
 use File;
 use Lang;
 use Config;
+use System;
 use Request;
 use Cms\Helpers\File as FileHelper;
 use October\Rain\Extension\Extendable;
@@ -242,9 +243,7 @@ class Asset extends Extendable
         if (!File::isFile($filePath)) {
             // Look at parent
             if ($parentTheme = $this->theme->getParentTheme()) {
-
                 $foundTheme = $parentTheme;
-
                 $filePath = $parentTheme->getPath().'/'.$this->dirName.'/'.$fileName;
 
                 if (!File::isFile($filePath)) {
@@ -313,7 +312,7 @@ class Asset extends Extendable
 
         $dirPath = $this->theme->getPath().'/'.$this->dirName;
         if (!file_exists($dirPath) || !is_dir($dirPath)) {
-            if (!File::makeDirectory($dirPath, 0777, true, true)) {
+            if (!File::makeDirectory($dirPath, 0755, true, true)) {
                 throw new ApplicationException(Lang::get(
                     'cms::lang.cms_object.error_creating_directory',
                     ['name'=>$dirPath]
@@ -324,7 +323,7 @@ class Asset extends Extendable
         if (($pos = strpos($this->fileName, '/')) !== false) {
             $dirPath = dirname($fullPath);
 
-            if (!is_dir($dirPath) && !File::makeDirectory($dirPath, 0777, true, true)) {
+            if (!is_dir($dirPath) && !File::makeDirectory($dirPath, 0755, true, true)) {
                 throw new ApplicationException(Lang::get(
                     'cms::lang.cms_object.error_creating_directory',
                     ['name'=>$dirPath]
@@ -461,10 +460,14 @@ class Asset extends Extendable
         $defaultTypes =  ['css', 'js', 'less', 'sass', 'scss'];
 
         $configTypes = Config::get('cms.editable_asset_types');
-        if (!$configTypes) {
-            return $defaultTypes;
+        if ($configTypes) {
+            $defaultTypes = $configTypes;
         }
 
-        return $configTypes;
+        if (System::checkSafeMode()) {
+            $defaultTypes = array_diff($defaultTypes, ['less', 'sass', 'scss']);
+        }
+
+        return array_values($defaultTypes);
     }
 }

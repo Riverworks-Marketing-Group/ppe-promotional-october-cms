@@ -1,7 +1,7 @@
 /*
  * Vue Inspector text control implementation
  */
-$.oc.module.register('backend.component.inspector.control.text', function () {
+oc.Modules.register('backend.component.inspector.control.text', function () {
     Vue.component('backend-component-inspector-control-text', {
         extends: $.oc.vueComponentHelpers.inspector.controlBase,
         props: {
@@ -110,7 +110,9 @@ $.oc.module.register('backend.component.inspector.control.text', function () {
             },
             presetValue: function onPresetValueChanged(value) {
                 if (value !== undefined) {
-                    this.setManagedValue(this.$refs.input.value);
+                    Vue.nextTick(() => {
+                        this.setManagedValue(this.$refs.input.value);
+                    });
                 }
             },
             'layoutUpdateData.updateValue': function onLayoutUpdateValueChanged() {

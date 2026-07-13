@@ -2,7 +2,7 @@
 
 use Illuminate\Console\Command;
 use System\Classes\UpdateManager;
-use Symfony\Component\Console\Input\InputOption;
+use October\Rain\Database\Updater;
 
 /**
  * OctoberMigrate migrates the database up or down.
@@ -14,10 +14,14 @@ use Symfony\Component\Console\Input\InputOption;
  */
 class OctoberMigrate extends Command
 {
+    use \Illuminate\Console\ConfirmableTrait;
+
     /**
-     * @var string name of console command
+     * @var string signature for the console command.
      */
-    protected $name = 'october:migrate';
+    protected $signature = 'october:migrate {--f|force : Force the operation to run.}
+        {--r|rollback : Destroys all database tables and records.}
+        {--skip-errors : Continue with migration through exceptions.}';
 
     /**
      * @var string description of the console command
@@ -29,16 +33,22 @@ class OctoberMigrate extends Command
      */
     public function handle()
     {
+        $skipErrors = $this->option('skip-errors');
+        if ($skipErrors) {
+            Updater::skipErrors();
+        }
+
         if ($this->option('rollback')) {
             return $this->handleRollback();
         }
 
-        $this->output->writeln('<info>Migrating application and plugins...</info>');
+        $this->line('Migrating Application and Plugins');
 
-        UpdateManager::instance()
-            ->setNotesOutput($this->output)
-            ->update()
-        ;
+        UpdateManager::instance()->setNotesCommand($this)->update();
+
+        if ($skipErrors) {
+            Updater::skipErrors(false);
+        }
     }
 
     /**
@@ -46,42 +56,20 @@ class OctoberMigrate extends Command
      */
     protected function handleRollback()
     {
-        if ($this->userAbortedFromWarning()) {
+        if (!$this->confirmToProceed('This will DESTROY all database tables.')) {
             return;
         }
 
-        UpdateManager::instance()
-            ->setNotesOutput($this->output)
-            ->uninstall()
-        ;
+        UpdateManager::instance()->setNotesCommand($this)->uninstall();
     }
 
     /**
-     * userAbortedFromWarning
+     * getDefaultConfirmCallback specifies the default confirmation callback
      */
-    protected function userAbortedFromWarning(): bool
+    protected function getDefaultConfirmCallback()
     {
-        // Bypass from force
-        if ($this->option('force', false)) {
-            return false;
-        }
-
-        // Warn user
-        if (!$this->confirm('This will DESTROY all database tables.')) {
+        return function() {
             return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * getOptions get the console command options
-     */
-    protected function getOptions()
-    {
-        return [
-            ['force', 'f', InputOption::VALUE_NONE, 'Force the operation to run.'],
-            ['rollback', 'r', InputOption::VALUE_NONE, 'Destroys all database tables and records.'],
-        ];
+        };
     }
 }

@@ -1,7 +1,5 @@
 <?php
 
-use System\Classes\PluginManager;
-
 class CoreLangTest extends TestCase
 {
     public function testValidationTranslator()
@@ -18,7 +16,7 @@ class CoreLangTest extends TestCase
 
         $messages = $validator->messages();
         $this->assertCount(1, $messages);
-        $this->assertEquals('The name must be at least 5 characters.', $messages->all()[0]);
+        $this->assertEquals('The name field must be at least 5 characters.', $messages->all()[0]);
     }
 
     public function testValidCoreLanguageFiles()
@@ -41,6 +39,12 @@ class CoreLangTest extends TestCase
                     $messages = require $srcPath;
                     $this->assertNotEmpty($messages);
                     $this->assertNotCount(0, $messages);
+                }
+
+                $jsonPath = base_path() . '/modules/'.$module.'/lang/'.$locale.'.json';
+                if (file_exists($jsonPath)) {
+                    $jsonOut = json_decode(file_get_contents($jsonPath));
+                    $this->assertNotEmpty($jsonOut, "Invalid JSON found in [{$locale}.json] for module [{$module}].");
                 }
             }
         }

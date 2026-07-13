@@ -24,9 +24,7 @@ trait PropertyContainer
     {
         $definedProperties = $this->defineProperties() ?: [];
 
-        /*
-         * Determine and implement default values
-         */
+        // Determine and implement default values
         $defaultProperties = [];
 
         foreach ($definedProperties as $name => $information) {
@@ -82,8 +80,8 @@ trait PropertyContainer
     /**
      * property returns a defined property value or default if one is not set.
      * @param string $name The property name to look for.
-     * @param string $default A default value to return if no name is found.
-     * @return string The property value or the default specified.
+     * @param ?string $default A default value to return if no name is found.
+     * @return ?string The property value or the default specified.
      */
     public function property($name, $default = null)
     {

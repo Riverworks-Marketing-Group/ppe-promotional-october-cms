@@ -1,11 +1,13 @@
-$.oc.module.register('backend.vuecomponents.richeditordocumentconnector.formwidget', function () {
+oc.Modules.register('backend.vuecomponents.richeditordocumentconnector.formwidget', function() {
     'use strict';
 
-    var FormWidget = function () {
-        function FormWidget(element, options, changeCallback) {
-            babelHelpers.classCallCheck(this, FormWidget);
+    class FormWidget {
+        constructor(element, options, changeCallback) {
+            const widgetConnectorClass = Vue.extend(
+                Vue.options.components['backend-component-richeditor-document-connector-formwidgetconnector']
+            );
 
-            var widgetConnectorClass = Vue.extend(Vue.options.components['backend-component-richeditor-document-connector-formwidgetconnector']);
+            this.element = element;
 
             this.connectorInstance = new widgetConnectorClass({
                 propsData: {
@@ -17,16 +19,18 @@ $.oc.module.register('backend.vuecomponents.richeditordocumentconnector.formwidg
             });
 
             if (changeCallback) {
-                this.connectorInstance.$on('change', function () {
+                this.connectorInstance.$on('change', function() {
                     changeCallback();
                 });
             }
 
-            this.connectorInstance.$on('focus', function () {
+            this.element.addEventListener('change', this.onChangeTextarea);
+
+            this.connectorInstance.$on('focus', function() {
                 $(element).closest('.editor-write').addClass('editor-focus');
             });
 
-            this.connectorInstance.$on('blur', function () {
+            this.connectorInstance.$on('blur', function() {
                 $(element).closest('.editor-write').removeClass('editor-focus');
             });
 
@@ -34,33 +38,34 @@ $.oc.module.register('backend.vuecomponents.richeditordocumentconnector.formwidg
             element.parentNode.appendChild(this.connectorInstance.$el);
         }
 
-        babelHelpers.createClass(FormWidget, [{
-            key: 'getEditor',
-            value: function getEditor() {
-                if (this.connectorInstance) {
-                    return this.connectorInstance.getEditor();
-                }
-            }
-        }, {
-            key: 'setContent',
-            value: function setContent(str) {
-                if (this.connectorInstance) {
-                    this.connectorInstance.setContent(str);
-                }
-            }
-        }, {
-            key: 'remove',
-            value: function remove() {
-                if (this.connectorInstance) {
-                    this.connectorInstance.$destroy();
-                    $(this.connectorInstance.$el).remove();
-                }
+        onChangeTextarea = () => {
+            this.setContent(this.element.value);
+        }
 
-                this.connectorInstance = null;
+        getEditor() {
+            if (this.connectorInstance) {
+                return this.connectorInstance.getEditor();
             }
-        }]);
-        return FormWidget;
-    }();
+        }
+
+        setContent(str) {
+            if (this.connectorInstance) {
+                this.connectorInstance.setContent(str);
+            }
+        }
+
+        remove() {
+            this.element.removeEventListener('change', this.onChangeTextarea);
+
+            if (this.connectorInstance) {
+                this.connectorInstance.$destroy();
+                $(this.connectorInstance.$el).remove();
+            }
+
+            this.connectorInstance = null;
+            this.element = null;
+        }
+    }
 
     return FormWidget;
 });

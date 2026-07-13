@@ -1,8 +1,8 @@
 .field-mediafinder {
     .mediafinder-control-container {
-        .border-radius(@input-border-radius);
-        border: 1px solid @color-form-field-border;
-        background: white;
+        border-radius: @input-border-radius;
+        border: 1px solid @input-border;
+        background: @input-bg;
 
         .mediafinder-control-toolbar {
             padding: 3px;
@@ -17,6 +17,8 @@
         }
 
         &.external-toolbar {
+            background: transparent;
+
             .mediafinder-control-toolbar {
                 display: none;
             }
@@ -28,7 +30,7 @@
 
     &.is-populated {
         .mediafinder-control-toolbar {
-            border-bottom: 1px solid @color-grey-3;
+            border-bottom: 1px solid @toolbar-border;
 
             .backend-toolbar-button.populated-only {
                 display: inline-block;
@@ -43,6 +45,10 @@
     }
 
     &.is-preview {
+        .mediafinder-control-container {
+            background-color: @input-disabled-bg;
+        }
+
         .mediafinder-control-toolbar {
             display: none;
         }

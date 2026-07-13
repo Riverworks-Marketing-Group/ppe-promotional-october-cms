@@ -1,10 +1,19 @@
 <?php namespace Backend\Classes;
 
+use Html;
 use October\Rain\Element\Navigation\ItemDefinition;
-use October\Rain\Exception\SystemException;
 
 /**
  * MainMenuItem
+ *
+ * @method MainMenuItem owner(string $owner) owner
+ * @method MainMenuItem iconSvg(null|string $iconSvg) iconSvg
+ * @method MainMenuItem counter(mixed $counter) counter
+ * @method MainMenuItem counterLabel(null|string $counterLabel) counterLabel
+ * @method MainMenuItem attributes(array $attributes) attributes
+ * @method MainMenuItem permissions(array $permissions) permissions
+ * @method MainMenuItem sideMenu(SideMenuItem[] $sideMenu) sideMenu
+ * @method MainMenuItem useDropdown(bool $useDropdown) useDropdown
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -12,58 +21,30 @@ use October\Rain\Exception\SystemException;
 class MainMenuItem extends ItemDefinition
 {
     /**
-     * @var string owner
+     * initDefaultValues for this scope
      */
-    public $owner;
-
-    /**
-     * @var null|string iconSvg
-     */
-    public $iconSvg;
-
-    /**
-     * @var mixed counter
-     */
-    public $counter;
-
-    /**
-     * @var null|string counterLabel
-     */
-    public $counterLabel;
-
-    /**
-     * @var array permissions
-     */
-    public $permissions = [];
-
-    /**
-     * @var SideMenuItem[] sideMenu
-     */
-    public $sideMenu = [];
-
-    /**
-     * evalConfig
-     */
-    protected function evalConfig($config): void
+    protected function initDefaultValues()
     {
-        parent::evalConfig($config);
+        parent::initDefaultValues();
 
-        $this->owner = $config['owner'] ?? $this->owner;
-        $this->iconSvg = $config['iconSvg'] ?? $this->iconSvg;
-        $this->counter = $config['counter'] ?? $this->counter;
-        $this->counterLabel = $config['counterLabel'] ?? $this->counterLabel;
-        $this->permissions = $config['permissions'] ?? $this->permissions;
-        $this->order = $config['order'] ?? 500;
+        $this
+            ->order(500)
+            ->permissions([])
+            ->sideMenu([])
+            ->useDropdown(true)
+        ;
     }
 
     /**
      * addPermission
+     * @deprecated recommend not using this method until v4 when signature is fixed
+     * should be a non-associative array
      * @param string $permission
      * @param array $definition
      */
     public function addPermission(string $permission, array $definition)
     {
-        $this->permissions[$permission] = $definition;
+        $this->config['permissions'][$permission] = $definition;
     }
 
     /**
@@ -72,22 +53,15 @@ class MainMenuItem extends ItemDefinition
      */
     public function addSideMenuItem(SideMenuItem $sideMenu)
     {
-        $this->sideMenu[$sideMenu->code] = $sideMenu;
+        $this->config['sideMenu'][$sideMenu->code] = $sideMenu;
     }
 
     /**
      * getSideMenuItem
-     * @param string $code
-     * @return SideMenuItem
-     * @throws SystemException
      */
-    public function getSideMenuItem(string $code)
+    public function getSideMenuItem(string $code): ?SideMenuItem
     {
-        if (!array_key_exists($code, $this->sideMenu)) {
-            throw new SystemException('No sidenavigation item available with code ' . $code);
-        }
-
-        return $this->sideMenu[$code];
+        return $this->config['sideMenu'][$code] ?? null;
     }
 
     /**
@@ -96,6 +70,30 @@ class MainMenuItem extends ItemDefinition
      */
     public function removeSideMenuItem(string $code)
     {
-        unset($this->sideMenu[$code]);
+        unset($this->config['sideMenu'][$code]);
+    }
+
+    /**
+     * itemAttributes returns HTML attributes for the list item
+     */
+    public function itemAttributes(): string
+    {
+        if ($this->attributes === null) {
+            return '';
+        }
+
+        return Html::attributes(array_except($this->attributes, ['target']));
+    }
+
+    /**
+     * linkAttributes returns HTML for the anchor link
+     */
+    public function linkAttributes(): string
+    {
+        if (!isset($this->attributes['target'])) {
+            return '';
+        }
+
+        return Html::attributes(array_only($this->attributes, ['target']));
     }
 }

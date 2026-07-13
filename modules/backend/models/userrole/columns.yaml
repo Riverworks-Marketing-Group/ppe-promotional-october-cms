@@ -34,3 +34,9 @@ columns:
         searchable: true
         invisible: true
         type: datetime
+
+    color_background:
+        shortLabel: ''
+        cssClass: text-end
+        type: colorpicker
+        sortable: false

@@ -1,17 +1,21 @@
 <?php namespace System\Widgets;
 
-use Lang;
+use Ui;
+use Log;
 use Flash;
+use System;
 use Backend;
 use Redirect;
-use Exception;
-use ApplicationException;
 use Cms\Classes\ThemeManager;
-use Backend\Classes\WidgetBase;
 use System\Classes\UpdateManager;
-use System\Classes\PluginManager;
 use System\Models\PluginVersion;
-use October\Rain\Process\Composer as ComposerProcess;
+use System\Classes\PluginManager;
+use October\Rain\Composer\Manager as ComposerManager;
+use Backend\Classes\WidgetBase;
+use System\Helpers\Cache as CacheHelper;
+use ApplicationException;
+use AjaxException;
+use Exception;
 
 /**
  * Updater widget
@@ -32,8 +36,8 @@ class Updater extends WidgetBase
      */
     protected function loadAssets()
     {
-        $this->addCss('css/updater.css', 'core');
-        $this->addJs('js/updater.js', 'core');
+        $this->addCss('css/updater.css');
+        $this->addJs('js/updater.js');
     }
 
     /**
@@ -44,96 +48,91 @@ class Updater extends WidgetBase
         return '';
     }
 
-    public function composerActionUrl()
-    {
-        return $this->controller->actionUrl('composer');
-    }
-
     /**
-     * handleComposerAction is the logic for the composer iframe route
-     * This logic should be added to the controller:
-     *
-     *     public function composer()
-     *     {
-     *         return $this->updaterWidget->handleComposerAction();
-     *     }
+     * renderWarnings warnings provided by the updater
      */
-    public function handleComposerAction()
+    public function renderWarnings(): string
     {
-        $this->controller->suppressLayout = true;
+        try {
+            $deps = PluginManager::instance()->findMissingDependencies();
 
-        ini_set('max_input_time', 0);
-        ini_set('max_execution_time', 0);
-
-        while (@ob_end_flush());
-
-        $composer = new ComposerProcess;
-
-        $composer->setCallback(function($msg) {
-            if ($nMsg = $this->processOutput($msg)) {
-                if ($this->checkIgnoreOutput($nMsg)) {
-                    return;
-                }
-
-                echo '<line>'.trim($nMsg).'</line>' . PHP_EOL;
-                flush();
+            if (System::hasModule('Cms')) {
+                $themeDeps = ThemeManager::instance()->findMissingDependencies();
+                $deps = array_unique(array_merge($deps, $themeDeps));
             }
-        });
-
-        flush();
-
-        $actionCode = get('code');
-
-        switch ($actionCode) {
-            case 'updateCore':
-                $composer->update();
-                break;
-
-            case 'installTheme':
-            case 'installPlugin':
-                $composer->require(get('packages'));
-                break;
-
-            case 'removeTheme':
-            case 'removePlugin':
-                $composer->remove(get('packages'));
-                break;
-
-            default:
-                echo "<exit>Unknown code {$actionCode}</exit>";
-                return;
+        }
+        catch (Exception $ex) {
+            return '';
         }
 
-        echo "<exit>{$composer->lastExitCode()}</exit>";
+        if (!$deps) {
+            return '';
+        }
+
+        if (System::checkProjectValid(1|16)) {
+            return (string) Ui::callout()
+                ->info()
+                ->label(__("License is unpaid or has expired. Please visit octobercms.com to obtain a license."))
+                ->action(
+                    Ui::popupButton("Renew License", 'onRenewOctoberCmsLicense')->success()
+                );
+        }
+
+        return (string) Ui::callout()
+            ->danger()
+            ->label(__('There are missing dependencies needed for the system to run correctly.'))
+            ->action(
+                Ui::popupButton(__('Check Dependencies'), $this->getEventHandler('onCheckDependencies'))
+                    ->attachLoading()
+                    ->danger()
+            );
     }
 
     /**
-     * checkIgnoreOutput checks for any unrelated composer messages
-     * and is used to ignore them
+     * onCheckDependencies for the system
      */
-    protected function checkIgnoreOutput($message): bool
+    public function onCheckDependencies()
     {
-        if (strlen(trim($message)) === 0) {
-            return true;
+        $deps = PluginManager::instance()->findMissingDependencies();
+
+        if (System::hasModule('Cms')) {
+            $themeDeps = ThemeManager::instance()->findMissingDependencies();
+            $deps = array_unique(array_merge($deps, $themeDeps));
         }
 
-        if (starts_with($message, [
-            'Warning from',
-            'Warning: Accessing',
-            'Loading from cache',
-            'Downloading',
-            'Reading composer.json of'
-        ])) {
-            return true;
+        return $this->makePartial('require_form', ['deps' => $deps]);
+    }
+
+    /**
+     * onInstallDependencies for the system
+     */
+    public function onInstallDependencies()
+    {
+        try {
+            $deps = (array) post('deps', []);
+            $updateSteps = [];
+
+            foreach ($deps as $code) {
+                $updateSteps[] = [
+                    'code' => 'installPlugin',
+                    'label' => __('Installing plugin: :name', ['name' => $code]),
+                    'name' => $code
+                ];
+            }
+
+            $updateSteps[] = [
+                'code' => 'completeUpdate',
+                'label' => __('Finishing update process'),
+                'type' => 'final'
+            ];
+
+            $this->vars['updateSteps'] = $updateSteps;
+        }
+        catch (Exception $ex) {
+            $this->handleError($ex);
         }
 
-        if (ends_with($message, [
-            'No replacement was suggested.'
-        ])) {
-            return true;
-        }
-
-        return false;
+        return $this->makePartial('execute');
     }
 
     /**
@@ -155,6 +154,7 @@ class Updater extends WidgetBase
             $result = $this->processImportantUpdates($result);
 
             $this->vars['core'] = $result['core'] ?? false;
+            $this->vars['needsLicense'] = $result['canUpdate'] ?? false;
             $this->vars['hasUpdates'] = $result['hasUpdates'] ?? false;
             $this->vars['hasImportantUpdates'] = $result['hasImportantUpdates'] ?? false;
             $this->vars['pluginList'] = $result['plugins'] ?? [];
@@ -177,19 +177,18 @@ class Updater extends WidgetBase
 
             $updateSteps = [];
 
-            foreach ($installPackages as $composerCode) {
+            foreach ($installPackages as $code => $installPackage) {
                 $updateSteps[] = [
-                    'type'  => 'composer',
-                    'code'  => 'installPlugin',
-                    'label' => Lang::get('system::lang.updates.plugin_downloading', ['name' => $composerCode]),
-                    'name'  => $composerCode
+                    'code' => 'installPlugin',
+                    'label' => __('Installing plugin: :name', ['name' => $code]),
+                    'name' => $code
                 ];
             }
 
             $updateSteps[] = [
-                'type'  => 'final',
                 'code' => 'completeUpdate',
-                'label' => Lang::get('system::lang.updates.update_completing'),
+                'label' => __('Finishing update process'),
+                'type' => 'final'
             ];
 
             $this->vars['updateSteps'] = $updateSteps;
@@ -209,14 +208,21 @@ class Updater extends WidgetBase
         try {
             $updateSteps = [
                 [
-                    'type'  => 'composer',
-                    'code'  => 'updateCore',
-                    'label' => Lang::get('system::lang.updates.core_downloading')
+                    'code' => 'updateComposer',
+                    'label' => __('Updating package manager')
                 ],
                 [
-                    'type'  => 'final',
+                    'code' => 'updateCore',
+                    'label' => __('Updating application files')
+                ],
+                [
+                    'code' => 'setBuild',
+                    'label' => __('Setting build number')
+                ],
+                [
                     'code' => 'completeUpdate',
-                    'label' => Lang::get('system::lang.updates.update_completing'),
+                    'label' => __('Finishing update process'),
+                    'type' => 'final'
                 ]
             ];
 
@@ -236,24 +242,19 @@ class Updater extends WidgetBase
     {
         try {
             if (!$code = trim(post('code'))) {
-                throw new ApplicationException(Lang::get('system::lang.install.missing_plugin_name'));
-            }
-
-            if (!$composerCode = $this->findPluginComposerCode($code)) {
-                throw new ApplicationException(Lang::get('system::lang.updates.plugin_not_found'));
+                throw new ApplicationException(__('Please specify a Plugin name to install.'));
             }
 
             $updateSteps = [
                 [
-                    'type'  => 'composer',
-                    'code'  => 'installPlugin',
-                    'label' => Lang::get('system::lang.updates.plugin_downloading', ['name' => $composerCode]),
-                    'name'  => $composerCode
+                    'code' => 'installPlugin',
+                    'label' => __('Installing plugin: :name', ['name' => $code]),
+                    'name' => $code
                 ],
                 [
-                    'type'  => 'final',
-                    'code'  => 'completeInstall',
-                    'label' => Lang::get('system::lang.install.install_completing'),
+                    'code' => 'completeInstall',
+                    'label' => __('Finishing installation process'),
+                    'type' => 'final'
                 ]
             ];
 
@@ -274,24 +275,19 @@ class Updater extends WidgetBase
     {
         try {
             if (!$code = trim(post('code'))) {
-                throw new ApplicationException(Lang::get('system::lang.install.missing_plugin_name'));
-            }
-
-            if (!$composerCode = $this->findPluginComposerCode($code)) {
-                throw new ApplicationException(Lang::get('system::lang.updates.plugin_not_found'));
+                throw new ApplicationException(__('Please specify a Plugin name to install.'));
             }
 
             $updateSteps = [
                 [
-                    'type'  => 'composer',
-                    'code'  => 'removePlugin',
-                    'label' => Lang::get('system::lang.updates.plugin_removing', ['name' => $composerCode]),
-                    'name'  => $composerCode
+                    'code' => 'removePlugin',
+                    'label' => __('Removing plugin: :name', ['name' => $code]),
+                    'name' => $code
                 ],
                 [
-                    'type'  => 'final',
-                    'code'  => 'completeInstall',
-                    'label' => Lang::get('system::lang.install.install_completing'),
+                    'code' => 'completeUpdate',
+                    'label' => __('Finishing installation process'),
+                    'type' => 'final'
                 ]
             ];
 
@@ -306,32 +302,131 @@ class Updater extends WidgetBase
     }
 
     /**
+     * onInstallThemeCheck requests information from the user about how to install the theme
+     */
+    public function onInstallThemeCheck()
+    {
+        try {
+            // Locate theme remotely
+            if (!$code = trim(post('code'))) {
+                throw new ApplicationException(__('Please specify a Theme name to install.'));
+            }
+            $manager = UpdateManager::instance();
+            $details = $manager->requestThemeDetails($code);
+            $deps = $this->findProposedDependencies($details['require'] ?? []);
+
+            // Build form
+            $formWidget = $this->getThemeCheckFormWidget();
+            if (count($deps)) {
+                $formWidget->getField('install_requirements')->hidden(false)->options(array_combine($deps, $deps));
+                $formWidget->getField('_requirements_ruler')->hidden(false);
+            }
+
+            $this->vars['code'] = $code;
+            $this->vars['formWidget'] = $formWidget;
+
+            return $this->makePartial('theme_check_form');
+        }
+        catch (Exception $ex) {
+            $this->handleError($ex);
+            return $this->makePartial('theme_form');
+        }
+    }
+
+    /**
+     * findProposedDependencies checks a response `require` object for missing plugins
+     */
+    protected function findProposedDependencies($require): array
+    {
+        $pluginManager = PluginManager::instance();
+        if (!is_array($require)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($require as $r) {
+            if (!isset($r['code'])) {
+                continue;
+            }
+
+            if ($pluginManager->hasPlugin($r['code'])) {
+                continue;
+            }
+
+            $result[] = $r['code'];
+        }
+
+        return $result;
+    }
+
+    /**
+     * getThemeCheckFormWidget
+     */
+    protected function getThemeCheckFormWidget()
+    {
+        $config = $this->makeConfig('~/modules/system/widgets/updater/fields-theme-check.yaml');
+        $config->model = new \Model;
+        $widget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
+        $widget->bindToController();
+        return $widget;
+    }
+
+    /**
      * onInstallTheme validates the theme code and execute the theme installation
      */
     public function onInstallTheme()
     {
         try {
             if (!$code = trim(post('code'))) {
-                throw new ApplicationException(Lang::get('system::lang.install.missing_theme_name'));
+                throw new ApplicationException(__('Please specify a Theme name to install.'));
             }
 
-            if (!$composerCode = $this->findThemeComposerCode($code)) {
-                throw new ApplicationException(Lang::get('system::lang.updates.theme_not_found'));
+            $updateSteps = [];
+
+            if (post('install_requirements')) {
+                $deps = (array) post('install_requirements', []);
+                foreach ($deps as $pluginCode) {
+                    $updateSteps[] = [
+                        'code' => 'installPlugin',
+                        'label' => __('Installing plugin: :name', ['name' => $pluginCode]),
+                        'name' => $pluginCode
+                    ];
+                }
             }
 
-            $updateSteps = [
-                [
-                    'type'  => 'composer',
-                    'code'  => 'installTheme',
-                    'label' => Lang::get('system::lang.updates.theme_downloading', ['name' => $composerCode]),
-                    'name'  => $composerCode
-                ],
-                [
-                    'type'  => 'final',
-                    'code'  => 'completeUpdate',
-                    'label' => Lang::get('system::lang.install.install_completing'),
-                    'name'  => $code
-                ]
+            if (post('install_strategy') === 'composer') {
+                $updateSteps[] = [
+                    'code' => 'installTheme',
+                    'label' => __('Installing theme: :name', ['name' => $code]),
+                    'name' => $code
+                ];
+            }
+            else {
+                $updateSteps[] = [
+                    'code' => 'downloadTheme',
+                    'label' => __('Installing theme: :name', ['name' => $code]),
+                    'name' => $code
+                ];
+
+                $updateSteps[] = [
+                    'code' => 'extractTheme',
+                    'label' => __('Extracting theme: :name', ['name' => $code]),
+                    'name' => $code
+                ];
+            }
+
+            if (post('seed_theme_data')) {
+                $updateSteps[] = [
+                    'code' => 'seedTheme',
+                    'label' => __('Seeding theme: :name', ['name' => $code]),
+                    'name' => $code
+                ];
+            }
+
+            $updateSteps[] = [
+                'code' => 'completeInstall',
+                'label' => __('Finishing installation process'),
+                'type' => 'final'
             ];
 
             $this->vars['updateSteps'] = $updateSteps;
@@ -351,25 +446,19 @@ class Updater extends WidgetBase
     {
         try {
             if (!$code = trim(post('code'))) {
-                throw new ApplicationException(Lang::get('system::lang.install.missing_theme_name'));
-            }
-
-            if (!$composerCode = $this->findThemeComposerCode($code)) {
-                throw new ApplicationException(Lang::get('system::lang.updates.theme_not_found'));
+                throw new ApplicationException(__('Please specify a Theme name to install.'));
             }
 
             $updateSteps = [
                 [
-                    'type'  => 'composer',
-                    'code'  => 'removeTheme',
-                    'label' => Lang::get('system::lang.updates.theme_removing', ['name' => $composerCode]),
-                    'name'  => $composerCode
+                    'code' => 'removeTheme',
+                    'label' => __('Removing theme: :name', ['name' => $code]),
+                    'name' => $code
                 ],
                 [
-                    'type'  => 'final',
-                    'code'  => 'completeUpdate',
-                    'label' => Lang::get('system::lang.install.install_completing'),
-                    'name'  => $code
+                    'code' => 'completeUpdate',
+                    'label' => __('Finishing installation process'),
+                    'type' => 'final'
                 ]
             ];
 
@@ -388,83 +477,107 @@ class Updater extends WidgetBase
      */
     public function onExecuteStep()
     {
-        // Address timeout limits
-        @set_time_limit(3600);
+        // Debugging
+        $useDebug = System::checkDebugMode() && get('debug');
 
+        // Prewarm system
+        $this->prewarmSystem();
+
+        $composer = ComposerManager::instance();
         $manager = UpdateManager::instance();
         $stepCode = post('code');
 
-        switch ($stepCode) {
-            case 'completeUpdate':
-                $manager->update();
-                Flash::success(Lang::get('system::lang.updates.update_success'));
-                return Redirect::refresh();
+        $composer->setOutputBuffer();
 
-            case 'completeInstall':
-                $manager->update();
-                Flash::success(Lang::get('system::lang.install.install_success'));
-                return Redirect::refresh();
-        }
-    }
+        try {
+            switch ($stepCode) {
+                case 'updateComposer':
+                    try {
+                        $composer->update(['composer/composer']);
+                        $this->clearMetaCache();
+                    }
+                    catch (Exception $ex) {
+                    }
+                    break;
 
-    /**
-     * findPluginComposerCode locates a composer code for a plugin
-     */
-    protected function findPluginComposerCode(string $code): string
-    {
-        // Local
-        $manager = ThemeManager::instance();
-        if ($manager->findByIdentifier($code)) {
-            return $manager->getComposerCode($code);
-        }
+                case 'updateCore':
+                    $composer->update();
+                    $this->clearMetaCache();
+                    break;
 
-        // Remote
-        $details = UpdateManager::instance()->requestPluginDetails($code);
-        return $details['composer_code'] ?? null;
-    }
+                case 'installPlugin':
+                    $manager->installPlugin(post('name'));
+                    $this->clearMetaCache();
+                    break;
 
-    /**
-     * findThemeComposerCode locates a composer code for a plugin
-     */
-    protected function findThemeComposerCode(string $code): string
-    {
-        // Local
-        $manager = PluginManager::instance();
-        if ($plugin = $manager->findByIdentifier($code)) {
-            return $manager->getComposerCode($plugin);
-        }
+                case 'installTheme':
+                    $manager->installTheme(post('name'));
+                    $this->clearMetaCache();
+                    break;
 
-        // Remote
-        $details = UpdateManager::instance()->requestThemeDetails($code);
-        return $details['composer_code'] ?? null;
-    }
+                case 'downloadTheme':
+                    $manager->downloadTheme(post('name'));
+                    $this->clearMetaCache();
+                    break;
 
-    /**
-     * processOutput cleans up console output for display
-     */
-    protected function processOutput($output)
-    {
-        if ($output === null) {
-            return $output;
-        }
+                case 'extractTheme':
+                    $manager->extractTheme(post('name'));
+                    $this->clearMetaCache();
+                    break;
 
-        // Split backspaced lines
-        while (true) {
-            $oldOutput = $output;
-            $output = str_replace(chr(8).chr(8), chr(8), $output);
-            if ($output === $oldOutput) {
-                break;
+                case 'seedTheme':
+                    $manager->seedTheme(post('name'));
+                    $this->clearMetaCache();
+                    break;
+
+                case 'removePlugin':
+                    $manager->uninstallPlugin(post('name'));
+                    $this->clearMetaCache();
+                    break;
+
+                case 'removeTheme':
+                    $manager->uninstallTheme(post('name'));
+                    $this->clearMetaCache();
+                    break;
+
+                case 'setBuild':
+                    $manager->setBuildNumberManually();
+                    break;
+
+                case 'completeUpdate':
+                    $manager->update();
+                    Flash::success(__('Update process complete'));
+                    return Redirect::refresh();
+
+                case 'completeInstall':
+                    $manager->update();
+                    Flash::success(__("Package installed successfully"));
+                    return Redirect::refresh();
             }
         }
-        $output = array_last(explode(chr(8), $output));
+        catch (Exception $ex) {
+            if ($useDebug) {
+                Log::error($ex);
+            }
 
-        // Remove terminal colors
-        $output = preg_replace('/\\e\[[0-9]+m/', '', $output);
+            throw new AjaxException([
+                'error' => $ex->getMessage(),
+                'output' => $composer->getOutputBuffer()
+            ]);
+        }
 
-        // Remove trailing newline
-        $output = preg_replace('/\\n$/', '', $output);
+        if ($useDebug) {
+            Log::info($composer->getOutputBuffer());
+        }
+    }
 
-        return $output;
+    /**
+     * clearMetaCache will clear the system meta files that may cause a system
+     * crash if the non-existent classes are referenced.
+     */
+    protected function clearMetaCache()
+    {
+        CacheHelper::instance()->clearMeta();
     }
 
     /**
@@ -474,9 +587,7 @@ class Updater extends WidgetBase
     {
         $hasImportantUpdates = false;
 
-        /*
-         * Core
-         */
+        // Core
         if (isset($result['core'])) {
             $coreImportant = false;
 
@@ -494,9 +605,7 @@ class Updater extends WidgetBase
             $result['core']['isImportant'] = $coreImportant ? '1' : '0';
         }
 
-        /*
-         * Plugins
-         */
+        // Plugins
         foreach (array_get($result, 'plugins', []) as $code => $plugin) {
             $isImportant = false;
 
@@ -533,5 +642,21 @@ class Updater extends WidgetBase
         }
 
         return $result;
+    }
+
+    /**
+     * prewarmSystem
+     */
+    protected function prewarmSystem()
+    {
+        // Address timeout limits
+        @set_time_limit(3600);
+
+        // Error path in case modules are replaced
+        class_exists(\System\Classes\ErrorHandler::class);
+        class_exists(\System\Models\EventLog::class);
+
+        // Cache helper may be encoded by Source Guardian
+        class_exists(\System\Helpers\Cache::class);
     }
 }

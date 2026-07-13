@@ -1,6 +1,7 @@
-$.oc.module.register('backend.component.monacoeditor', function () {
-    var environmentInitialized = false;
-    var emmetInitialized = false;
+oc.Modules.register('backend.component.monacoeditor', function () {
+    let environmentInitialized = false;
+    let emmetInitialized = false;
+    let yamlInitialized = false;
 
     function initEnvironment(baseUrl) {
         if (environmentInitialized) {
@@ -12,22 +13,51 @@ $.oc.module.register('backend.component.monacoeditor', function () {
         require.config({
             paths: { vs: baseUrl + '/vs' }
         });
-        window.MonacoEnvironment = { getWorkerUrl: function getWorkerUrl() {
-                return proxy;
-            } };
 
-        var proxy = URL.createObjectURL(new Blob(['\n                        self.MonacoEnvironment = {\n                            baseUrl: \'' + baseUrl + '/\'\n                        };\n                        importScripts(\'' + baseUrl + '/vs/base/worker/workerMain.js\');\n                    '], { type: 'text/javascript' }));
+        const proxy = URL.createObjectURL(
+            new Blob(
+                [`
+                    self.MonacoEnvironment = {
+                        baseUrl: '${baseUrl}/'
+                    };
+                    importScripts('${baseUrl}/vs/base/worker/workerMain.js');
+                `],
+                { type: 'text/javascript' }
+            )
+        );
+
+        // window.MonacoEnvironment = { getWorkerUrl: () => proxy };
+        window.MonacoEnvironment = {
+            getWorker: (moduleId, label) => {
+                switch (label) {
+                    case 'yaml':
+                        return new Worker(new URL('monaco-yaml/yaml.worker.min.js', baseUrl));
+                    case 'editorWorkerService':
+                        return new Worker(proxy);
+                    default:
+                        throw new Error(`Unknown label ${label}`);
+                }
+            }
+        };
     }
 
     function initEditor(component, options) {
-        component.modelReferences = component.modelDefinitions.map(function (def) {
+        component.modelReferences = component.modelDefinitions.map((def) => {
             return def.makeModelReference(options);
         });
 
-        if (!emmetInitialized) {
-            emmetMonaco.emmetHTML(monaco);
-            emmetMonaco.emmetCSS(monaco);
+        if (options.useEmmet && !emmetInitialized) {
+            emmetMonaco.emmetHTML(monaco, ["html", "twig", "php"]);
+            emmetMonaco.emmetCSS(monaco, ["css", "less", "scss"]);
             emmetInitialized = true;
+        }
+
+        if (options.yamlSchemas && !yamlInitialized) {
+            configureMonacoYaml(monaco, {
+                enableSchemaRequest: true,
+                schemas: options.yamlSchemas
+            });
+            yamlInitialized = true;
         }
 
         component.editor = monaco.editor.create(component.$refs.editorContainer, options);
@@ -36,10 +66,10 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             component.editor.setModel(component.modelReferences[0].model);
         }
 
-        var getSupportedActions = component.editor.getSupportedActions;
-        component.editor.getSupportedActions = function () {
-            var actions = getSupportedActions.apply(this);
-            var payload = {
+        const getSupportedActions = component.editor.getSupportedActions;
+        component.editor.getSupportedActions = function() {
+            const actions = getSupportedActions.apply(this);
+            const payload = {
                 editor: component.editor,
                 actions: actions
             };
@@ -48,10 +78,10 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             return payload.actions;
         };
 
-        var contextmenu = component.editor.getContribution('editor.contrib.contextmenu');
-        var onContextMenu = contextmenu._onContextMenu;
-        contextmenu._onContextMenu = function (eventData) {
-            var payload = {
+        const contextmenu = component.editor.getContribution('editor.contrib.contextmenu');
+        const onContextMenu = contextmenu._onContextMenu;
+        contextmenu._onContextMenu = function(eventData) {
+            const payload = {
                 editor: component.editor,
                 target: eventData.target
             };
@@ -62,7 +92,7 @@ $.oc.module.register('backend.component.monacoeditor', function () {
         component.timerId = setInterval(component.autoLayout, 100);
     }
 
-    var ModelDefinition = $.oc.module.import('backend.vuecomponents.monacoeditor.modeldefinition');
+    const ModelDefinition = oc.Modules.import('backend.vuecomponents.monacoeditor.modeldefinition');
 
     /*
      * Vue Monaco editor implementation.
@@ -88,11 +118,13 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             modelDefinitions: {
                 type: Array,
                 required: true,
-                validator: function validator(value) {
-                    return !value.some(function (definition) {
-                        return !definition instanceof ModelDefinition;
-                    });
+                validator: (value) => {
+                    return !value.some((definition) => !definition instanceof ModelDefinition);
                 }
+            },
+            glyphMargin: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -113,8 +145,8 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             },
 
             editorTabs: function computeEditorTabs() {
-                return this.modelDefinitions.map(function (def) {
-                    var result = {
+                return this.modelDefinitions.map((def) => {
+                    const result = {
                         label: def.tabTitle,
                         key: def.uriString
                     };
@@ -137,39 +169,46 @@ $.oc.module.register('backend.component.monacoeditor', function () {
                 return 'editor-container editor-container-' + this.theme;
             }
         },
-        data: function data() {
+        data: function() {
             return {
                 editor: null,
                 modelReferences: [],
                 timerId: null,
                 lastWidth: null,
                 lastHeight: null,
-                theme: 'vs-dark'
+                theme: 'vs-dark',
+                decorationsIds: []
             };
         },
         methods: {
             findModelReferenceByUri: function findModelReferenceByUri(uriString) {
-                return this.modelReferences.find(function (ref) {
-                    return ref.uriString == uriString;
-                });
+                return this.modelReferences.find((ref) => ref.uriString == uriString);
             },
 
             updateValue: function updateValue(modelDefinition, value) {
-                var ref = this.findModelReferenceByUri(modelDefinition.uriString);
+                const ref = this.findModelReferenceByUri(modelDefinition.uriString);
                 if (ref && ref.model.getValue != value) {
                     ref.model.setValue(modelDefinition.preprocess(value));
                 }
             },
 
             updateLanguage: function updateLanguage(modelDefinition, value) {
-                var ref = this.findModelReferenceByUri(modelDefinition.uriString);
-                if (ref && ref.model.getLanguageIdentifier().language != value) {
+                const ref = this.findModelReferenceByUri(modelDefinition.uriString);
+                if (ref && ref.model.getLanguageId() != value) {
                     monaco.editor.setModelLanguage(ref.model, value);
                 }
             },
 
+            makeRange: function makeRange(startLine, startColumn, endLine, endColumn) {
+                return new monaco.Range(startLine, startColumn, endLine, endColumn);
+            },
+
+            updateDecorations: function updateDecorations(decorations) {
+                this.decorationsIds = this.editor.deltaDecorations(this.decorationsIds, decorations);
+            },
+
             setModelCustomAttribute: function setModelCustomAttribute(modelDefinition, name, value) {
-                var ref = this.findModelReferenceByUri(modelDefinition.uriString);
+                const ref = this.findModelReferenceByUri(modelDefinition.uriString);
                 if (!ref || !ref.model) {
                     return false;
                 }
@@ -192,8 +231,6 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             },
 
             autoLayout: function autoLayout() {
-                var _this = this;
-
                 if (this.lastWidth === null) {
                     this.lastWidth = this.$el.clientWidth;
                     this.lastHeight = this.$el.clientHeight;
@@ -202,8 +239,8 @@ $.oc.module.register('backend.component.monacoeditor', function () {
                 }
 
                 if (this.lastWidth != this.$el.clientWidth || this.lastHeight != this.$el.clientHeight) {
-                    window.requestAnimationFrame(function () {
-                        _this.layout();
+                    window.requestAnimationFrame(() => {
+                        this.layout();
                     });
 
                     this.lastWidth = this.$el.clientWidth;
@@ -212,42 +249,56 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             },
 
             insertText: function insertText(str) {
-                var position = this.editor.getPosition();
-                this.editor.executeEdits('', [{
-                    range: {
-                        startLineNumber: position.lineNumber,
-                        startColumn: position.column,
-                        endLineNumber: position.lineNumber,
-                        endColumn: position.column
-                    },
-                    text: str
-                }]);
-                this.editor.setSelection(new monaco.Selection(position.lineNumber, position.column, position.lineNumber, position.column));
+                const position = this.editor.getPosition();
+                this.editor.executeEdits('', [
+                    {
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: position.lineNumber,
+                            endColumn: position.column
+                        },
+                        text: str
+                    }
+                ]);
+                this.editor.setSelection(
+                    new monaco.Selection(position.lineNumber, position.column, position.lineNumber, position.column)
+                );
             },
 
             replaceText: function replaceText(text, replacement, modelDefinition) {
-                var ref = this.findModelReferenceByUri(modelDefinition.uriString);
+                const ref = this.findModelReferenceByUri(modelDefinition.uriString);
                 if (!ref) {
                     return;
                 }
 
-                var matches = ref.model.findMatches(text, false, false, false, null, true);
-                matches.forEach(function (match) {
-                    ref.model.pushEditOperations([], [{
-                        range: match.range,
-                        text: replacement
-                    }]);
+                const matches = ref.model.findMatches(text, false, false, false, null, true);
+                matches.forEach((match) => {
+                    ref.model.pushEditOperations(
+                        [],
+                        [
+                            {
+                                range: match.range,
+                                text: replacement
+                            }
+                        ]
+                    );
                 });
             },
 
             replaceAsSnippet: function replaceAsSnippet(model, range, str) {
-                var tab = ' '.repeat(range.startColumn - 1);
-                var paddedStr = str.replace(/^/gm, tab).replace(/^\s+/, '');
+                const tab = ' '.repeat(range.startColumn - 1);
+                const paddedStr = str.replace(/^/gm, tab).replace(/^\s+/, '');
 
-                model.pushEditOperations([], [{
-                    range: range,
-                    text: paddedStr
-                }]);
+                model.pushEditOperations(
+                    [],
+                    [
+                        {
+                            range: range,
+                            text: paddedStr
+                        }
+                    ]
+                );
             },
 
             getCurrentModelUri: function getCurrentModelUri() {
@@ -263,7 +314,7 @@ $.oc.module.register('backend.component.monacoeditor', function () {
                     return;
                 }
 
-                var targetAtPoint = this.editor.getTargetAtClientPoint(ev.clientX, ev.clientY);
+                const targetAtPoint = this.editor.getTargetAtClientPoint(ev.clientX, ev.clientY);
                 if (!targetAtPoint || !targetAtPoint.position) {
                     return;
                 }
@@ -290,8 +341,8 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             },
 
             onTabSelected: function onTabSelected(newKey, oldKey) {
-                var newRef = this.findModelReferenceByUri(newKey);
-                var oldRef = this.findModelReferenceByUri(oldKey);
+                const newRef = this.findModelReferenceByUri(newKey);
+                const oldRef = this.findModelReferenceByUri(oldKey);
 
                 if (oldRef) {
                     oldRef.setViewState(this.editor.saveViewState());
@@ -306,9 +357,7 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             }
         },
         mounted: function mounted() {
-            var _this2 = this;
-
-            var options = JSON.parse(this.$el.getAttribute('data-configuration'));
+            const options = JSON.parse(this.$el.getAttribute('data-configuration'));
             initEnvironment(options.vendorPath);
 
             this.theme = options.theme;
@@ -317,24 +366,33 @@ $.oc.module.register('backend.component.monacoeditor', function () {
             }
 
             options.theme = this.theme;
+            options.glyphMargin = this.glyphMargin;
             options.tabCompletion = 'on';
             options.automaticLayout = true;
-
+            options.unusualLineTerminators = 'auto';
             options.minimap = {
                 enabled: true
             };
+            options.quickSuggestions = {
+                other: true,
+                comments: false,
+                strings: true
+            };
 
-            require(['vs/editor/editor.main'], function () {
-                initEditor(_this2, options);
-                _this2.$emit('monacoloaded', monaco, _this2.editor);
+            // Allows plugins to override the editor options
+            if (oc.monacoEditorOptions) {
+                Object.assign(options, oc.monacoEditorOptions);
+            }
+
+            require(['vs/editor/editor.main'], () => {
+                initEditor(this, options);
+                this.$emit('monacoloaded', monaco, this.editor);
             });
         },
         beforeDestroy: function beforeDestroy() {
             this.$emit('dispose', this.editor);
             this.editor && this.editor.dispose();
-            this.modelReferences.forEach(function (ref) {
-                return ref.dispose();
-            });
+            this.modelReferences.forEach((ref) => ref.dispose());
 
             if (this.timerId) {
                 clearInterval(this.timerId);

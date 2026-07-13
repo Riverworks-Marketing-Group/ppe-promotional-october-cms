@@ -3,7 +3,7 @@
 use October\Rain\Database\Schema\Blueprint;
 use October\Rain\Database\Updates\Migration;
 
-class DbDeferredBindings extends Migration
+return new class extends Migration
 {
     public function up()
     {
@@ -14,7 +14,9 @@ class DbDeferredBindings extends Migration
             $table->string('slave_type');
             $table->integer('slave_id');
             $table->string('session_key');
+            $table->mediumText('pivot_data')->nullable();
             $table->boolean('is_bind')->default(true);
+            $table->integer('sort_order')->nullable();
             $table->timestamps();
         });
     }
@@ -23,4 +25,4 @@ class DbDeferredBindings extends Migration
     {
         Schema::dropIfExists('deferred_bindings');
     }
-}
+};

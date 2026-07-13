@@ -1,5 +1,6 @@
 <?php namespace Cms\Twig;
 
+use Site;
 use Event;
 use Twig\Source as TwigSource;
 use Twig\Loader\LoaderInterface as TwigLoaderInterface;
@@ -38,7 +39,7 @@ class Loader extends LoaderBase implements TwigLoaderInterface
      * getSourceContext returns the Twig content string.
      * This step is cached internally by Twig.
      */
-    public function getSourceContext($name)
+    public function getSourceContext(string $name): TwigSource
     {
         if (!$this->validateCmsObject($name)) {
             return parent::getSourceContext($name);
@@ -66,7 +67,7 @@ class Loader extends LoaderBase implements TwigLoaderInterface
     /**
      * getCacheKey returns the Twig cache key.
      */
-    public function getCacheKey($name)
+    public function getCacheKey(string $name): string
     {
         if (!$this->validateCmsObject($name)) {
             return parent::getCacheKey($name);
@@ -78,7 +79,7 @@ class Loader extends LoaderBase implements TwigLoaderInterface
     /**
      * isFresh determines if the content is fresh.
      */
-    public function isFresh($name, $time)
+    public function isFresh(string $name, int $time): bool
     {
         if (!$this->validateCmsObject($name)) {
             return parent::isFresh($name, $time);
@@ -102,7 +103,7 @@ class Loader extends LoaderBase implements TwigLoaderInterface
     /**
      * exists checks that the template exists.
      */
-    public function exists($name)
+    public function exists(string $name)
     {
         if (!$this->validateCmsObject($name)) {
             return parent::exists($name);
@@ -141,6 +142,14 @@ class Loader extends LoaderBase implements TwigLoaderInterface
 
         if (array_key_exists($name, $this->fallbackCache)) {
             return $this->fallbackCache[$name];
+        }
+
+        try {
+            if (($site = Site::getSiteFromContext()) && $site->theme) {
+                return $this->fallbackCache[$name] = CmsPartial::inTheme($site->theme)->find($name);
+            }
+        }
+        catch (Exception $ex) {
         }
 
         try {

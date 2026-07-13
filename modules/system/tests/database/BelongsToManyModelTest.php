@@ -12,13 +12,14 @@ class BelongsToManyModelTest extends PluginTestCase
     {
         parent::setUp();
 
-        include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Role.php';
-        include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Author.php';
-        include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Category.php';
-        include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Post.php';
-        include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Product.php';
+        include_once base_path('modules/system/tests/fixtures/plugins/database/tester/models/Role.php');
+        include_once base_path('modules/system/tests/fixtures/plugins/database/tester/models/Author.php');
+        include_once base_path('modules/system/tests/fixtures/plugins/database/tester/models/Category.php');
+        include_once base_path('modules/system/tests/fixtures/plugins/database/tester/models/Post.php');
+        include_once base_path('modules/system/tests/fixtures/plugins/database/tester/models/Product.php');
+        include_once base_path('modules/system/tests/fixtures/plugins/database/tester/models/Tag.php');
 
-        $this->runPluginRefreshCommand('Database.Tester');
+        $this->migratePlugin('Database.Tester');
     }
 
     public function testSetRelationValue()
@@ -48,7 +49,7 @@ class BelongsToManyModelTest extends PluginTestCase
         // Set by primary key
         $author->roles = $role2->id;
         $this->assertEquals(1, $author->roles->count());
-        $this->assertEquals([$role2->id], $author->getRelationValue('roles'));
+        $this->assertEquals([$role2->id], $author->getRelationSimpleValue('roles'));
         $this->assertEquals('Programmer', $author->roles->first()->name);
 
         $author->roles = [$role2->id, $role3->id];
@@ -59,10 +60,10 @@ class BelongsToManyModelTest extends PluginTestCase
         $this->assertEquals(0, $author->roles->count());
 
         // Extra nullify checks (still exists in DB until saved)
-        $author->reloadRelations('roles');
+        $author->unsetRelation('roles');
         $this->assertEquals(2, $author->roles->count());
         $author->save();
-        $author->reloadRelations('roles');
+        $author->unsetRelation('roles');
         $this->assertEquals(0, $author->roles->count());
 
         // Deferred in memory
@@ -82,7 +83,7 @@ class BelongsToManyModelTest extends PluginTestCase
         $author->roles()->add($role1);
         $author->roles()->add($role2);
 
-        $this->assertEquals([$role1->id, $role2->id], $author->getRelationValue('roles'));
+        $this->assertEquals([$role1->id, $role2->id], $author->getRelationSimpleValue('roles'));
     }
 
     public function testDeferredBinding()
@@ -103,17 +104,13 @@ class BelongsToManyModelTest extends PluginTestCase
         $this->assertEquals(0, $author->roles()->count());
         $this->assertEquals(2, $author->roles()->withDeferred($sessionKey)->count());
 
-        // Get simple value (implicit)
-        $author->reloadRelations();
-        $author->sessionKey = $sessionKey;
-        $this->assertEquals([$role1->id, $role2->id], $author->getRelationValue('roles'));
-
         // Get simple value (explicit)
-        $relatedIds = $author->roles()->allRelatedIds($sessionKey)->all();
+        $author->unsetRelations();
+        $relatedIds = $author->roles()->withDeferred($sessionKey)->pluck('id')->all();
         $this->assertEquals([$role1->id, $role2->id], $relatedIds);
 
         // Commit deferred
-        $author->save(null, $sessionKey);
+        $author->save(['sessionKey' => $sessionKey]);
         $this->assertEquals(2, $author->roles()->count());
         $this->assertEquals('Designer', $author->roles->first()->name);
 
@@ -128,7 +125,7 @@ class BelongsToManyModelTest extends PluginTestCase
         $this->assertEquals('Designer', $author->roles->first()->name);
 
         // Commit deferred
-        $author->save(null, $sessionKey);
+        $author->save(['sessionKey' => $sessionKey]);
         $this->assertEquals(0, $author->roles()->count());
         $this->assertEquals(0, $author->roles->count());
     }
@@ -157,17 +154,13 @@ class BelongsToManyModelTest extends PluginTestCase
         $this->assertEquals(0, $category->posts()->count());
         $this->assertEquals(2, $category->posts()->withDeferred($sessionKey)->count());
 
-        // Get simple value (implicit)
-        $category->reloadRelations();
-        $category->sessionKey = $sessionKey;
-        $this->assertEquals([$post1->id, $post2->id], $category->getRelationValue('posts'));
-
         // Get simple value (explicit)
-        $relatedIds = $category->posts()->allRelatedIds($sessionKey)->all();
+        $category->unsetRelations();
+        $relatedIds = $category->posts()->withDeferred($sessionKey)->pluck('id')->all();
         $this->assertEquals([$post1->id, $post2->id], $relatedIds);
 
         // Commit deferred
-        $category->save(null, $sessionKey);
+        $category->save(['sessionKey' => $sessionKey]);
         $this->assertEquals(2, $category->posts()->count());
         $this->assertEquals('First post', $category->posts->first()->title);
         $this->assertEquals('Second post', $category->posts->last()->title);
@@ -192,7 +185,7 @@ class BelongsToManyModelTest extends PluginTestCase
         $this->assertEquals('News in pivot', $category->posts->last()->pivot->category_name);
 
         // Commit deferred
-        $category->save(null, $sessionKey);
+        $category->save(['sessionKey' => $sessionKey]);
         $this->assertEquals(0, $category->posts()->count());
         $this->assertEquals(0, $category->posts->count());
     }

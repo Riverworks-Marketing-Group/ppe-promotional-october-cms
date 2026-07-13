@@ -1,13 +1,17 @@
 /*
  * Vue Inspector object list records control implementation
  */
-$.oc.module.register('backend.component.inspector.control.objectlist.records', function () {
+oc.Modules.register('backend.component.inspector.control.objectlist.records', function () {
     Vue.component('backend-component-inspector-control-objectlist-records', {
         extends: $.oc.vueComponentHelpers.inspector.controlBase,
         props: {
             obj: {
                 type: [Object, Array],
                 required: true
+            },
+            parentObj: {
+                type: Object,
+                required: false
             },
             layoutUpdateData: {
                 type: Object
@@ -24,13 +28,18 @@ $.oc.module.register('backend.component.inspector.control.objectlist.records', f
         computed: {
             hasValues: function computeHasValues() {
                 return !$.oc.vueComponentHelpers.inspector.utils.isValueEmpty(this.obj);
+            },
+
+            displayAddItem: function computeDisplayAddItem() {
+                if (!this.control.parentControl.maxItems) {
+                    return true;
+                }
+
+                const itemCount = $.isArray(this.obj) ? this.obj.length : Object.keys(this.obj).length;
+                return itemCount < this.control.parentControl.maxItems;
             }
         },
         methods: {
-            getRecordTitle: function getRecordTitle(record) {
-                return record[this.control.titleProperty];
-            },
-
             onRemoveItemClick: function onRemoveItemClick(index) {
                 if ($.isArray(this.obj)) {
                     this.obj.splice(index, 1);
@@ -41,7 +50,7 @@ $.oc.module.register('backend.component.inspector.control.objectlist.records', f
             },
 
             onAddItemClick: function onAddItemClick() {
-                if (this.inspectorPreferences.readOnly) {
+                if (this.inspectorPreferences.readOnly || !this.displayAddItem) {
                     return;
                 }
 

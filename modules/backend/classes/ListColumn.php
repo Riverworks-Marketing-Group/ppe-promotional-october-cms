@@ -5,8 +5,23 @@ use October\Rain\Html\Helper as HtmlHelper;
 use October\Rain\Element\Lists\ColumnDefinition;
 
 /**
- * List Columns definition
- * A translation of the list column configuration
+ * ListColumn definition is a translation of the list column configuration
+ *
+ * @method ListColumn valueFrom(string $valueFrom) valueFrom is a model attribute to use for the accessed value
+ * @method ListColumn displayFrom(string $displayFrom) displayFrom is a model attribute to use for the displayed value
+ * @method ListColumn defaults(string $defaults) defaults specifies a default value when value is empty
+ * @method ListColumn sqlSelect(string $sqlSelect) sqlSelect is a custom SQL for selecting this record display value, the `@` symbol is replaced with the table name.
+ * @method ListColumn relation(string $relation) Relation name, if this column represents a model relationship.
+ * @method ListColumn relationCount(bool $relationCount) Count mode to display the number of related records.
+ * @method ListColumn relationWith(string $relationWith) Eager load this dot-notated relation definition with the list query.
+ * @method ListColumn width(string $width) sets the column width, can be specified in percents (10%) or pixels (50px).
+ * @method ListColumn cssClass(string $cssClass) Specify a CSS class to attach to the list cell element.
+ * @method ListColumn headCssClass(string $headCssClass) Specify a CSS class to attach to the list header cell element.
+ * @method ListColumn format(string $format) Specify a format or style for the column value, such as a Date.
+ * @method ListColumn path(string $path) Specifies a path for partial-type fields.
+ * @method ListColumn sortableDefault(string $sortableDefault) sortableDefault makes the field sorted by default, either as asc or desc.
+ * @method ListColumn valueTrans(bool $valueTrans) valueTrans determines if display values (model attributes) should be translated
+ * @method ListColumn tooltip(array|string $tooltip) tooltip title to display next to the column value, as an array can contain title, placement, icon.
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -14,114 +29,55 @@ use October\Rain\Element\Lists\ColumnDefinition;
 class ListColumn extends ColumnDefinition
 {
     /**
-     * @var string valueFrom is a model attribute to use for the accessed value
+     * __construct using old and new interface
      */
-    public $valueFrom;
-
-    /**
-     * @var string displayFrom is a model attribute to use for the displayed value
-     */
-    public $displayFrom;
-
-    /**
-     * @var string defaults specifies a default value when value is empty
-     */
-    public $defaults;
-
-    /**
-     * @var string sqlSelect is a custom SQL for selecting this record display value,
-     * the `@` symbol is replaced with the table name.
-     */
-    public $sqlSelect;
-
-    /**
-     * @var string Relation name, if this column represents a model relationship.
-     */
-    public $relation;
-
-    /**
-     * @var bool Count mode to display the number of related records.
-     */
-    public $relationCount = false;
-
-    /**
-     * @var string sets the column width, can be specified in percents (10%) or pixels (50px).
-     * There could be a single column without width specified, it will be stretched to take the
-     * available space.
-     */
-    public $width;
-
-    /**
-     * @var string Specify a CSS class to attach to the list cell element.
-     */
-    public $cssClass;
-
-    /**
-     * @var string Specify a CSS class to attach to the list header cell element.
-     */
-    public $headCssClass;
-
-    /**
-     * @var string Specify a format or style for the column value, such as a Date.
-     */
-    public $format;
-
-    /**
-     * @var string Specifies a path for partial-type fields.
-     */
-    public $path;
-
-    /**
-     * __construct the column
-     * @todo remove this method if year >= 2023
-     */
-    public function __construct($columnName, $label)
+    public function __construct($config = [], $label = null)
     {
-        parent::__construct((string) $columnName);
+        // @deprecated old API
+        if (!is_array($config)) {
+            return parent::__construct([
+                'columnName' => $config,
+                'label' => $label
+            ]);
+        }
 
-        $this->label((string) $label);
+        parent::__construct($config);
     }
 
     /**
-     * evalConfig from an array and apply them to the object
+     * initDefaultValues for this field
      */
-    protected function evalConfig(array $config): void
+    protected function initDefaultValues()
     {
-        parent::evalConfig($config);
+        parent::initDefaultValues();
 
-        if (isset($config['width'])) {
-            $this->width = $config['width'];
-        }
-        if (isset($config['cssClass'])) {
-            $this->cssClass = $config['cssClass'];
-        }
-        if (isset($config['headCssClass'])) {
-            $this->headCssClass = $config['headCssClass'];
-        }
-        if (isset($config['valueFrom'])) {
-            $this->valueFrom = $config['valueFrom'];
-        }
-        if (isset($config['displayFrom'])) {
-            $this->displayFrom = $config['displayFrom'];
-        }
-        if (isset($config['default'])) {
-            $this->defaults = $config['default'];
-        }
+        $this
+            ->valueTrans(true)
+        ;
+    }
+
+    /**
+     * evalConfig
+     */
+    public function evalConfig(array $config)
+    {
         if (isset($config['select'])) {
-            $this->sqlSelect = $config['select'];
+            // @deprecated use below
+            $this->sqlSelect($config['select']);
+            // $this->sqlSelect(array_pull($config, 'select'));
         }
-        if (isset($config['relation'])) {
-            $this->relation = $config['relation'];
+
+        if (isset($config['default'])) {
+            $this->defaults($config['default']);
         }
-        if (isset($config['relationCount'])) {
-            $this->relationCount = (bool) $config['relationCount'];
-        }
-        if (isset($config['format'])) {
-            $this->format = $config['format'];
-        }
-        if (isset($config['path'])) {
-            $this->path = $config['path'];
-        }
+    }
+
+    /**
+     * select
+     */
+    public function select($column)
+    {
+        $this->sqlSelect($column);
     }
 
     /**
@@ -152,7 +108,20 @@ class ListColumn extends ColumnDefinition
     }
 
     /**
-     * getAlignClass returns the column specific aligment css class.
+     * getDisplayValue checks to see if display values (model attributes) should be translated,
+     * and also escapes the value
+     */
+    public function getDisplayValue($value)
+    {
+        if ($this->valueTrans) {
+            return e(__($value));
+        }
+
+        return e($value);
+    }
+
+    /**
+     * getAlignClass returns the column specific alignment css class.
      * @return string
      */
     public function getAlignClass()
@@ -174,18 +143,7 @@ class ListColumn extends ColumnDefinition
             return $value;
         }
 
-        return $this->relationCount;
-    }
-
-    /**
-     * getConfig returns a raw config item value
-     * @param  string $value
-     * @param  string $default
-     * @return mixed
-     */
-    public function getConfig($value, $default = null)
-    {
-        return array_get($this->config, $value, $default);
+        return (bool) $this->relationCount;
     }
 
     /**

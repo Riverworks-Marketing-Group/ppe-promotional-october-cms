@@ -1,4 +1,4 @@
-$.oc.module.register('backend.component.toolbar.button', function () {
+oc.Modules.register('backend.component.toolbar.button', function () {
     Vue.component('backend-component-document-toolbar-button', {
         props: {
             settings: Object,
@@ -8,6 +8,12 @@ $.oc.module.register('backend.component.toolbar.button', function () {
             icon: function computeIcon() {
                 if (this.settings.icon) {
                     return this.settings.icon;
+                }
+            },
+
+            command: function computeCommand() {
+                if (this.settings.command) {
+                    return this.settings.command;
                 }
             },
 
@@ -102,6 +108,8 @@ $.oc.module.register('backend.component.toolbar.button', function () {
         },
         methods: {
             onClick: function onClick(ev, isHotkey, isMenuButton) {
+                Vue.nextTick(oc.octoberTooltips.clear, 1);
+
                 if (this.settings.disabled || this.toolbarDisabled || $(document.body).hasClass('drag')) {
                     ev.preventDefault();
                     ev.stopPropagation();

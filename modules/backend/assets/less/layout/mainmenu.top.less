@@ -2,7 +2,7 @@
     .navbar {
         padding: 0 20px 0 0;
         height: @mainmenu-mode-inline-height;
-        background-color: @color-mainmenu;
+        background-color: @mainnav-bg;
 
         [data-control="toolbar"] {
             position: absolute;
@@ -25,9 +25,19 @@
                     padding: 15px 10px 0 38px;
                 }
 
-                &.has-subitems > a:after {
-                    .backend-icon-sprite-pseudo(11px, 6px, 82px, 3px);
-                    margin-left: 6px;
+                &.has-subitems {
+                    .nav-label {
+                        padding-right: 17px;
+                    }
+
+                    > a:after {
+                        .icon-OctoFont();
+                        content: @icon-angle-down-arrow;
+                        position: absolute;
+                        right: 6px;
+                        top: 19.4px;
+                        font-size: 19.5px;
+                    }
                 }
 
                 .nav-label {
@@ -38,6 +48,7 @@
                     line-height: 52px;
                     left: 0;
                     width: 30px;
+                    text-align: center;
 
                     .svg-icon {
                         height: 30px;
@@ -50,8 +61,46 @@
                     }
                 }
 
+                .nav-icon .nav-colorpicker {
+                    width: 0;
+                    height: 0;
+                    background-color: transparent;
+                    border-right-color: var(--background-color);
+                    border-bottom-color: var(--background-color);
+                    border-top-color: var(--foreground-color);
+                    border-left-color: var(--foreground-color);
+                    border-width: 10px;
+                    border-style: solid;
+                    border-radius: 20px;
+                    display: inline-block;
+                    position: relative;
+                    top: 10px;
+
+                    &:after {
+                        content: "";
+                        top: -10px;
+                        left: -10px;
+                        width: 20px;
+                        height: 20px;
+                        position: absolute;
+                        box-shadow: inset 0 0 0 1px rgba(var(--bs-body-bg-rgb), 0.2);
+                        border-radius: 20px;
+                    }
+                }
+
                 &.mainmenu-preview > a {
-                    padding-left: 10px;
+                    padding-left: 34px;
+                }
+
+                &.mainmenu-preview:not(.has-nolabel) > a {
+                    padding-right: 15px;
+                    &:after {
+                        right: 11px;
+                    }
+                }
+
+                &.mainmenu-taskbar > a {
+                    padding-right: 0;
                 }
             }
 
@@ -59,15 +108,12 @@
                 margin-left: 10px;
 
                 > li.mainmenu-item {
+                    &.mainmenu-taskbar,
                     &.mainmenu-preview {
                         margin-right: 0;
 
-                        > a {
-                            width: 40px;
-                        }
-
                         .nav-icon {
-                            left: 10px;
+                            left: 0;
 
                             i {
                                 font-size: 20px;
@@ -87,6 +133,7 @@
                             margin-top: 2px;
                             width: 42px;
 
+                            // Hide caret
                             &:after {
                                 display: none;
                             }
@@ -103,12 +150,6 @@
                 li.mainmenu-toggle {
                     display: none;
                 }
-            }
-        }
-
-        .toolbar-item {
-            &:before, &:after {
-                display: none;
             }
         }
     }
@@ -137,16 +178,9 @@
                     text-align: center;
 
                     > a {
-                        padding: 13px 15px 8px 15px;
+                        padding: 11px 15px 10px;
                         height: auto;
                         display: block;
-
-                        &:after {
-                            margin: 0;
-                            position: absolute;
-                            right: 15px;
-                            bottom: 13px;
-                        }
                     }
 
                     .nav-label {
@@ -158,6 +192,13 @@
                     &.has-subitems {
                         .nav-label {
                             padding-right: 17px;
+                        }
+
+                        a:after {
+                            margin: 0;
+                            top: auto;
+                            right: 11px;
+                            bottom: 8.9px
                         }
                     }
 
@@ -176,6 +217,10 @@
                         i:before {
                             margin-right: 0;
                         }
+                    }
+
+                    .nav-icon .nav-colorpicker {
+                        top: 7px;
                     }
 
                     span.counter {
@@ -207,7 +252,7 @@
                         }
                     }
 
-                    &.mainmenu-preview {
+                    &.mainmenu-preview.has-nolabel {
                         > a {
                             width: auto;
                             margin-top: 14px;
@@ -258,7 +303,7 @@
                     .hide-text();
                     width: 50px;
                     position: relative;
-                    opacity: 0.7;
+                    opacity: .7;
 
                     &:before {
                         .backend-icon-sprite-pseudo(20px, 18px, 0, 0);

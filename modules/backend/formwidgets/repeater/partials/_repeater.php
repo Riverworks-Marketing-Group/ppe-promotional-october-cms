@@ -1,10 +1,9 @@
 <div
     class="field-repeater repeater-mode-<?= $displayMode ?> <?= $useGroups ? 'is-grouped' : 'is-singular' ?>"
-    data-control="fieldrepeater"
+    data-control="repeater<?= $displayMode ?>"
     <?= $titleFrom ? 'data-title-from="'.$titleFrom.'"' : '' ?>
     <?= $minItems ? 'data-min-items="'.$minItems.'"' : '' ?>
     <?= $maxItems ? 'data-max-items="'.$maxItems.'"' : '' ?>
-    data-display-mode="<?= $displayMode ?>"
     data-use-reorder="<?= $showReorder ?>"
     data-items-expanded="<?= $itemsExpanded ?>"
     data-sortable-handle=".<?= $this->getId('items') ?>-handle"
@@ -14,7 +13,6 @@
     data-duplicate-handler="<?= $this->getEventHandler('onDuplicateItem') ?>"
     data-default-title="<?= e(trans('backend::lang.page.untitled')) ?>"
     <?php if ($externalToolbarAppState): ?>data-external-toolbar-app-state="<?= e($externalToolbarAppState)?>"<?php endif ?>
-    <?php if ($externalToolbarEventBus): ?>data-external-toolbar-event-bus="<?= e($externalToolbarEventBus)?>"<?php endif ?>
 >
     <!-- Passable fields -->
     <input type="hidden" name="<?= $name ?>" value="" data-repeater-pointer-input disabled />

@@ -1,6 +1,5 @@
 <?php
 
-use Carbon\Carbon;
 use Database\Tester\Models\CategoryNested;
 
 class NestedTreeModelTest extends PluginTestCase
@@ -11,7 +10,7 @@ class NestedTreeModelTest extends PluginTestCase
 
         include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Category.php';
 
-        $this->runPluginRefreshCommand('Database.Tester');
+        $this->migratePlugin('Database.Tester');
         $this->seedSampleTree();
     }
 

@@ -43,12 +43,7 @@ class MailBrandSettings extends SettingsController
     /**
      * @var array requiredPermissions to view this page.
      */
-    public $requiredPermissions = ['system.manage_mail_templates'];
-
-    /**
-     * @var string bodyClass HTML body tag class
-     */
-    public $bodyClass = 'compact-container';
+    public $requiredPermissions = ['mail.templates'];
 
     /**
      * __construct the controller
@@ -57,7 +52,7 @@ class MailBrandSettings extends SettingsController
     {
         parent::__construct();
 
-        $this->pageTitle = 'system::lang.mail_brand.page_title';
+        $this->pageTitle = "Customize Mail Appearance";
     }
 
     /**
@@ -65,13 +60,10 @@ class MailBrandSettings extends SettingsController
      */
     public function index()
     {
-        $this->addJs('/modules/system/assets/js/mailbrandsettings/mailbrandsettings.js', 'core');
-        $this->addCss('/modules/system/assets/css/mailbrandsettings/mailbrandsettings.css', 'core');
-
-        Block::append('head', $this->renderSampleMessageAsScript());
+        $this->addJs('/modules/system/assets/js/pages/mailbrandsettings.js');
+        $this->addCss('/modules/system/assets/css/pages/mailbrandsettings.css');
 
         $setting = MailBrandSetting::instance();
-
         $setting->resetCache();
 
         return $this->create();
@@ -91,7 +83,6 @@ class MailBrandSettings extends SettingsController
     public function index_onResetDefault()
     {
         $setting = MailBrandSetting::instance();
-
         $setting->resetDefault();
 
         Flash::success(Lang::get('backend::lang.form.reset_success'));
@@ -104,8 +95,6 @@ class MailBrandSettings extends SettingsController
      */
     public function onUpdateSampleMessage()
     {
-        $this->pageAction();
-
         $this->formGetWidget()->setFormValues();
 
         return ['previewHtml' => $this->renderSampleMessage()];

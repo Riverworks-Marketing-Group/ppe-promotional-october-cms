@@ -5,6 +5,7 @@ use SystemException;
 use Backend\Classes\FormField;
 use Backend\Classes\WidgetManager;
 use Backend\Classes\FormWidgetBase;
+use October\Rain\Html\Helper as HtmlHelper;
 
 /**
  * HasFormWidgets concern
@@ -12,7 +13,7 @@ use Backend\Classes\FormWidgetBase;
 trait HasFormWidgets
 {
     /**
-     * @var array Collection of all form widgets used in this form.
+     * @var array formWidgets collection of all form widgets used in this form.
      */
     protected $formWidgets = [];
 
@@ -42,6 +43,19 @@ trait HasFormWidgets
             return $this->formWidgets[$field->fieldName];
         }
 
+        // If options are defined by config but are in an unusable state
+        $fieldOptions = $field->optionsPreset
+            ? 'preset:' . $field->optionsPreset
+            : ($field->optionsMethod ?: $field->options);
+
+        // Defer the execution of option data collection
+        if ($fieldOptions !== null && !$field->hasOptions()) {
+            $field->options(function () use ($field, $fieldOptions) {
+                return $field->getOptionsFromModel($this->model, $fieldOptions, $this->data);
+            });
+        }
+
+        // Create form widget instance
         $widgetConfig = $this->makeConfig($field->config);
         $widgetConfig->alias = $this->alias . studly_case($this->nameToId($field->fieldName));
         $widgetConfig->sessionKey = $this->getSessionKey();
@@ -62,14 +76,6 @@ trait HasFormWidgets
         }
 
         $widget = $this->makeFormWidget($widgetClass, $field, $widgetConfig);
-
-        // If options config is defined, request options from the model.
-        if (isset($field->config['options'])) {
-            $field->options(function () use ($field) {
-                $fieldOptions = $field->config['options'];
-                return $field->getOptionsFromModel($this->model, $fieldOptions, $this->data);
-            });
-        }
 
         return $this->formWidgets[$field->fieldName] = $widget;
     }
@@ -93,7 +99,7 @@ trait HasFormWidgets
             return false;
         }
 
-        if (is_subclass_of($widgetClass, 'Backend\Classes\FormWidgetBase')) {
+        if (is_subclass_of($widgetClass, \Backend\Classes\FormWidgetBase::class)) {
             return true;
         }
 
@@ -119,5 +125,15 @@ trait HasFormWidgets
         }
 
         return null;
+    }
+
+    /**
+     * nameToId is a helper method to convert a field name to a valid ID attribute
+     * @param $input
+     * @return string
+     */
+    public function nameToId($input)
+    {
+        return HtmlHelper::nameToId($input);
     }
 }

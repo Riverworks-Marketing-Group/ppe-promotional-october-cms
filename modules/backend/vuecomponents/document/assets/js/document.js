@@ -1,4 +1,4 @@
-$.oc.module.register('backend.component.document', function () {
+oc.Modules.register('backend.component.document', function () {
     Vue.component('backend-component-document', {
         props: {
             fullHeight: {

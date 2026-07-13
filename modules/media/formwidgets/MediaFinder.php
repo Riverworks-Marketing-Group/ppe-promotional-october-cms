@@ -8,12 +8,11 @@ use October\Rain\Database\Model;
 use Exception;
 
 /**
- * Media Finder
- * Renders a record finder field.
+ * MediaFinder renders a record finder field.
  *
  *    image:
  *        label: Some image
- *        type: media
+ *        type: mediafinder
  *
  * @package october\media
  * @author Alexey Bobkov, Samuel Georges
@@ -21,7 +20,7 @@ use Exception;
 class MediaFinder extends FormWidgetBase
 {
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
@@ -30,12 +29,12 @@ class MediaFinder extends FormWidgetBase
     public $mode = 'file';
 
     /**
-     * @var int Preview image width
+     * @var int imageWidth for preview
      */
     public $imageWidth = 190;
 
     /**
-     * @var int Preview image height
+     * @var int imageHeight for preview
      */
     public $imageHeight = 190;
 
@@ -45,6 +44,14 @@ class MediaFinder extends FormWidgetBase
     public $maxItems = null;
 
     /**
+     * @var array thumbOptions used for generating thumbnails
+     */
+    public $thumbOptions = [
+        'mode' => 'crop',
+        'extension' => 'auto'
+    ];
+
+    /**
      * @var string Defines a mount point for the editor toolbar.
      * Must include a module name that exports the Vue application and a state element name.
      * Format: module.name::stateElementName
@@ -52,22 +59,14 @@ class MediaFinder extends FormWidgetBase
      */
     public $externalToolbarAppState = null;
 
-    /**
-     * @var string Defines an event bus for an external toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::eventBus
-     * Only works in Vue applications and form document layouts.
-     */
-    public $externalToolbarEventBus = null;
-
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
      * @inheritDoc
      */
-    protected $defaultAlias = 'media';
+    protected $defaultAlias = 'mediafinder';
 
     /**
      * @inheritDoc
@@ -79,19 +78,28 @@ class MediaFinder extends FormWidgetBase
             'imageWidth',
             'imageHeight',
             'maxItems',
-            'externalToolbarAppState',
-            'externalToolbarEventBus'
+            'thumbOptions',
+            'externalToolbarAppState'
         ]);
 
         if ($this->formField->disabled || $this->formField->readOnly) {
             $this->previewMode = true;
         }
 
-        if (!BackendAuth::userHasAccess('media.manage_media')) {
+        if (!BackendAuth::userHasAccess('media.library')) {
             $this->previewMode = true;
         }
 
         $this->processMaxItems();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function loadAssets()
+    {
+        $this->addJs('js/mediafinder.js');
+        $this->addCss('css/mediafinder.css');
     }
 
     /**
@@ -118,7 +126,6 @@ class MediaFinder extends FormWidgetBase
         $this->vars['imageWidth'] = $this->imageWidth;
         $this->vars['imageHeight'] = $this->imageHeight;
         $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
-        $this->vars['externalToolbarEventBus'] = $this->externalToolbarEventBus;
     }
 
     /**
@@ -133,22 +140,81 @@ class MediaFinder extends FormWidgetBase
         }
 
         // Lookup files
-        $mediaLib = MediaLibrary::instance();
-
         $list = [];
         foreach ($value as $val) {
-            try {
-                if ($file = $mediaLib->findFile($val)) {
-                    $list[] = $file;
-                }
+            if ($item = $this->findItemFromMediaLibrary($val)) {
+                $list[] = $item;
             }
-            catch (Exception $ex) {}
         }
 
         // Promote to Collection
         $list = new Collection($list);
 
         return $list;
+    }
+
+    /**
+     * findItemFromMediaLibrary
+     */
+    protected function findItemFromMediaLibrary($val)
+    {
+        $mediaLib = MediaLibrary::instance();
+        try {
+            $item = $this->isFolderMode()
+                ? $mediaLib->findFolder($val)
+                : $mediaLib->findFile($val);
+
+            if ($item) {
+                return $this->decorateFileAttributes($item);
+            }
+        }
+        catch (Exception $ex) {
+        }
+    }
+
+    /**
+     * decorateFileAttributes adds the bespoke attributes used
+     * internally by this widget. Added attributes are:
+     * - thumbUrl
+     * @return \Media\Classes\MediaLibraryItem
+     */
+    protected function decorateFileAttributes($file)
+    {
+        $thumb = $file->publicUrl;
+
+        if ($this->isFileResizable($file) && $this->shouldGenerateThumb()) {
+            $thumb = \System\Classes\ResizeImages::resize($file->publicUrl, $this->imageWidth, $this->imageHeight, $this->thumbOptions);
+        }
+
+        $file->thumbUrl = $thumb;
+
+        return $file;
+    }
+
+    /**
+     * shouldGenerateThumb determines if the resizer should be used
+     */
+    protected function shouldGenerateThumb()
+    {
+        if ($this->thumbOptions === false) {
+            return false;
+        }
+
+        return $this->imageWidth || $this->imageHeight;
+    }
+
+    /**
+     * isFileResizable returns true if the file can be resized
+     */
+    protected function isFileResizable($file): bool
+    {
+        return in_array(pathinfo($file->path, PATHINFO_EXTENSION), [
+            'jpg',
+            'jpeg',
+            'bmp',
+            'png',
+            'gif'
+        ]);
     }
 
     /**
@@ -175,22 +241,27 @@ class MediaFinder extends FormWidgetBase
     protected function getDisplayMode()
     {
         $mode = $this->getConfig('mode', 'file');
-
         if (str_contains($mode, '-')) {
             return $mode;
         }
 
-        $mode .= $this->maxItems === 1 ? '-single' : '-multi';
+        if ($this->isFolderMode()) {
+            return 'folder-single';
+        }
 
-        return $mode;
+        $isMulti = $this->maxItems !== 1;
+        if ($isMulti) {
+            return $mode . '-multi';
+        }
+
+        return $mode . '-single';
     }
 
     /**
-     * @inheritDoc
+     * isFolderMode returns true if the chosen media item is a folder.
      */
-    protected function loadAssets()
+    protected function isFolderMode()
     {
-        $this->addJs('js/mediafinder.js', 'core');
-        $this->addCss('css/mediafinder.css', 'core');
+        return $this->getConfig('mode') === 'folder';
     }
 }

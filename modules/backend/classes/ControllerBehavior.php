@@ -22,22 +22,22 @@ class ControllerBehavior extends ExtensionBase
     }
 
     /**
-     * @var object Supplied configuration.
+     * @var object config supplied.
      */
     protected $config;
 
     /**
-     * @var \Backend\Classes\Controller Reference to the back end controller.
+     * @var \Backend\Classes\Controller controller reference.
      */
     protected $controller;
 
     /**
-     * @var array Properties that must exist in the controller using this behavior.
+     * @var array requiredProperties that must exist in the controller using this behavior.
      */
     protected $requiredProperties = [];
 
     /**
-     * @var array Visible actions in context of the controller. Only takes effect if it is an array
+     * @var array actions visible in context of the controller. Only takes effect if it is an array
      */
     protected $actions;
 
@@ -50,9 +50,7 @@ class ControllerBehavior extends ExtensionBase
         $this->viewPath = $this->configPath = $this->guessViewPath('/partials');
         $this->assetPath = $this->guessViewPath('/assets', true);
 
-        /*
-         * Validate controller properties
-         */
+        // Validate controller properties
         foreach ($this->requiredProperties as $property) {
             if (!isset($controller->{$property})) {
                 throw new ApplicationException(Lang::get('system::lang.behavior.missing_property', [
@@ -63,16 +61,12 @@ class ControllerBehavior extends ExtensionBase
             }
         }
 
-        /*
-         * Hide all methods that aren't explicitly listed as actions
-         */
+        // Hide all methods that aren't explicitly listed as actions
         if (is_array($this->actions)) {
             $this->hideAction(array_diff(get_class_methods(get_class($this)), $this->actions));
         }
 
-        /**
-         * Constructor logic that is protected by authentication
-         */
+        // Constructor logic that is protected by authentication
         $controller->bindEvent('page.beforeDisplay', function() {
             $this->beforeDisplay();
         });
@@ -141,10 +135,7 @@ class ControllerBehavior extends ExtensionBase
     }
 
     /**
-     * controllerMethodExists returns true in case if a specified method exists in the
-     * extended controller.
-     * @param string $methodName Specifies the method name
-     * @return bool
+     * @deprecated
      */
     protected function controllerMethodExists($methodName)
     {

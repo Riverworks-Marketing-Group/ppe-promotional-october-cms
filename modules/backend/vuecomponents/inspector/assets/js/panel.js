@@ -1,7 +1,7 @@
 /*
  * Vue Inspector panel implementation
  */
-$.oc.module.register('backend.component.inspector.panel', function () {
+oc.Modules.register('backend.component.inspector.panel', function () {
     Vue.component('backend-component-inspector-panel', {
         props: {
             controls: {
@@ -11,6 +11,10 @@ $.oc.module.register('backend.component.inspector.panel', function () {
             obj: {
                 type: Object,
                 required: true
+            },
+            parentObj: {
+                type: Object,
+                required: false
             },
             inspectorUniqueId: {
                 type: String,

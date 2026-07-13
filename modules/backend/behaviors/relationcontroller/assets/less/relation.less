@@ -2,6 +2,9 @@
 
 @color-relation-border: #eeeeee;
 
+@import "relation.ui.less";
+@import "relation.field.less";
+
 .relation-behavior {
     margin-bottom: 20px;
 
@@ -12,10 +15,27 @@
             border-top: none !important;
             border-color: @color-relation-border;
         }
+
+        table.table.data {
+            border-bottom: none;
+        }
+
+        .list-content + .list-footer {
+            border-top: 1px solid @input-border;
+        }
+
+        .list-footer .pagination {
+            --bs-pagination-bg: @input-bg;
+        }
     }
 
     .control-toolbar {
         padding: 0 20px 20px 20px;
+
+        .toolbar-item.toolbar-primary {
+            &:before { left: 0; }
+            &:after { right: 0; }
+        }
 
         .toolbar-item .form-control.search {
             padding-top: 5px;
@@ -58,5 +78,3 @@
         padding: 0 0 10px 0;
     }
 }
-
-@import "relation.ui.less";

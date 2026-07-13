@@ -13,7 +13,7 @@ class HasManyModelTest extends PluginTestCase
         include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Post.php';
         include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Author.php';
 
-        $this->runPluginRefreshCommand('Database.Tester');
+        $this->migratePlugin('Database.Tester');
     }
 
     public function testSetRelationValue()
@@ -69,7 +69,7 @@ class HasManyModelTest extends PluginTestCase
         $post2 = Post::create(['title' => "Second post", 'author_id' => $author->id]);
         Model::reguard();
 
-        $this->assertEquals([$post1->id, $post2->id], $author->getRelationValue('posts'));
+        $this->assertEquals([$post1->id, $post2->id], $author->getRelationSimpleValue('posts'));
     }
 
     public function testDeferredBinding()
@@ -92,7 +92,7 @@ class HasManyModelTest extends PluginTestCase
         $this->assertEquals(1, $author->posts()->withDeferred($sessionKey)->count());
 
         // Commit deferred
-        $author->save(null, $sessionKey);
+        $author->save(['sessionKey' => $sessionKey]);
         $post = Post::find($postId);
         $this->assertEquals(1, $author->posts()->count());
         $this->assertEquals($author->id, $post->author_id);
@@ -113,7 +113,7 @@ class HasManyModelTest extends PluginTestCase
         ], $author->posts->pluck('title')->all());
 
         // Commit deferred
-        $author->save(null, $sessionKey);
+        $author->save(['sessionKey' => $sessionKey]);
         $post = Post::find($postId);
         $this->assertEquals(0, $author->posts()->count());
         $this->assertNull($post->author_id);

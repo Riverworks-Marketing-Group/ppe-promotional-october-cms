@@ -1,6 +1,6 @@
 <?php namespace Backend\Models;
 
-use Backend\Classes\AuthManager;
+use Backend\Classes\RoleManager;
 use October\Rain\Auth\Models\Role as RoleBase;
 
 /**
@@ -11,6 +11,8 @@ use October\Rain\Auth\Models\Role as RoleBase;
  */
 class UserRole extends RoleBase
 {
+    use \October\Rain\Database\Traits\Sortable;
+
     const CODE_DEVELOPER = 'developer';
     const CODE_PUBLISHER = 'publisher';
 
@@ -35,6 +37,16 @@ class UserRole extends RoleBase
     ];
 
     /**
+     * @var array fillable fields
+     */
+    protected $fillable = [
+        'name',
+        'code',
+        'description',
+        'color_background'
+    ];
+
+    /**
      * filterFields used by the form controller
      */
     public function filterFields($fields)
@@ -52,6 +64,10 @@ class UserRole extends RoleBase
     {
         if ($this->is_system) {
             $this->permissions = $this->getDefaultPermissions();
+        }
+
+        if (is_array($this->permissions)) {
+            $this->permissions = static::applyPermissionPatches($this->permissions);
         }
     }
 
@@ -82,7 +98,7 @@ class UserRole extends RoleBase
             return true;
         }
 
-        return AuthManager::instance()->hasPermissionsForRole($this->code);
+        return RoleManager::instance()->hasPermissionsForRole($this->code);
     }
 
     /**
@@ -90,6 +106,28 @@ class UserRole extends RoleBase
      */
     public function getDefaultPermissions()
     {
-        return AuthManager::instance()->listPermissionsForRole($this->code);
+        return RoleManager::instance()->listPermissionsForRole($this->code);
+    }
+
+    /**
+     * applyPermissionPatches replaces old permission codes with new ones. It leaves
+     * the old ones in place since there shouldn't be any harm in doing so.
+     */
+    public static function applyPermissionPatches(array $permissions): array
+    {
+        $toReplace = [
+            'admins.manage.roles' => 'admins.roles',
+            'admins.manage.groups' => 'admins.groups',
+        ];
+
+        foreach ($permissions as $key => $value) {
+            if (!isset($toReplace[$key])) {
+                continue;
+            }
+
+            $permissions[$toReplace[$key]] = $value;
+        }
+
+        return $permissions;
     }
 }

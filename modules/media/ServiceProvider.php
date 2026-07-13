@@ -1,13 +1,11 @@
 <?php namespace Media;
 
-use App;
+use Event;
 use Backend;
-use BackendMenu;
 use BackendAuth;
 use Media\Widgets\MediaManager;
-use System\Classes\CombineAssets;
-use System\Classes\MarkupManager;
-use Backend\Classes\WidgetManager;
+use Media\Helpers\MediaView as MediaViewHelper;
+use Backend\Classes\Controller as BackendController;
 use October\Rain\Support\ModuleServiceProvider;
 
 /**
@@ -22,16 +20,10 @@ class ServiceProvider extends ModuleServiceProvider
     {
         parent::register('media');
 
-        $this->registerMarkupTags();
-        $this->registerAssetBundles();
+        $this->registerSingletons();
 
-        /*
-         * Backend specific
-         */
-        if (App::runningInBackend()) {
-            $this->registerBackendNavigation();
-            $this->registerBackendWidgets();
-            $this->registerBackendPermissions();
+        // Backend specific
+        if ($this->app->runningInBackend()) {
             $this->registerGlobalInstance();
         }
     }
@@ -42,87 +34,109 @@ class ServiceProvider extends ModuleServiceProvider
     public function boot()
     {
         parent::boot('media');
+
+        $this->bootMediaViewEvents();
     }
 
     /**
-     * registerAssetBundles
+     * registerSingletons
      */
-    protected function registerAssetBundles()
+    protected function registerSingletons()
     {
-        CombineAssets::registerCallback(function ($combiner) {
-            $combiner->registerBundle('~/modules/media/widgets/mediamanager/assets/js/mediamanager-browser.js');
-        });
+        $this->app->singleton('media.views', \Media\Helpers\MediaView::class);
+        $this->app->singleton('media.library', \Media\Classes\MediaLibrary::class);
     }
 
-    /*
-     * Register navigation
+    /**
+     * registerNavigation
      */
-    protected function registerBackendNavigation()
+    public function registerNavigation()
     {
-        BackendMenu::registerCallback(function ($manager) {
-            $manager->registerMenuItems('October.Media', [
-                'media' => [
-                    'label' => 'backend::lang.media.menu_label',
-                    'icon' => 'icon-folder',
-                    'iconSvg' => 'modules/media/assets/images/media-icon.svg',
-                    'url' => Backend::url('media'),
-                    'permissions' => ['media.*'],
-                    'order' => 200
-                ]
-            ]);
-        });
+        return [
+            'media' => [
+                'label' => 'backend::lang.media.menu_label',
+                'icon' => 'icon-image',
+                'iconSvg' => 'modules/media/assets/images/media-icon.svg',
+                'url' => Backend::url('media'),
+                'permissions' => ['media.library'],
+                'order' => 200
+            ]
+        ];
     }
 
-    /*
-     * Register permissions
+    /**
+     * registerPermissions
      */
-    protected function registerBackendPermissions()
+    public function registerPermissions()
     {
-        BackendAuth::registerCallback(function ($manager) {
-            $manager->registerPermissions('October.Media', [
-                'media.manage_media' => [
-                    'label' => 'backend::lang.permissions.manage_media',
-                    'tab' => 'system::lang.permissions.name',
-                ]
-            ]);
-        });
+        return [
+            'media.library' => [
+                'label' => 'Access the Media Manager',
+                'tab' => 'Media',
+                'order' => 300
+            ],
+            'media.library.create' => [
+                'label' => 'Upload Media',
+                'comment' => 'backend::lang.permissions.manage_media',
+                'tab' => 'Media',
+                'order' => 400
+            ],
+            // 'media.library.update' => [
+            //     'label' => 'Modify Media',
+            //     'comment' => 'Change meta data and other information',
+            //     'tab' => 'Media',
+            //     'order' => 500
+            // ],
+            'media.library.delete' => [
+                'label' => 'Delete Media',
+                'tab' => 'Media',
+                'order' => 600
+            ]
+        ];
     }
 
-    /*
-     * Register widgets
+    /**
+     * registerFormWidgets
      */
-    protected function registerBackendWidgets()
+    public function registerFormWidgets()
     {
-        WidgetManager::instance()->registerFormWidgets(function ($manager) {
-            $manager->registerFormWidget(\Media\FormWidgets\MediaFinder::class, 'mediafinder');
-        });
+        return [
+            \Media\FormWidgets\MediaFinder::class => 'mediafinder'
+        ];
     }
 
-    /*
-     * Register markup tags
+    /**
+     * registerMarkupTags
      */
-    protected function registerMarkupTags()
+    public function registerMarkupTags()
     {
-        MarkupManager::instance()->registerCallback(function ($manager) {
-            $manager->registerFilters([
+        return [
+            'filters' => [
                 'media' => [\Media\Classes\MediaLibrary::class, 'url'],
-            ]);
+            ]
+        ];
+    }
+
+    /**
+     * bootMediaViewEvents
+     */
+    protected function bootMediaViewEvents()
+    {
+        Event::listen('cms.content.postProcessMarkup', function (&$content) {
+            $content = MediaViewHelper::instance()->processHtml($content);
         });
     }
 
     /**
-     * Media Manager widget is available on all back-end pages
+     * registerGlobalInstance ensures media Manager widget is available on all backend pages
      */
     protected function registerGlobalInstance()
     {
-        \Backend\Classes\Controller::extend(function($controller) {
-            $user = BackendAuth::getUser();
-            if (!$user || !$user->hasAccess('media.*')) {
-                return;
+        BackendController::extend(function($controller) {
+            if (BackendAuth::userHasAccess('media.library')) {
+                $manager = new MediaManager($controller, ['alias' => 'ocmediamanager']);
+                $manager->bindToController();
             }
-
-            $manager = new MediaManager($controller, 'ocmediamanager');
-            $manager->bindToController();
         });
     }
 }

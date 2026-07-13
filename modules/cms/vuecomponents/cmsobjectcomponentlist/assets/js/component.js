@@ -10,13 +10,7 @@ Vue.component('cmd-object-component-list-component', {
         },
 
         componentIcon: function computeComponentIcon() {
-            var result = this.component.icon;
-
-            if (result.substring(0, 3) !== 'oc-') {
-                result = 'oc-' + result;
-            }
-
-            return result;
+            return this.component.icon;
         },
 
         inspectorTitle: function computeInspectorTitle() {
@@ -58,18 +52,25 @@ Vue.component('cmd-object-component-list-component', {
 
             values = JSON.parse(values);
             this.component.alias = values['oc.alias'];
+            this.$emit('inspectorhidden');
         },
 
         onInspectorHiding: function onInspectorHiding(ev, values) {
             this.$emit('inspectorhiding', { ev: ev, values: values });
+        },
+
+        onInspectorShowed: function onInspectorShowed() {
+            this.$emit('inspectorshowed');
         }
     },
     mounted: function mounted() {
         $(this.$el).on('hidden.oc.inspector', this.onInspectorHidden);
+        $(this.$el).on('showed.oc.inspector', this.onInspectorShowed);
         $(this.$el).on('hiding.oc.inspector', this.onInspectorHiding);
     },
     beforeDestroy: function beforeDestroy() {
         $(this.$el).off('hidden.oc.inspector', this.onInspectorHidden);
+        $(this.$el).off('showed.oc.inspector', this.onInspectorShowed);
         $(this.$el).off('hiding.oc.inspector', this.onInspectorHiding);
     },
     template: '#cms_vuecomponents_cmsobjectcomponentlist_component'

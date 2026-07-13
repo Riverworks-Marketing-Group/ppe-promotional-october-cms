@@ -48,11 +48,11 @@
     }
 
     ListStructureWidget.prototype.initTree = function() {
-        this.$el.on('click', '.tree-expand-collapse', $.proxy(this.onToggleTreeNode, this));
+        this.$el.on('click', '.tree-expand-collapse', this.proxy(this.onToggleTreeNode));
     }
 
     ListStructureWidget.prototype.destroyTree = function() {
-        this.$el.off('click', '.tree-expand-collapse', $.proxy(this.onToggleTreeNode, this));
+        this.$el.off('click', '.tree-expand-collapse', this.proxy(this.onToggleTreeNode));
     }
 
     ListStructureWidget.prototype.onToggleTreeNode = function(evt) {
@@ -78,24 +78,27 @@
         this.activeChildren = null;
         this.lastChildDiff = null;
 
-        var that = this;
+        var self = this;
 
         var sortableOptions = {
             // forceFallback: true,
+            filter: '.no-sort',
             animation: 150,
             setData: function setData(dataTransfer, dragEl) {
-                var hoverElement = $(document.documentElement).hasClass('gecko') ? 'div' : 'canvas';
-                that.blankHoverImage = document.createElement(hoverElement);
-
-                document.body.appendChild(that.blankHoverImage);
-                dataTransfer.setDragImage(that.blankHoverImage, 0, 0);
-                dataTransfer.setData('Text', dragEl.textContent);
+                self.dragGhost = dragEl.cloneNode(true);
+                self.dragGhost.classList.add('list-hidden-drag-ghost');
+                document.body.appendChild(self.dragGhost);
+                dataTransfer.setDragImage(self.dragGhost, 0, 0);
             },
+            onStart: this.proxy(this.onDragStart),
+            onChange: this.proxy(this.onChange),
+            onEnd: this.proxy(this.onDragStop),
+            onMove: this.proxy(this.onDragMove),
 
-            onStart: $.proxy(this.onDragStart, this),
-            onChange: $.proxy(this.onChange, this),
-            onEnd: $.proxy(this.onDragStop, this),
-            onMove: $.proxy(this.onDragMove, this)
+            // Auto scroll plugin
+            forceAutoScrollFallback: true,
+            scrollSensitivity: 60,
+            scrollSpeed: 20
         };
 
         if (!this.options.dragRow) {
@@ -104,17 +107,17 @@
 
         this.sortable = Sortable.create(this.$tableBody.get(0), sortableOptions);
 
-        this.$el.on('drag', $.proxy(this.onDragging, this));
-        this.$el.on('mousemove', $.proxy(this.onDragging, this));
-        this.$el.on('touchmove', $.proxy(this.onDragging, this));
-        this.$el.on('pointermove', $.proxy(this.onDragging, this));
+        this.$el.on('drag', this.proxy(this.onDragging));
+        this.$el.on('mousemove', this.proxy(this.onDragging));
+        this.$el.on('touchmove', this.proxy(this.onDragging));
+        this.$el.on('pointermove', this.proxy(this.onDragging));
     }
 
     ListStructureWidget.prototype.destroyReorder = function() {
-        this.$el.off('drag', $.proxy(this.onDragging, this));
-        this.$el.off('mousemove', $.proxy(this.onDragging, this));
-        this.$el.off('touchmove', $.proxy(this.onDragging, this));
-        this.$el.off('pointermove', $.proxy(this.onDragging, this));
+        this.$el.off('drag', this.proxy(this.onDragging));
+        this.$el.off('mousemove', this.proxy(this.onDragging));
+        this.$el.off('touchmove', this.proxy(this.onDragging));
+        this.$el.off('pointermove', this.proxy(this.onDragging));
     }
 
     ListStructureWidget.prototype.dispose = function() {
@@ -192,11 +195,15 @@
             self = this,
             $tableBody = this.$tableBody;
 
+        if (!$tableBody) {
+            return;
+        }
+
         $tableBody.addClass('tree-drag-updated').removeClass('tree-drag-mode');
 
-        if (this.blankHoverImage) {
-            $(this.blankHoverImage).remove();
-            this.blankHoverImage = null;
+        if (this.dragGhost) {
+            $(this.dragGhost).remove();
+            this.dragGhost = null;
         }
 
         var currentLevel = $item.data('tree-level'),
@@ -219,6 +226,7 @@
 
         if (this.options.includeSortOrders) {
             postData.sort_orders = this.getRecordSortData();
+            postData.root_sort_orders = this.getRecordSortData(true);
         }
 
         this.$el.request(this.options.reorderHandler, {
@@ -240,6 +248,7 @@
 
             if (nextRowLevel === proposedLevel) {
                 data.next_id = $nextRow.data('tree-id');
+                data.next_root_id = $nextRow.data('tree-root-id');
                 break;
             }
 
@@ -257,6 +266,7 @@
 
             if (prevRowLevel === proposedLevel) {
                 data.previous_id = $prevRow.data('tree-id');
+                data.previous_root_id = $prevRow.data('tree-root-id');
                 break;
             }
 
@@ -274,6 +284,7 @@
 
             if (prevRowLevel < proposedLevel) {
                 data.parent_id = $prevRow.data('tree-id');
+                data.parent_root_id = $prevRow.data('tree-root-id');
                 break;
             }
 
@@ -283,11 +294,11 @@
         return data;
     }
 
-    ListStructureWidget.prototype.getRecordSortData = function() {
+    ListStructureWidget.prototype.getRecordSortData = function(rootId) {
         var sortOrders = [];
 
-        $('[data-tree-id]', this.$tableBody).each(function(){
-            sortOrders.push($(this).data('tree-id'))
+        $('[data-tree-id]', this.$tableBody).each(function() {
+            sortOrders.push($(this).data(rootId ? 'tree-root-id' : 'tree-id'))
         });
 
         return sortOrders;
@@ -456,7 +467,7 @@
     }
 
     ListStructureWidget.prototype.getEventPageX = function(evt) {
-        return evt.pageX || evt.touches[0].pageX;
+        return evt.pageX || (evt.touches && evt.touches[0].pageX) || 0;
     }
 
     // LISTREE WIDGET PLUGIN DEFINITION

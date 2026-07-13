@@ -13,7 +13,7 @@
  * JavaScript API:
  * $('div').fileUploader()
  *
- * Dependancies:
+ * Dependencies:
  * - Dropzone.js
  */
 +function ($) { "use strict";
@@ -24,7 +24,7 @@
     // FILEUPLOAD CLASS DEFINITION
     // ============================
 
-    var FileUpload = function (element, options) {
+    var FileUpload = function(element, options) {
         this.$el = $(element);
         this.options = options || {};
 
@@ -37,6 +37,9 @@
     FileUpload.prototype.constructor = FileUpload;
 
     FileUpload.prototype.init = function() {
+        this.isLoaded = false;
+        this.pendingCount = 0;
+
         if (this.options.isMulti === null) {
             this.options.isMulti = this.$el.hasClass('is-multi');
         }
@@ -59,11 +62,8 @@
         this.$el.on('click', '.toolbar-clear-file', this.proxy(this.onClearFileClick));
         this.$el.on('click', '.toolbar-delete-selected', this.proxy(this.onDeleteSelectedClick));
 
+        this.$el.on('click', 'input[data-record-selector]', this.proxy(this.onClickCheckbox));
         this.$el.on('change', 'input[data-record-selector]', this.proxy(this.onSelectionChanged));
-
-        this.initToolbarExtensionPoint();
-        this.initExternalToolbarEventBus();
-        this.mountExternalToolbarEventBusEvents();
 
         this.bindUploader();
 
@@ -71,7 +71,14 @@
             this.bindSortable();
         }
 
-        this.extendExternalToolbar();
+        this.isLoaded = true;
+
+        // External toolbar
+        setTimeout(() => {
+            this.initToolbarExtensionPoint();
+            this.mountExternalToolbarEventBusEvents();
+            this.extendExternalToolbar();
+        }, 0);
     }
 
     FileUpload.prototype.dispose = function() {
@@ -80,6 +87,7 @@
         this.$el.off('click', '.toolbar-clear-file', this.proxy(this.onClearFileClick));
         this.$el.off('click', '.toolbar-delete-selected', this.proxy(this.onDeleteSelectedClick));
 
+        this.$el.off('click', 'input[data-record-selector]', this.proxy(this.onClickCheckbox));
         this.$el.off('change', 'input[data-record-selector]', this.proxy(this.onSelectionChanged));
 
         this.$el.off('dispose-control', this.proxy(this.dispose));
@@ -95,6 +103,7 @@
         this.uploaderOptions = null;
         this.toolbarExtensionPoint = null;
         this.externalToolbarEventBusObj = null;
+        this.isLoaded = null;
 
         // In some cases options could contain callbacks,
         // so it's better to clean them up too.
@@ -107,34 +116,21 @@
     // External toolbar
     //
 
-    FileUpload.prototype.initToolbarExtensionPoint = function () {
+    FileUpload.prototype.initToolbarExtensionPoint = function() {
         if (!this.options.externalToolbarAppState) {
             return;
         }
 
-        // Expected format: tailor.app::toolbarExtensionPoint
-        const parts = this.options.externalToolbarAppState.split('::');
-        if (parts.length !== 2) {
-            throw new Error('Invalid externalToolbarAppState format. Expected format: module.name::stateElementName');
+        const point = $.oc.vueUtils.getToolbarExtensionPoint(
+            this.options.externalToolbarAppState,
+            this.$el.get(0),
+            'both'
+        );
+
+        if (point) {
+            this.toolbarExtensionPoint = point.state;
+            this.externalToolbarEventBusObj = point.bus;
         }
-
-        const app = $.oc.module.import(parts[0]);
-        this.toolbarExtensionPoint = app.state[parts[1]];
-    }
-
-    FileUpload.prototype.initExternalToolbarEventBus = function() {
-        if (!this.options.externalToolbarEventBus) {
-            return;
-        }
-
-        // Expected format: tailor.app::eventBus
-        const parts = this.options.externalToolbarEventBus.split('::');
-        if (parts.length !== 2) {
-            throw new Error('Invalid externalToolbarEventBus format. Expected format: module.name::stateElementName');
-        }
-
-        const module = $.oc.module.import(parts[0]);
-        this.externalToolbarEventBusObj = module.state[parts[1]];
     }
 
     FileUpload.prototype.mountExternalToolbarEventBusEvents = function() {
@@ -155,7 +151,7 @@
         this.externalToolbarEventBusObj.$off('extendapptoolbar', this.proxy(this.extendExternalToolbar));
     }
 
-    FileUpload.prototype.onToolbarExternalCommand = function (ev) {
+    FileUpload.prototype.onToolbarExternalCommand = function(ev) {
         var cmdPrefix = 'fileupload-toolbar-';
 
         if (ev.command.substring(0, cmdPrefix.length) != cmdPrefix) {
@@ -169,7 +165,7 @@
         $button.get(0).click(ev.ev);
     }
 
-    FileUpload.prototype.extendExternalToolbar = function () {
+    FileUpload.prototype.extendExternalToolbar = function() {
         if (!this.$el.is(":visible") || !this.toolbarExtensionPoint) {
             return;
         }
@@ -183,9 +179,9 @@
         var that = this,
             $buttons = this.$el.find('.uploader-control-toolbar .backend-toolbar-button');
 
-        $buttons.each(function () {
+        $buttons.each(function() {
             var $button = $(this),
-                $icon = $button.find('i[class^=octo-icon]');
+                $icon = $button.find('i[class^=icon]');
 
             that.toolbarExtensionPoint.push(
                 {
@@ -209,6 +205,7 @@
             paramName: this.options.paramName,
             clickable: this.$uploadButton.get(0),
             previewsContainer: this.$filesContainer.get(0),
+            hiddenInputContainer: this.$el.get(0),
             maxFilesize: this.options.maxFilesize,
             headers: {},
             timeout: 0
@@ -237,18 +234,14 @@
 
         this.uploaderOptions.resize = this.onResizeFileInfo;
 
-        /*
-         * Locale
-         */
+        // Locale
         this.uploaderOptions.dictMaxFilesExceeded = $.oc.lang.get('upload.max_files');
         this.uploaderOptions.dictInvalidFileType = $.oc.lang.get('upload.invalid_file_type');
         this.uploaderOptions.dictFileTooBig = $.oc.lang.get('upload.file_too_big');
         this.uploaderOptions.dictResponseError = $.oc.lang.get('upload.response_error');
         this.uploaderOptions.dictRemoveFile = $.oc.lang.get('upload.remove_file');
 
-        /*
-         * Add CSRF token to headers
-         */
+        // Add CSRF token to headers
         var token = $('meta[name="csrf-token"]').attr('content');
         if (token) {
             this.uploaderOptions.headers['X-CSRF-TOKEN'] = token;
@@ -260,6 +253,7 @@
         this.dropzone.on('sending', this.proxy(this.onUploadSending));
         this.dropzone.on('success', this.proxy(this.onUploadSuccess));
         this.dropzone.on('error', this.proxy(this.onUploadError));
+        this.dropzone.on('complete', this.proxy(this.onUploadComplete));
 
         this.dropzone.on('dragenter', this.proxy(this.onDragEnter));
         this.dropzone.on('dragover', this.proxy(this.onDragEnter));
@@ -273,20 +267,20 @@
         this.loadExistingFiles();
     }
 
-    // FileUpload.prototype.removeEventListeners = function () {
+    // FileUpload.prototype.removeEventListeners = function() {
     //     this.dropzone.removeEventListeners();
     // }
 
-    // FileUpload.prototype.setupEventListeners = function () {
+    // FileUpload.prototype.setupEventListeners = function() {
     //     if (this.dropzone.files.length < this.dropzone.options.maxFiles) {
     //         this.dropzone.setupEventListeners();
     //     }
     // }
 
-    FileUpload.prototype.loadExistingFiles = function () {
+    FileUpload.prototype.loadExistingFiles = function() {
         var self = this;
 
-        $('.server-file', this.$el).each(function () {
+        $('.server-file', this.$el).each(function() {
             var file = $(this).data();
 
             self.dropzone.files.push(file);
@@ -335,7 +329,8 @@
         return info;
     }
 
-    FileUpload.prototype.onUploadAddedFile = function (file) {
+    FileUpload.prototype.onUploadAddedFile = function(file) {
+        this.pendingCount++;
         this.$uploadButton.blur();
 
         var $object = $(file.previewElement).data('dzFileObject', file),
@@ -349,7 +344,7 @@
             this.removeFileFromElement($object.siblings());
         }
 
-        if (this.options.isMulti) {
+        if (this.options.isMulti && this.isLoaded) {
             file.previewElement.scrollIntoView();
         }
 
@@ -383,13 +378,25 @@
         $preview.addClass('is-error');
     }
 
-    FileUpload.prototype.onSelectionChanged = function (ev) {
+    FileUpload.prototype.onUploadComplete = function(file) {
+        this.pendingCount--;
+
+        if (this.pendingCount === 0) {
+            this.onSortAttachments();
+        }
+    }
+
+    FileUpload.prototype.onSelectionChanged = function(ev) {
         var $object = $(ev.target).closest('.upload-object');
 
         $object.toggleClass('selected', ev.target.checked);
 
         this.updateDeleteSelectedState();
         this.extendExternalToolbar();
+    }
+
+    FileUpload.prototype.onClickCheckbox = function(ev) {
+        oc.checkboxRangeRegisterClick(ev, '.upload-object', 'input[data-record-selector]');
     }
 
     /*
@@ -401,14 +408,14 @@
 
     FileUpload.prototype.addExtraFormData = function(formData) {
         if (this.options.extraData) {
-            $.each(this.options.extraData, function (name, value) {
+            $.each(this.options.extraData, function(name, value) {
                 formData.append(name, value)
             });
         }
 
         var $form = this.$el.closest('form');
         if ($form.length > 0) {
-            $.each($form.serializeArray(), function (index, field) {
+            $.each($form.serializeArray(), function(index, field) {
                 formData.append(field.name, field.value)
             });
         }
@@ -442,9 +449,13 @@
             animation: 150,
             draggable: 'div.upload-object.is-success',
             handle: '.drag-handle',
-            onStart: $.proxy(this.onDragStart, this),
-            onChange: this.proxy(this.onSortAttachments),
-            onEnd: $.proxy(this.onDragStop, this)
+            onStart: this.proxy(this.onDragStart),
+            onEnd: this.proxy(this.onDragStop),
+
+            // Auto scroll plugin
+            forceAutoScrollFallback: true,
+            scrollSensitivity: 60,
+            scrollSpeed: 20
         });
     }
 
@@ -454,83 +465,82 @@
 
     FileUpload.prototype.onDragStop = function(evt) {
         this.dragging = false;
+
+        this.onSortAttachments();
     }
 
     FileUpload.prototype.onSortAttachments = function() {
-        if (this.options.sortHandler) {
-
-            // Build an object of ID:ORDER
-            var orderData = {}
-
-            this.$el.find('.upload-object.is-success')
-                .each(function(index){
-                    var id = $(this).data('id')
-                    orderData[id] = index + 1
-                });
-
-            this.$el.request(this.options.sortHandler, {
-                data: { sortOrder: orderData }
-            });
+        if (!this.options.sortHandler) {
+            return;
         }
+
+        // Build an object of ID:ORDER
+        var orderData = {}
+
+        this.$el.find('.upload-object.is-success')
+            .each(function(index){
+                var id = $(this).data('id')
+                orderData[id] = index + 1
+            });
+
+        // Already sorting, queue the request
+        if (this.sorting) {
+            this.sortAgain = true;
+            return;
+        }
+
+        this.sorting = true;
+
+        this.$el.request(this.options.sortHandler, {
+            data: { sortOrder: orderData }
+        }).done(() => {
+            this.sorting = false;
+
+            // Capture the final state
+            if (this.sortAgain) {
+                this.sortAgain = false;
+                this.onSortAttachments();
+            }
+        });
     }
 
     //
     // User interaction
     //
 
-    FileUpload.prototype.onClearFileClick = function (ev) {
+    FileUpload.prototype.onClearFileClick = function(ev) {
         var self = this,
             $form = $(ev.target).closest('form'),
             $button = $(ev.target).closest('.toolbar-clear-file'),
-            $currentObjects = $('.upload-object', this.$filesContainer);
+            $currentObject = $('.upload-object:first', this.$filesContainer);
 
-        $.oc.confirm($button.attr('data-request-confirm'), function() {
-            $currentObjects.addClass('is-loading');
+        oc.confirm($button.attr('data-request-confirm'), function(isConfirm) {
+            if (!isConfirm) {
+                return;
+            }
 
-            $form.request($button.attr('data-request'), {
-                data: {
-                    file_id: $currentObjects.data('id')
-                }
-            }).done(function() {
-                    self.removeFileFromElement($currentObjects);
-                    self.evalIsPopulated();
-                    self.updateDeleteSelectedState();
-                    self.extendExternalToolbar();
-                    self.triggerChange();
-            }).always(function() {
-                $currentObjects.removeClass('is-loading');
-            });
+            self.removeObjectInternal($form, $button, $currentObject);
         });
 
         ev.stopPropagation();
         ev.preventDefault();
     }
 
-    FileUpload.prototype.onDeleteSelectedClick = function (ev) {
+    FileUpload.prototype.onDeleteSelectedClick = function(ev) {
         var self = this,
             $form = $(ev.target).closest('form'),
             $button = $(ev.target).closest('.toolbar-delete-selected'),
             $currentObjects = $('.upload-object:has(input[data-record-selector]:checked)', this.$filesContainer);
 
-        $.oc.confirm($button.attr('data-request-confirm'), function () {
+        oc.confirm($button.attr('data-request-confirm'), function(isConfirm) {
+            if (!isConfirm) {
+                return;
+            }
+
             $currentObjects.addClass('is-loading');
 
-            $currentObjects.each(function () {
-                var $currentObject = $(this)
-
-                $form.request($button.attr('data-request'), {
-                    data: {
-                        file_id: $currentObject.data('id')
-                    }
-                }).done(function() {
-                    self.removeFileFromElement($currentObject);
-                    self.evalIsPopulated();
-                    self.updateDeleteSelectedState();
-                    self.extendExternalToolbar();
-                    self.triggerChange();
-                }).always(function () {
-                    $currentObject.removeClass('is-loading');
-                });
+            $currentObjects.each(function() {
+                self.removeObjectInternal($form, $button, $(this));
             });
         });
 
@@ -538,9 +548,38 @@
         ev.preventDefault();
     }
 
+    FileUpload.prototype.removeObjectInternal = function($form, $button, $currentObject) {
+        var self = this,
+            objectId = $currentObject.data('id');
+
+        if (!objectId) {
+            self.removeFileFromElement($currentObject);
+            self.evalIsPopulated();
+            self.updateDeleteSelectedState();
+            self.extendExternalToolbar();
+            self.triggerChange();
+            return;
+        }
+
+        $currentObject.addClass('is-loading');
+        $form.request($button.attr('data-request'), {
+            data: {
+                file_id: objectId
+            }
+        }).done(function() {
+            self.removeFileFromElement($currentObject);
+            self.evalIsPopulated();
+            self.updateDeleteSelectedState();
+            self.extendExternalToolbar();
+            self.triggerChange();
+        }).always(function() {
+            $currentObject.removeClass('is-loading');
+        });
+    }
+
     FileUpload.prototype.onClickSuccessObject = function(ev) {
         if ($(ev.target).closest('.meta').length) return;
-        if ($(ev.target).closest('.custom-checkbox-v2').length) return;
+        if ($(ev.target).closest('.form-check').length) return;
 
         var $target = $(ev.target).closest('.upload-object');
 
@@ -571,7 +610,7 @@
             errorMsg = $('[data-dz-errormessage]', $target).text(),
             $template = $(this.options.errorTemplate);
 
-        // Remove any exisiting objects for single variety
+        // Remove any existing objects for single variety
         if (!this.options.isMulti) {
             this.removeFileFromElement($target.siblings());
         }
@@ -619,7 +658,7 @@
         }
     }
 
-    FileUpload.prototype.updateDeleteSelectedState = function () {
+    FileUpload.prototype.updateDeleteSelectedState = function() {
         var enabled = false,
             selectedCount = this.$el.find('input[data-record-selector]:checked').length;
 
@@ -648,7 +687,7 @@
         this.$el.addClass('file-drag-over');
     }
 
-    FileUpload.prototype.onDragEnd = function () {
+    FileUpload.prototype.onDragEnd = function() {
         if (this.dragging) {
             return;
         }
@@ -660,7 +699,7 @@
      * Replicates the formatting of October\Rain\Filesystem\Filesystem::sizeToString(). This method will return
      * an object with the file size amount and the unit used as `size` and `units` respectively.
      */
-    FileUpload.prototype.getFilesize = function (file) {
+    FileUpload.prototype.getFilesize = function(file) {
         var formatter = new Intl.NumberFormat('en', {
                 style: 'decimal',
                 minimumFractionDigits: 2,
@@ -721,8 +760,8 @@
 
     var old = $.fn.fileUploader;
 
-    $.fn.fileUploader = function (option) {
-        return this.each(function () {
+    $.fn.fileUploader = function(option) {
+        return this.each(function() {
             var $this   = $(this)
             var data    = $this.data('oc.fileUpload')
             var options = $.extend({}, FileUpload.DEFAULTS, $this.data(), typeof option == 'object' && option)
@@ -736,14 +775,14 @@
     // FILEUPLOAD NO CONFLICT
     // =================
 
-    $.fn.fileUploader.noConflict = function () {
+    $.fn.fileUploader.noConflict = function() {
         $.fn.fileUpload = old
         return this
     }
 
     // FILEUPLOAD DATA-API
     // ===============
-    $(document).render(function () {
+    $(document).render(function() {
         $('[data-control="fileupload"]').fileUploader();
     });
 

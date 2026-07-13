@@ -3,11 +3,11 @@
 use Url;
 use Html;
 use Config;
+use System;
 use Request;
 use Redirect;
 use October\Rain\Router\Helper as RouterHelper;
 use System\Helpers\DateTime as DateTimeHelper;
-use System\Models\Parameter as SystemParameters;
 use Backend\Classes\Skin;
 use Exception;
 
@@ -26,8 +26,7 @@ class Backend
      */
     public function assetVersion(): string
     {
-        return hash('crc32', SystemParameters::get('system::core.build', 1)
-            . filemtime(base_path('modules/backend/ServiceProvider.php')));
+        return hash('crc32', filemtime(base_path('vendor/autoload.php')) . System::VERSION);
     }
 
     /**
@@ -35,7 +34,7 @@ class Backend
      */
     public function uri(): string
     {
-        return Config::get('backend.uri', Config::get('cms.backendUri', 'backend'));
+        return ltrim(Config::get('backend.uri', Config::get('cms.backendUri', 'backend')), '/');
     }
 
     /**
@@ -195,5 +194,32 @@ class Backend
         }
 
         return '<time'.Html::attributes($attributes).'>'.e($defaultValue).'</time>'.PHP_EOL;
+    }
+
+    /**
+     * sizeToPixels converts a size name, e.g. large, small to a pixel size
+     */
+    public function sizeToPixels($size): int
+    {
+        if (is_numeric($size)) {
+            return (int) $size;
+        }
+
+        switch ($size) {
+            case 'tiny':
+                return 400;
+            case 'small':
+                return 500;
+            case 'medium':
+                return 600;
+            case 'large':
+                return 750;
+            case 'huge':
+                return 950;
+            case 'giant':
+                return 1200;
+        }
+
+        return 0;
     }
 }

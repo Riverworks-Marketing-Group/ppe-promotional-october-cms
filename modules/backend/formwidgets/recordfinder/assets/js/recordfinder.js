@@ -8,7 +8,7 @@
  * JavaScript API:
  * $('a#someElement').recordFinder({ option: 'value' })
  *
- * Dependences:
+ * Dependencies:
  * - Some other plugin (filename.js)
  */
 
@@ -57,7 +57,7 @@
     }
 
     RecordFinder.prototype.onDoubleClick = function(linkEl, recordId) {
-        $('.btn.find-record', this.$el).trigger('click');
+        $('.toolbar-find-button', this.$el).trigger('click');
     }
 
     RecordFinder.prototype.updateRecord = function(linkEl, recordId) {
@@ -74,9 +74,8 @@
 
         this.$el.loadIndicator({ opaque: true });
         this.$el.request(this.options.refreshHandler, {
-            success: function(data) {
-                this.success(data)
-                $(locker).trigger('change')
+            afterUpdate: function() {
+                $(locker).trigger('change');
             }
         });
 

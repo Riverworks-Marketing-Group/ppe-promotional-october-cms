@@ -1,10 +1,8 @@
 <?php namespace Backend\Classes;
 
-use Str;
 use App;
 use File;
 use View;
-use Event;
 use System;
 use Response;
 use Illuminate\Routing\Controller as ControllerBase;
@@ -15,7 +13,7 @@ use Closure;
 /**
  * BackendController is the master controller for all back-end pages.
  * All requests that are prefixed with the backend URI pattern are sent here,
- * then the next URI segments are analysed and the request is routed to the
+ * then the next URI segments are analyzed and the request is routed to the
  * relevant back-end controller.
  *
  * For example, a request with the URL `/backend/acme/blog/posts` will look
@@ -61,19 +59,6 @@ class BackendController extends ControllerBase
     }
 
     /**
-     * runCmsPage passses unhandled URLs to the CMS Controller, if it exists
-     */
-    protected function runCmsPage($url)
-    {
-        if (System::hasModule('Cms')) {
-            return App::make(\Cms\Classes\Controller::class)->run($url);
-        }
-        else {
-            return Response::make(View::make('backend::404'), 404);
-        }
-    }
-
-    /**
      * run finds and serves the requested backend controller
      * If the controller cannot be found, returns the Cms page with the URL /404.
      * If the /404 page doesn't exist, returns the system 404 page.
@@ -85,53 +70,44 @@ class BackendController extends ControllerBase
     {
         $params = RouterHelper::segmentizeUrl($url);
 
-        // Handle NotFoundHttpExceptions in the backend (usually triggered by abort(404))
-        Event::listen('exception.beforeRender', function ($exception, $httpCode, $request) {
-            if (!System::hasModule('Cms') && $exception instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
-                return View::make('backend::404');
-            }
-        }, 1);
-
-        /*
-         * Database check
-         */
+        // Database check
         if (!App::hasDatabase()) {
             return System::checkDebugMode()
                 ? Response::make(View::make('backend::no_database'), 200)
-                : $this->runCmsPage($url);
+                : $this->runPageNotFound();
         }
 
-        /*
-         * Look for a Module controller
-         */
+        // Look for App or Module controller
         $module = $params[0] ?? 'backend';
         $controller = $params[1] ?? 'index';
+        $isApp = strtolower($module) === 'app';
+
         self::$action = $action = isset($params[2]) ? $this->parseAction($params[2]) : 'index';
         self::$params = $controllerParams = array_slice($params, 3);
-        $controllerClass = '\\'.$module.'\Controllers\\'.$controller;
+        $controllerClass = "{$module}\\Controllers\\{$controller}";
+        $controllerBase = $isApp ? base_path() : base_path('modules');
         if ($controllerObj = $this->findController(
             $controllerClass,
             $action,
-            base_path().'/modules'
+            $controllerBase
         )) {
-            return $controllerObj->run($action, $controllerParams);
-        }
-
-        /*
-         * Look for a Plugin controller
-         */
-        if (count($params) >= 2) {
-            [$author, $plugin] = $params;
-
-            $pluginCode = ucfirst($author) . '.' . ucfirst($plugin);
-            if (PluginManager::instance()->isDisabled($pluginCode)) {
+            if (!$isApp && !System::hasModule(ucfirst($module))) {
                 return Response::make(View::make('backend::404'), 404);
             }
 
-            $controller = $params[2] ?? 'index';
-            self::$action = $action = isset($params[3]) ? $this->parseAction($params[3]) : 'index';
-            self::$params = $controllerParams = array_slice($params, 4);
-            $controllerClass = '\\'.$author.'\\'.$plugin.'\Controllers\\'.$controller;
+            return $controllerObj->run($action, $controllerParams);
+        }
+
+        // Look for Plugin controller using hint segment
+        $hint = $params[0] ?? null;
+        $namespace = PluginManager::instance()->getPluginHints()[$hint] ?? null;
+        if ($namespace && str_contains($namespace, '.')) {
+            [$author, $plugin] = explode('.', strtolower($namespace));
+            $controller = $params[1] ?? 'index';
+
+            self::$action = $action = isset($params[2]) ? $this->parseAction($params[2]) : 'index';
+            self::$params = $controllerParams = array_slice($params, 3);
+            $controllerClass = "{$author}\\{$plugin}\Controllers\\{$controller}";
             if ($controllerObj = $this->findController(
                 $controllerClass,
                 $action,
@@ -141,10 +117,43 @@ class BackendController extends ControllerBase
             }
         }
 
-        /*
-         * Fall back to CMS controller
-         */
-        return $this->runCmsPage($url);
+        // Look for a Plugin controller
+        if (count($params) >= 2) {
+            [$author, $plugin] = $params;
+            $controller = $params[2] ?? 'index';
+
+            self::$action = $action = isset($params[3]) ? $this->parseAction($params[3]) : 'index';
+            self::$params = $controllerParams = array_slice($params, 4);
+            $controllerClass = "{$author}\\{$plugin}\Controllers\\{$controller}";
+            if ($controllerObj = $this->findController(
+                $controllerClass,
+                $action,
+                plugins_path()
+            )) {
+                if (PluginManager::instance()->isDisabled(ucfirst($author).'.'.ucfirst($plugin))) {
+                    return Response::make(View::make('backend::404'), 404);
+                }
+
+                return $controllerObj->run($action, $controllerParams);
+            }
+        }
+
+        // Fall back to CMS controller
+        return $this->runPageNotFound();
+    }
+
+    /**
+     * runPageNotFound display a CMS 404 page, if one is available. For security reasons,
+     * the backend 404 page is not used unless an admin session is found, this prevents
+     * random discovery of the admin panel URL by crawlers or bots.
+     */
+    protected function runPageNotFound()
+    {
+        if (System::hasModule('Cms') && !\BackendAuth::getUser()) {
+            return \Cms::pageNotFound();
+        }
+
+        return Response::make(View::make('backend::404'), 404);
     }
 
     /**
@@ -153,16 +162,13 @@ class BackendController extends ControllerBase
      * @param string $controller Specifies a method name to execute.
      * @param string $action Specifies a method name to execute.
      * @param string $inPath Base path for class file location.
-     * @return ControllerBase Returns the backend controller object
+     * @return ControllerBase|false Returns the backend controller object
      */
     protected function findController($controller, $action, $inPath)
     {
-        /*
-         * Workaround: Composer does not support case insensitivity.
-         */
+        // Workaround: Composer does not support case insensitivity.
         if (!class_exists($controller)) {
-            $controller = Str::normalizeClassName($controller);
-            $controllerFile = $inPath.strtolower(str_replace('\\', '/', $controller)) . '.php';
+            $controllerFile = $inPath.'/'.strtolower(str_replace('\\', '/', $controller)) . '.php';
             if (
                 strpos($controllerFile, '..') !== false ||
                 strpos($controllerFile, './') !== false ||

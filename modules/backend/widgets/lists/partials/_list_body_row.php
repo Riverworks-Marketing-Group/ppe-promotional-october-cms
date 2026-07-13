@@ -17,10 +17,8 @@
             if (!$column->clickable) {
                 $classes[] = 'nolink';
             }
-
-            $isLastWithSetup = $showSetup && $index === $total;
         ?>
-        <td class="<?= implode(' ', $classes) ?>" <?= $isLastWithSetup ? 'colspan="2"' : '' ?>>
+        <td class="<?= implode(' ', $classes) ?>">
             <?php if ($column->clickable && !$action && ($action = $this->getRecordAction($record))): ?>
                 <a <?= $action[1] ?> href="<?= $action[0] ?>">
                     <?= $this->getColumnValue($record, $column) ?>

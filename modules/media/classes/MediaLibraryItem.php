@@ -1,9 +1,9 @@
 <?php namespace Media\Classes;
 
+use Date;
 use File;
 use Config;
 use October\Rain\Filesystem\Definitions as FileDefinitions;
-use Carbon\Carbon;
 
 /**
  * MediaLibraryItem represents a file or folder in the Media Library.
@@ -32,11 +32,6 @@ class MediaLibraryItem
     public $path;
 
     /**
-     * @var string spawnPath used to create this instance.
-     */
-    public $spawnPath;
-
-    /**
      * @var integer size specifies the item size.
      * For files the item size is measured in bytes. For folders it
      * contains the number of files in the folder.
@@ -60,19 +55,19 @@ class MediaLibraryItem
 
     /**
      * @var array imageExtensions contains a default list of image files and directories to ignore.
-     * Override with config: system.storage.media.imageExtensions
+     * Override with config: media.image_extensions
      */
     protected static $imageExtensions;
 
     /**
      * @var array videoExtensions contains a default list of video files and directories to ignore.
-     * Override with config: system.storage.media.videoExtensions
+     * Override with config: media.video_extensions
      */
     protected static $videoExtensions;
 
     /**
      * @var array audioExtensions contains a default list of audio files and directories to ignore.
-     * Override with config: system.storage.media.audioExtensions
+     * Override with config: media.audio_extensions
      */
     protected static $audioExtensions;
 
@@ -100,13 +95,14 @@ class MediaLibraryItem
      */
     public function isFile()
     {
-        return $this->type == self::TYPE_FILE;
+        return $this->type === self::TYPE_FILE;
     }
 
     /**
-     * getFileType returns the file type by its name.
+     * getFileType returns the file type by its name. Returns the file type or NULL
+     * if the item is a folder.
      * The known file types are: image, video, audio, document
-     * @return string Returns the file type or NULL if the item is a folder.
+     * @return string
      */
     public function getFileType()
     {
@@ -115,9 +111,9 @@ class MediaLibraryItem
         }
 
         if (!self::$imageExtensions) {
-            self::$imageExtensions = array_map('strtolower', Config::get('media.image_extensions', FileDefinitions::get('image_extensions')));
-            self::$videoExtensions = array_map('strtolower', Config::get('media.video_extensions', FileDefinitions::get('video_extensions')));
-            self::$audioExtensions = array_map('strtolower', Config::get('media.audio_extensions', FileDefinitions::get('audio_extensions')));
+            self::$imageExtensions = array_map('strtolower', FileDefinitions::get('image_extensions'));
+            self::$videoExtensions = array_map('strtolower', FileDefinitions::get('video_extensions'));
+            self::$audioExtensions = array_map('strtolower', FileDefinitions::get('audio_extensions'));
         }
 
         $extension = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
@@ -144,11 +140,11 @@ class MediaLibraryItem
      * sizeToString returns the item size as string.
      * For file-type items the size is the number of bytes. For folder-type items
      * the size is the number of items contained by the item.
-     * @return string Returns the size as string.
+     * @return string
      */
     public function sizeToString()
     {
-        return $this->type == self::TYPE_FILE
+        return $this->type === self::TYPE_FILE
             ? File::sizeToString($this->size)
             : $this->size.' '.trans('system::lang.media.folder_size_items');
     }
@@ -159,10 +155,18 @@ class MediaLibraryItem
      */
     public function lastModifiedAsString()
     {
-        if (!($date = $this->lastModified)) {
+        if (!$date = $this->lastModified) {
             return null;
         }
 
-        return Carbon::createFromTimestamp($date)->toFormattedDateString();
+        return Date::createFromTimestamp($date)->toFormattedDateString();
+    }
+
+    /**
+     * forgetExtensions resets extensions supplied by config but stored in RAM
+     */
+    public static function forgetExtensions()
+    {
+        self::$imageExtensions = null;
     }
 }

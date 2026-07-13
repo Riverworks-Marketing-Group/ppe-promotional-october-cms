@@ -1,9 +1,18 @@
 <?php namespace Backend\Classes;
 
+use Html;
 use October\Rain\Element\Navigation\ItemDefinition;
 
 /**
  * SideMenuItem
+ *
+ * @method SideMenuItem owner(string $owner) owner
+ * @method SideMenuItem iconSvg(null|string $iconSvg) iconSvg
+ * @method SideMenuItem counter(null|int|callable $counter) counter
+ * @method SideMenuItem counterLabel(null|string $counterLabel) counterLabel
+ * @method SideMenuItem attributes(array $attributes) attributes
+ * @method SideMenuItem permissions(array $permissions) permissions
+ * @method SideMenuItem itemType(string $itemType) itemType
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -11,60 +20,16 @@ use October\Rain\Element\Navigation\ItemDefinition;
 class SideMenuItem extends ItemDefinition
 {
     /**
-     * @var string owner
+     * initDefaultValues for this scope
      */
-    public $owner;
-
-    /**
-     * @var null|string iconSvg
-     */
-    public $iconSvg;
-
-    /**
-     * @var null|int|callable counter
-     */
-    public $counter;
-
-    /**
-     * @var null|string counterLabel
-     */
-    public $counterLabel;
-
-    /**
-     * @var array attributes
-     */
-    public $attributes = [];
-
-    /**
-     * @var array permissions
-     */
-    public $permissions = [];
-
-    /**
-     * @var string itemType
-     */
-    public $itemType;
-
-    /**
-     * @var string buttonActiveOn
-     */
-    public $buttonActiveOn;
-
-    /**
-     * evalConfig
-     */
-    protected function evalConfig($config): void
+    protected function initDefaultValues()
     {
-        parent::evalConfig($config);
+        parent::initDefaultValues();
 
-        $this->owner = $config['owner'] ?? $this->owner;
-        $this->iconSvg = $config['iconSvg'] ?? $this->iconSvg;
-        $this->counter = $config['counter'] ?? $this->counter;
-        $this->counterLabel = $config['counterLabel'] ?? $this->counterLabel;
-        $this->attributes = $config['attributes'] ?? $this->attributes;
-        $this->permissions = $config['permissions'] ?? $this->permissions;
-        $this->itemType = $config['itemType'] ?? $this->itemType;
-        $this->buttonActiveOn = $config['buttonActiveOn'] ?? $this->buttonActiveOn;
+        $this
+            ->attributes([])
+            ->permissions([])
+        ;
     }
 
     /**
@@ -74,7 +39,7 @@ class SideMenuItem extends ItemDefinition
      */
     public function addAttribute($attribute, $value)
     {
-        $this->attributes[$attribute] = $value;
+        $this->config['attributes'][$attribute] = $value;
     }
 
     /**
@@ -82,24 +47,52 @@ class SideMenuItem extends ItemDefinition
      */
     public function removeAttribute($attribute)
     {
-        unset($this->attributes[$attribute]);
+        unset($this->config['attributes'][$attribute]);
     }
 
     /**
      * addPermission
+     * @deprecated recommend not using this method until v4 when signature is fixed
+     * should be a non-associative array
      */
     public function addPermission(string $permission, array $definition)
     {
-        $this->permissions[$permission] = $definition;
+        $this->config['permissions'][$permission] = $definition;
     }
 
     /**
      * removePermission
+     * @deprecated recommend not using this method until v4 when signature is fixed
+     * should spin over every value and remove via located key
      * @param string $permission
      * @return void
      */
     public function removePermission(string $permission)
     {
-        unset($this->permissions[$permission]);
+        unset($this->config['permissions'][$permission]);
+    }
+
+    /**
+     * itemAttributes returns HTML attributes for the list item
+     */
+    public function itemAttributes(): string
+    {
+        if ($this->attributes === null) {
+            return '';
+        }
+
+        return Html::attributes(array_except($this->attributes, ['target']));
+    }
+
+    /**
+     * linkAttributes returns HTML for the anchor link
+     */
+    public function linkAttributes(): string
+    {
+        if (!isset($this->attributes['target'])) {
+            return '';
+        }
+
+        return Html::attributes(array_only($this->attributes, ['target']));
     }
 }

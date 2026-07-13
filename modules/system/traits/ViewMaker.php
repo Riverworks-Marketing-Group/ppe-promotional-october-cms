@@ -3,7 +3,6 @@
 use File;
 use Lang;
 use Block;
-use Config;
 use System;
 use SystemException;
 use Throwable;
@@ -40,6 +39,11 @@ trait ViewMaker
      * @var bool suppressLayout prevents the use of a layout
      */
     public $suppressLayout = false;
+
+    /**
+     * @var array viewPathGuessCache remembers path guesses for performance.
+     */
+    protected $viewPathGuessCache = [];
 
     /**
      * addViewPath prepends a path on the available view path locations
@@ -88,9 +92,9 @@ trait ViewMaker
 
         $partialPath = $this->getViewPath($partial);
 
-        if (!File::exists($partialPath)) {
+        if (!$partialPath || !File::exists($partialPath)) {
             if ($throwException) {
-                throw new SystemException(Lang::get('backend::lang.partial.not_found_name', ['name' => $partialPath]));
+                throw new SystemException(Lang::get('backend::lang.partial.not_found_name', ['name' => $partial]));
             }
 
             return false;
@@ -198,44 +202,39 @@ trait ViewMaker
             $viewPath = $this->viewPath;
         }
 
-        // Check in view paths
         if (!is_array($viewPath)) {
             $viewPath = [$viewPath];
         }
 
         // Remove extension from path
-        $fileNameNe = File::anyname($fileName);
+        $fileName = File::anyname($fileName);
 
         // Check in view paths
-        foreach ($viewPath as $path) {
-            $fullPath = File::symbolizePath($path);
+        if (!File::isPathSymbol($fileName)) {
+            foreach ($viewPath as $path) {
+                $fullPath = File::symbolizePath($path);
 
-            foreach ($viewExtensions as $extension) {
-                $_fileName = $fullPath . '/' . $fileNameNe . '.' . $extension;
-                if (File::isFile($_fileName)) {
-                    return $_fileName;
+                foreach ($viewExtensions as $extension) {
+                    $_fileName = $fullPath . '/' . $fileName . '.' . $extension;
+                    if (File::isFile($_fileName)) {
+                        return $_fileName;
+                    }
                 }
             }
         }
 
-        // Check in absolute (exact lookup)
+        // Check in absolute
         $fileName = File::symbolizePath($fileName);
-        if (strpos($fileName, '/') !== false && System::checkBaseDir($fileName)) {
-            return $fileName;
-        }
-
-        // Check with extension applied (v2.2 patch)
         if (strpos($fileName, '/') !== false) {
             foreach ($viewExtensions as $extension) {
-                $_fileName = $fileNameNe . '.' . $extension;
+                $_fileName = $fileName . '.' . $extension;
                 if (System::checkBaseDir($_fileName)) {
                     return $_fileName;
                 }
             }
         }
 
-        // Returns the closest guess, although invalid
-        return $fileName;
+        return '';
     }
 
     /**
@@ -254,7 +253,11 @@ trait ViewMaker
             $extraParams = [];
         }
 
-        $vars = array_merge($this->vars, $extraParams);
+        $vars = array_merge(
+            $this->vars,
+            $extraParams,
+            ['_context' => $extraParams]
+        );
 
         $obLevel = ob_get_level();
 
@@ -301,17 +304,35 @@ trait ViewMaker
     }
 
     /**
-     * guessViewPathFrom guesses the package path from a specified class
-     * @param string $class Class to guess path from.
-     * @param string $suffix An extra path to attach to the end
-     * @param bool $isPublic Returns public path instead of an absolute one
+     * guessViewPathFrom guesses the package path from a specified class, including
+     * an optional suffix to attach at the end, and the option to return a public
+     * path instead of a local one.
+     * @param string $class
+     * @param string $suffix
+     * @param bool $isPublic
      * @return string
      */
     public function guessViewPathFrom($class, $suffix = '', $isPublic = false)
     {
-        $classFolder = strtolower(class_basename($class));
-        $classFile = realpath(dirname(File::fromClass($class)));
-        $guessedPath = $classFile ? $classFile . '/' . $classFolder . $suffix : null;
+        // Pass to the controller to share the cache
+        if (isset($this->controller)) {
+            return $this->controller->guessViewPathFrom($class, $suffix, $isPublic);
+        }
+
+        if (is_object($class)) {
+            $class = get_class($class);
+        }
+
+        if (!array_key_exists($class, $this->viewPathGuessCache)) {
+            $classFolder = strtolower(class_basename($class));
+            $classFile = realpath(dirname(File::fromClass($class)));
+            $this->viewPathGuessCache[$class] = $classFile ? $classFile . '/' . $classFolder : null;
+        }
+
+        $guessedPath = $this->viewPathGuessCache[$class];
+        if ($guessedPath !== null) {
+            $guessedPath .= $suffix;
+        }
 
         return $isPublic ? File::localToPublic($guessedPath) : $guessedPath;
     }

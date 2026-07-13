@@ -33,32 +33,47 @@ class ProductDetail
     protected $isOrphaned = false;
 
     /**
-     * @var bool Is theme product
+     * @var bool isTheme product
      */
     public $isTheme = false;
 
     /**
-     * @var string Product name
+     * @var bool canInstall product
+     */
+    public $canInstall = false;
+
+    /**
+     * @var bool canResetData is used by orphaned plugins to remove data
+     */
+    public $canResetData = false;
+
+    /**
+     * @var string name for product
      */
     public $name;
 
     /**
-     * @var string Product code
+     * @var string code for product
      */
     public $code;
 
     /**
-     * @var string Composer code
+     * @var string composerCode
      */
     public $composerCode;
 
     /**
-     * @var string Current version
+     * @var string composerVersion
+     */
+    public $composerVersion = '*';
+
+    /**
+     * @var string currentVersion
      */
     public $currentVersion;
 
     /**
-     * @var string Product author
+     * @var string author of product
      */
     public $author;
 
@@ -93,7 +108,7 @@ class ProductDetail
     public $licenseHtml;
 
     /**
-     * Constructor.
+     * __construct
      */
     public function __construct(string $productCode, bool $isTheme = false)
     {
@@ -132,16 +147,25 @@ class ProductDetail
         }
     }
 
+    /**
+     * installed
+     */
     public function installed(): bool
     {
         return $this->isInstalled;
     }
 
+    /**
+     * exists
+     */
     public function exists(): bool
     {
         return $this->isFound;
     }
 
+    /**
+     * initPluginLocal
+     */
     protected function initPluginLocal(): bool
     {
         $manager = PluginManager::instance();
@@ -157,10 +181,10 @@ class ProductDetail
         // Markdown
         $readmeFiles = ['README.md', 'readme.md'];
         $upgradeFiles = ['UPGRADE.md', 'upgrade.md'];
-        $licenceFiles = ['LICENCE.md', 'licence.md', 'LICENSE.md', 'license.md'];
+        $licenseFiles = ['LICENCE.md', 'license.md', 'LICENSE.md', 'license.md'];
         $this->contentHtml = $this->getProductMarkdownFile($path, $readmeFiles);
         $this->upgradeHtml = $this->getProductMarkdownFile($path, $upgradeFiles);
-        $this->licenseHtml = $this->getProductMarkdownFile($path, $licenceFiles);
+        $this->licenseHtml = $this->getProductMarkdownFile($path, $licenseFiles);
 
         // Registration file
         $details = $plugin->pluginDetails();
@@ -169,6 +193,7 @@ class ProductDetail
         $this->author = $details['author'] ?? null;
         $this->icon = $details['icon'] ?? 'icon-leaf';
         $this->homepage = $details['homepage'] ?? null;
+        $this->canInstall = true;
 
         // Version
         $pluginVersion = PluginVersion::whereCode($code)->first();
@@ -177,6 +202,9 @@ class ProductDetail
         return true;
     }
 
+    /**
+     * initPluginRemote
+     */
     protected function initPluginRemote(): bool
     {
         try {
@@ -190,14 +218,20 @@ class ProductDetail
         $this->upgradeHtml = $details['upgrade_guide_html'] ?? '';
 
         $this->name = $details['name'] ?? null;
+        $this->code = $details['code'] ?? null;
         $this->author = $details['author'] ?? null;
         $this->image = $details['image'] ?? null;
-        $this->homepage = $details['product_url'] ?? null;
+        $this->homepage = $this->normalizeProductEndpoint($details['product_url'] ?? null);
         $this->composerCode = $details['composer_code'] ?? null;
+        $this->composerVersion = $details['composer_version'] ?? null;
+        $this->canInstall = !($details['price'] ?? 0) || ($details['in_project'] ?? false);
 
         return true;
     }
 
+    /**
+     * initPluginDatabase
+     */
     protected function initPluginDatabase(): bool
     {
         $plugin = PluginVersion::where(Db::raw('LOWER(code)'), strtolower($this->code))->first();
@@ -208,13 +242,15 @@ class ProductDetail
         $this->name = $plugin->code;
         $this->currentVersion = $plugin->version;
         $this->author = 'Unknown';
-        $this->contentHtml = Lang::get('system::lang.plugins.unknown_plugin');
-        $this->upgradeHtml = Lang::get('system::lang.plugins.unknown_plugin');
-        $this->licenseHtml = Lang::get('system::lang.plugins.unknown_plugin');
+        $this->canResetData = true;
+        $this->contentHtml = __("Plugin has been removed from the file system.");
 
         return true;
     }
 
+    /**
+     * initThemeLocal
+     */
     protected function initThemeLocal(): bool
     {
         $manager = ThemeManager::instance();
@@ -236,10 +272,10 @@ class ProductDetail
         // Markdown
         $readmeFiles = ['README.md', 'readme.md'];
         $upgradeFiles = ['UPGRADE.md', 'upgrade.md'];
-        $licenceFiles = ['LICENCE.md', 'licence.md', 'LICENSE.md', 'license.md'];
+        $licenseFiles = ['LICENCE.md', 'licence.md', 'LICENSE.md', 'license.md'];
         $this->contentHtml = $this->getProductMarkdownFile($path, $readmeFiles);
         $this->upgradeHtml = $this->getProductMarkdownFile($path, $upgradeFiles);
-        $this->licenseHtml = $this->getProductMarkdownFile($path, $licenceFiles);
+        $this->licenseHtml = $this->getProductMarkdownFile($path, $licenseFiles);
 
         // Registration file
         $details = $theme->getConfig();
@@ -247,10 +283,14 @@ class ProductDetail
         $this->author = $details['author'] ?? null;
         $this->icon = $details['icon'] ?? 'icon-leaf';
         $this->homepage = $details['homepage'] ?? null;
+        $this->canInstall = true;
 
         return true;
     }
 
+    /**
+     * initThemeRemote
+     */
     protected function initThemeRemote(): bool
     {
         try {
@@ -264,10 +304,13 @@ class ProductDetail
         $this->upgradeHtml = $details['upgrade_guide_html'] ?? '';
 
         $this->name = $details['name'] ?? null;
+        $this->code = $details['code'] ?? null;
         $this->author = $details['author'] ?? null;
         $this->image = $details['image'] ?? null;
-        $this->homepage = $details['product_url'] ?? null;
+        $this->homepage = $this->normalizeProductEndpoint($details['product_url'] ?? null);
         $this->composerCode = $details['composer_code'] ?? null;
+        $this->composerVersion = $details['composer_version'] ?? null;
+        $this->canInstall = !($details['price'] ?? 0) || ($details['in_project'] ?? false);
 
         return true;
     }
@@ -296,5 +339,14 @@ class ProductDetail
         }
 
         return $contents;
+    }
+
+    /**
+     * normalizeProductEndpoint only allows trusted hostnames for security reasons
+     */
+    protected function normalizeProductEndpoint($url)
+    {
+        $hostname = parse_url($url, PHP_URL_HOST);
+        return str_replace($hostname, 'octobercms.com', $url);
     }
 }

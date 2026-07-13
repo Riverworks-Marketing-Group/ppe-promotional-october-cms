@@ -1,4 +1,4 @@
-$.oc.module.register('backend.component.inspector.control.base', function () {
+oc.Modules.register('backend.component.inspector.control.base', function () {
     'use strict';
     var ControlBase = {
         props: {
@@ -9,6 +9,10 @@ $.oc.module.register('backend.component.inspector.control.base', function () {
             obj: {
                 type: Object,
                 required: true
+            },
+            parentObj: {
+                type: Object,
+                required: false
             },
             controlId: {
                 type: String,
@@ -63,9 +67,9 @@ $.oc.module.register('backend.component.inspector.control.base', function () {
 
             validatePropertyValue: function validatePropertyValue() {
                 var validatorSet = new $.oc.vueComponentHelpers.inspector.validatorSet(
-                        this.control,
-                        this.control.property
-                    ),
+                    this.control,
+                    this.control.property
+                ),
                     result = validatorSet.validate(this.value);
 
                 if (result !== null) {
@@ -97,17 +101,20 @@ $.oc.module.register('backend.component.inspector.control.base', function () {
 
             setManagedValue: function setManagedValue(value) {
                 var utils = $.oc.vueComponentHelpers.inspector.utils;
-
                 utils.setProperty(this.obj, this.control.property, value);
             },
 
+            refreshDisplayedValue: function refreshDisplayedValue() { },
+
             focusControl: function focusControl() { },
-            
+
             inspectorGetTab: function inspectorGetTab() {
                 return this.control.tab;
             },
 
             loadDynamicOptions: function loadDynamicOptions() {
+                const dataLoader = oc.Modules.import('backend.component.inspector.dataloader');
+
                 if (!this.serverClassName) {
                     throw new Error(
                         'Error loading Inspector dynamic option for the Inspector control "' +
@@ -115,21 +122,34 @@ $.oc.module.register('backend.component.inspector.control.base', function () {
                         '". Neither inspectorClass Inspector property nor serverClassName control property was found.');
                 }
 
-                var data = $.oc.vueUtils.getCleanObject(this.obj),
-                    that = this;
+                var data = Object.assign({}, $.oc.vueUtils.getCleanObject(this.parentObj), $.oc.vueUtils.getCleanObject(this.obj));
+                if (typeof this.control.getDynamicOptionsExtraData === 'function') {
+                    const extraData = this.control.getDynamicOptionsExtraData();
+                    if (typeof extraData !== 'object') {
+                        throw new Error('getDynamicOptionsExtraData must return an object');
+                    }
+
+                    Object.assign(data, extraData);
+                }
 
                 this.loadingDynamicOptions = true;
 
                 data['inspectorProperty'] = this.control.property;
                 data['inspectorClassName'] = this.serverClassName;
 
-                $(this.$el).request('onInspectableGetOptions', {
-                    data: data
-                })
-                    .done(that.dynamicOptionsLoaded)
-                    .always(function () {
-                        that.loadingDynamicOptions = false;
-                    });
+                var handlerAlias = this.$el.dataset.inspectorHandlerAlias,
+                    optionsHandler = handlerAlias ? handlerAlias + '::onInspectableGetOptions' : 'onInspectableGetOptions';
+                
+                return dataLoader.requestOptions(
+                    this.$el,
+                    this.serverClassName,
+                    optionsHandler,
+                    data,
+                    this.control.dataCacheKeyName,
+                    this.control.dataCacheKeyPropertyNames
+                )
+                    .then(data => this.dynamicOptionsLoaded(data))
+                    .finally(() => this.loadingDynamicOptions = false);
             },
 
             dynamicOptionsLoaded: function dynamicOptionsLoaded(data) {}

@@ -11,7 +11,7 @@ use October\Rain\Html\Helper as HtmlHelper;
 abstract class FormWidgetBase extends WidgetBase
 {
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
@@ -45,7 +45,7 @@ abstract class FormWidgetBase extends WidgetBase
     public $showLabels = true;
 
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -54,12 +54,12 @@ abstract class FormWidgetBase extends WidgetBase
     protected $formField;
 
     /**
-     * @var Backend\Widgets\Form The parent form that contains this field
+     * @var \Backend\Widgets\Form The parent form that contains this field
      */
     protected $parentForm = null;
 
     /**
-     * @var string Form field name.
+     * @var string fieldName
      */
     protected $fieldName;
 
@@ -70,15 +70,15 @@ abstract class FormWidgetBase extends WidgetBase
 
     /**
      * __construct
-     * @param $controller Controller Active controller object.
-     * @param $formField FormField Object containing general form field information.
-     * @param $configuration array Configuration the relates to this widget.
+     * @param Controller $controller
+     * @param FormField $formField
+     * @param array $configuration
      */
     public function __construct($controller, $formField, $configuration = [])
     {
         $this->formField = $formField;
         $this->fieldName = $formField->fieldName;
-        $this->valueFrom = $formField->valueFrom;
+        $this->valueFrom = $formField->valueFrom ?: $this->fieldName;
 
         $this->config = $this->makeConfig($configuration);
 
@@ -97,7 +97,7 @@ abstract class FormWidgetBase extends WidgetBase
 
     /**
      * getParentForm retrieves the parent form for this formwidget
-     * @return Backend\Widgets\Form|null
+     * @return \Backend\Widgets\Form|null
      */
     public function getParentForm()
     {
@@ -107,7 +107,7 @@ abstract class FormWidgetBase extends WidgetBase
     /**
      * getFieldName returns the HTML element field name for this widget, used for
      * capturing user input, passed back to the getSaveValue method when saving.
-     * @return string HTML element name
+     * @return string
      */
     public function getFieldName()
     {

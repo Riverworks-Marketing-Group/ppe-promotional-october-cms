@@ -3,14 +3,19 @@
 use Lang;
 use Flash;
 use Backend;
+use BackendAuth;
 use BackendMenu;
-use Backend\Classes\Controller;
 use System\Models\PluginVersion;
 use System\Classes\UpdateManager;
 use System\Classes\PluginManager;
 use System\Classes\SettingsManager;
+use System\Helpers\Cache as CacheHelper;
 use System\Widgets\Changelog;
 use System\Widgets\Updater;
+use Backend\Classes\Controller;
+use October\Rain\Composer\Manager as ComposerManager;
+use ValidationException;
+use Exception;
 
 /**
  * Updates controller
@@ -21,6 +26,8 @@ use System\Widgets\Updater;
  */
 class Updates extends Controller
 {
+    use \System\Controllers\Updates\HasComposerEditor;
+
     /**
      * @var array Extensions implemented by this controller.
      */
@@ -39,7 +46,7 @@ class Updates extends Controller
     /**
      * @var array requiredPermissions to view this page.
      */
-    public $requiredPermissions = ['system.manage_updates'];
+    public $requiredPermissions = ['general.backend.perform_updates'];
 
     /**
      * @var System\Widgets\Changelog
@@ -69,22 +76,20 @@ class Updates extends Controller
     }
 
     /**
-     * composer endpoint used by updaterWidget
-     */
-    public function composer()
-    {
-        return $this->updaterWidget->handleComposerAction();
-    }
-
-    /**
      * index controller
      */
     public function index()
     {
-        $this->addJs('/modules/system/assets/js/updates/updates.js', 'core');
+        $this->addJs('/modules/system/assets/js/pages/updates.js');
+
+        try {
+            $this->vars['projectDetails'] = UpdateManager::instance()->getProjectDetails();
+        }
+        catch (Exception $ex) {
+            $this->vars['projectDetails'] = null;
+        }
 
         $this->vars['currentVersion'] = UpdateManager::instance()->getCurrentVersion();
-        $this->vars['projectDetails'] = UpdateManager::instance()->getProjectDetails();
         $this->vars['pluginsActiveCount'] = PluginVersion::applyEnabled()->count();
         $this->vars['pluginsCount'] = PluginVersion::count();
         return $this->asExtension('ListController')->index();
@@ -105,8 +110,10 @@ class Updates extends Controller
      */
     public function manage()
     {
-        $this->pageTitle = 'system::lang.plugins.manage';
+        $this->pageTitle = "Manage Plugins";
         PluginManager::instance()->clearDisabledCache();
+
+        $this->vars['canUpdate'] = BackendAuth::userHasAccess('general.backend.perform_updates');
         return $this->asExtension('ListController')->index();
     }
 
@@ -166,8 +173,21 @@ class Updates extends Controller
             }
         }
 
+        // Reload plugin dependency tree
+        PluginManager::instance()->reloadDisabledCache();
+
         Flash::success(Lang::get("system::lang.plugins.{$bulkAction}_success"));
         return $this->listRefresh('manage');
+    }
+
+    /**
+     * manage_onClearCache clears the application cache
+     */
+    public function manage_onClearCache()
+    {
+        CacheHelper::clear();
+
+        Flash::success(__("Cache cleared successfully."));
     }
 
     /**
@@ -193,14 +213,60 @@ class Updates extends Controller
             return 'safe disabled';
         }
 
-        if ($definition != 'manage') {
-            return;
-        }
-
         if ($record->disabledBySystem) {
             return 'negative';
         }
 
+        if ($definition !== 'manage') {
+            return;
+        }
+
         return 'positive';
+    }
+
+    /**
+     * onLoadProjectForm displays the form for entering a license key
+     */
+    public function onLoadProjectForm()
+    {
+        return $this->makePartial('project_form');
+    }
+
+    /**
+     * onAttachProject validates the project ID and execute the project installation
+     */
+    public function onAttachProject()
+    {
+        try {
+            if (!$projectId = trim(post('project_id'))) {
+                throw new ValidationException(['project_id' => Lang::get('system::lang.project.id.missing')]);
+            }
+
+            // Validate input with gateway
+            $manager = UpdateManager::instance();
+            $result = $manager->requestProjectDetails($projectId);
+
+            // Check project status
+            $isActive = $result['is_active'] ?? false;
+            if (!$isActive) {
+                throw new ValidationException(['project_id' => __("License is unpaid or has expired. Please visit octobercms.com to obtain a license.")]);
+            }
+
+            // Store project details
+            $manager->storeProjectDetails($result);
+
+            // Add gateway as a composer repo
+            $composer = ComposerManager::instance();
+            $composerUrl = $manager->getComposerUrl();
+            if (!$composer->hasRepository($composerUrl)) {
+                $composer->addOctoberRepository($composerUrl);
+            }
+
+            Flash::success(__("Thanks for being a customer of October CMS!"));
+            return Backend::redirect('system/updates');
+        }
+        catch (Exception $ex) {
+            throw new ValidationException(['project_id' => $ex->getMessage()]);
+        }
     }
 }

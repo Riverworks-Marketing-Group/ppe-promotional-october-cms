@@ -1,12 +1,24 @@
 Vue.component('cms-editor-component-partial-editor', {
-    extends: $.oc.module.import('cms.editor.extension.documentcomponent.base'),
-    data: function data() {
-        var EditorModelDefinition = $.oc.module.import('backend.vuecomponents.monacoeditor.modeldefinition');
-        var defMarkup = new EditorModelDefinition('twig', this.trans('cms::lang.page.editor_markup'), {}, 'markup', 'backend-icon-background monaco-document html');
+    extends: oc.Modules.import('cms.editor.extension.documentcomponent.base'),
+    data: function() {
+        const EditorModelDefinition = oc.Modules.import('backend.vuecomponents.monacoeditor.modeldefinition');
+        const defMarkup = new EditorModelDefinition(
+            'twig',
+            this.trans('cms::lang.page.editor_markup'),
+            {},
+            'markup',
+            'backend-icon-background monaco-document html'
+        );
 
         defMarkup.setModelTags(['cms-markup']);
 
-        var defCode = new EditorModelDefinition('php', this.trans('cms::lang.page.editor_code'), {}, 'code', 'backend-icon-background monaco-document php');
+        const defCode = new EditorModelDefinition(
+            'php',
+            this.trans('cms::lang.page.editor_code'),
+            {},
+            'code',
+            'backend-icon-background monaco-document php'
+        );
 
         defCode.setAutoPrefix('<?php\n\n', /^\s*\<\?(php)?\n*/);
 
@@ -24,54 +36,64 @@ Vue.component('cms-editor-component-partial-editor', {
     },
     computed: {
         toolbarElements: function computeToolbarElements() {
-            return this.postProcessToolbarElements([{
-                type: 'button',
-                icon: 'octo-icon-save',
-                label: this.trans('backend::lang.form.save'),
-                hotkey: 'ctrl+s, cmd+s',
-                tooltip: this.trans('backend::lang.form.save'),
-                tooltipHotkey: '⌃S, ⌘S',
-                command: 'save'
-            }, {
-                type: 'button',
-                icon: 'octo-icon-settings',
-                label: this.trans('editor::lang.common.settings'),
-                command: 'settings',
-                hidden: !this.hasSettingsForm
-            }, this.customToolbarButtons, {
-                type: 'button',
-                icon: 'octo-icon-components',
-                label: this.trans('cms::lang.editor.component_list'),
-                command: 'show-components'
-            }, {
-                type: 'separator'
-            }, {
-                type: 'button',
-                icon: 'octo-icon-info',
-                label: this.trans('cms::lang.editor.info'),
-                command: 'show-template-info',
-                disabled: this.isNewDocument
-            }, {
-                type: 'separator'
-            }, {
-                type: 'button',
-                icon: 'octo-icon-delete',
-                disabled: this.isNewDocument,
-                command: 'delete',
-                hotkey: 'shift+option+d',
-                tooltip: this.trans('backend::lang.form.delete'),
-                tooltipHotkey: '⇧⌥D'
-            }, {
-                type: 'button',
-                icon: this.documentHeaderCollapsed ? 'octo-icon-angle-down' : 'octo-icon-angle-up',
-                command: 'document:toggleToolbar',
-                fixedRight: true,
-                tooltip: this.trans('editor::lang.common.toggle_document_header')
-            }]);
+            return this.postProcessToolbarElements([
+                {
+                    type: 'button',
+                    icon: 'icon-save-cloud',
+                    label: this.trans('backend::lang.form.save'),
+                    hotkey: 'ctrl+s, cmd+s',
+                    tooltip: this.trans('backend::lang.form.save'),
+                    tooltipHotkey: '⌃S, ⌘S',
+                    command: 'save'
+                },
+                {
+                    type: 'button',
+                    icon: 'icon-settings',
+                    label: this.trans('editor::lang.common.settings'),
+                    command: 'settings',
+                    hidden: !this.hasSettingsForm
+                },
+                this.customToolbarButtons,
+                {
+                    type: 'button',
+                    icon: 'icon-components',
+                    label: this.trans('cms::lang.editor.component_list'),
+                    command: 'show-components'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    type: 'button',
+                    icon: 'icon-info-circle',
+                    label: this.trans('cms::lang.editor.info'),
+                    command: 'show-template-info',
+                    disabled: this.isNewDocument
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    type: 'button',
+                    icon: 'icon-delete',
+                    disabled: this.isNewDocument,
+                    command: 'delete',
+                    hotkey: 'shift+option+d',
+                    tooltip: this.trans('backend::lang.form.delete'),
+                    tooltipHotkey: '⇧⌥D'
+                },
+                {
+                    type: 'button',
+                    icon: this.documentHeaderCollapsed ? 'icon-angle-down' : 'icon-angle-up',
+                    command: 'document:toggleToolbar',
+                    fixedRight: true,
+                    tooltip: this.trans('editor::lang.common.toggle_document_header')
+                }
+            ]);
         }
     },
     methods: {
-        getRootProperties: function getRootProperties() {
+        getRootProperties: function() {
             return ['components', 'fileName', 'markup', 'code'];
         },
 

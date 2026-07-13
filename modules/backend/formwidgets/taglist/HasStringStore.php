@@ -10,6 +10,10 @@ trait HasStringStore
      */
     protected function getLoadValueFromString($value)
     {
+        if (empty($value)) {
+            return [];
+        }
+
         return explode($this->getSeparatorCharacter(), $value);
     }
 

@@ -1,9 +1,12 @@
 <?php namespace Backend\Models;
 
 use File;
+use Html;
 use Cache;
-use Model;
+use Config;
+use System;
 use Less_Parser;
+use System\Models\SettingModel;
 use Exception;
 
 /**
@@ -12,17 +15,9 @@ use Exception;
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class EditorSetting extends Model
+class EditorSetting extends SettingModel
 {
-    use \System\Traits\ViewMaker;
     use \October\Rain\Database\Traits\Validation;
-
-    /**
-     * @var array Behaviors implemented by this model.
-     */
-    public $implement = [
-        \System\Behaviors\SettingsModel::class
-    ];
 
     /**
      * @var string settingsCode is a unique code for this object.
@@ -42,7 +37,7 @@ class EditorSetting extends Model
     /**
      * @var string defaultHtmlAllowEmptyTags
      */
-    protected $defaultHtmlAllowEmptyTags = 'textarea, a, iframe, object, video, style, script';
+    protected $defaultHtmlAllowEmptyTags = 'textarea, a, i, iframe, object, video, style, script, .icon, .bi, .fa, .fr-emoticon, .fr-inner, path, line';
 
     /**
      * @var string defaultHtmlAllowTags
@@ -95,6 +90,12 @@ class EditorSetting extends Model
         'oc-text-uppercase' => 'Uppercase',
     ];
 
+    protected $defaultHtmlStyleInline = [
+        'oc-class-code' => 'Code',
+        'oc-class-highlighted' => 'Highlighted',
+        'oc-class-transparency' => 'Transparent',
+    ];
+
     /**
      * @var array defaultHtmlStyleTable
      */
@@ -128,12 +129,12 @@ class EditorSetting extends Model
      */
     protected $editorToolbarPresets = [
         'default' => 'paragraphFormat, paragraphStyle, quote, bold, italic, align, formatOL, formatUL, insertTable,
-                      insertLink, insertImage, insertVideo, insertAudio, insertFile, insertHR, html',
-        'minimal' => 'bold, italic, underline, |, insertLink, insertImage, |, html',
+                      insertSnippet, insertPageLink, insertImage, insertVideo, insertAudio, insertFile, insertHR, fullscreen, html',
+        'minimal' => 'bold, italic, underline, |, insertSnippet, insertPageLink, insertImage, |, html',
         'full'    => 'undo, redo, |, bold, italic, underline, |, paragraphFormat, paragraphStyle, inlineStyle, |,
                       strikeThrough, subscript, superscript, clearFormatting, |, fontFamily, fontSize, |, color,
-                      emoticons, -, selectAll, |, align, formatOL, formatUL, outdent, indent, quote, |, insertHR,
-                      insertLink, insertImage, insertVideo, insertAudio, insertFile, insertTable, |, selectAll,
+                      emoticons, icons, -, selectAll, |, align, formatOL, formatUL, outdent, indent, quote, |, insertHR,
+                      insertSnippet, insertPageLink, insertImage, insertVideo, insertAudio, insertFile, insertTable, |, selectAll,
                       html, fullscreen',
     ];
 
@@ -149,18 +150,25 @@ class EditorSetting extends Model
      */
     public function initSettingsData()
     {
-        $this->html_allow_empty_tags = $this->defaultHtmlAllowEmptyTags;
-        $this->html_allow_tags = $this->defaultHtmlAllowTags;
-        $this->html_no_wrap_tags = $this->defaultHtmlNoWrapTags;
-        $this->html_remove_tags = $this->defaultHtmlRemoveTags;
-        $this->html_line_breaker_tags = $this->defaultHtmlLineBreakerTags;
-        $this->html_custom_styles = File::get(base_path().'/modules/backend/models/editorsetting/default_styles.less');
-        $this->html_style_image = $this->makeStylesForTable($this->defaultHtmlStyleImage);
-        $this->html_style_link = $this->makeStylesForTable($this->defaultHtmlStyleLink);
-        $this->html_style_paragraph = $this->makeStylesForTable($this->defaultHtmlStyleParagraph);
-        $this->html_style_table = $this->makeStylesForTable($this->defaultHtmlStyleTable);
-        $this->html_style_table_cell = $this->makeStylesForTable($this->defaultHtmlStyleTableCell);
-        $this->html_paragraph_formats = $this->makeFormatsForTable($this->defaultHtmlParagraphFormats);
+        $this->html_toolbar_buttons = static::getBaseConfig('toolbar_buttons', '');
+        $this->html_allow_empty_tags = static::getBaseConfig('allow_empty_tags', $this->defaultHtmlAllowEmptyTags);
+        $this->html_allow_tags = static::getBaseConfig('allow_tags', $this->defaultHtmlAllowTags);
+        $this->html_no_wrap_tags = static::getBaseConfig('no_wrap_tags', $this->defaultHtmlNoWrapTags);
+        $this->html_remove_tags = static::getBaseConfig('remove_tags', $this->defaultHtmlRemoveTags);
+        $this->html_line_breaker_tags = static::getBaseConfig('line_breaker_tags', $this->defaultHtmlLineBreakerTags);
+        $this->html_style_image = $this->makeStylesForTable(static::getBaseConfig('style_image', $this->defaultHtmlStyleImage));
+        $this->html_style_link = $this->makeStylesForTable(static::getBaseConfig('style_link', $this->defaultHtmlStyleLink));
+        $this->html_paragraph_formats = $this->makeFormatsForTable(static::getBaseConfig('paragraph_formats', $this->defaultHtmlParagraphFormats));
+        $this->html_style_paragraph = $this->makeStylesForTable(static::getBaseConfig('style_paragraph', $this->defaultHtmlStyleParagraph));
+        $this->html_style_inline = $this->makeStylesForTable(static::getBaseConfig('style_inline', $this->defaultHtmlStyleInline));
+        $this->html_style_table = $this->makeStylesForTable(static::getBaseConfig('style_table', $this->defaultHtmlStyleTable));
+        $this->html_style_table_cell = $this->makeStylesForTable(static::getBaseConfig('style_table_cell', $this->defaultHtmlStyleTableCell));
+
+        // Attempt to load custom CSS
+        $htmlCssPath = File::symbolizePath(self::getBaseConfig('stylesheet_path', '~/modules/backend/models/editorsetting/default_styles.less'));
+        if ($htmlCssPath && File::exists($htmlCssPath)) {
+            $this->html_custom_styles = File::get($htmlCssPath);
+        }
     }
 
     /**
@@ -176,11 +184,64 @@ class EditorSetting extends Model
     }
 
     /**
-     * afterSave
+     * beforeSave
      */
-    public function afterSave()
+    public function beforeSave()
     {
-        Cache::forget(self::instance()->cacheKey);
+        if ($this->isDirty('html_custom_styles')) {
+            $this->html_custom_styles = Html::clean($this->html_custom_styles);
+
+            if (System::checkSafeMode()) {
+                $this->html_custom_styles = str_ireplace('@import', 'import', $this->html_custom_styles);
+            }
+        }
+
+        $this->cleanMarkupClasses();
+    }
+
+    /**
+     * cleanMarkupClasses removes invalid characters from CSS class names
+     * to prevent XSS via Froala editor dropdown rendering
+     */
+    protected function cleanMarkupClasses()
+    {
+        $styleFields = [
+            'html_style_image',
+            'html_style_link',
+            'html_style_paragraph',
+            'html_style_inline',
+            'html_style_table',
+            'html_style_table_cell',
+        ];
+
+        $value = $this->value;
+
+        foreach ($styleFields as $field) {
+            if (is_array($value[$field] ?? null)) {
+                foreach ($value[$field] as $key => $row) {
+                    if (isset($row['class_name'])) {
+                        // Only allow valid CSS class characters: letters, digits, hyphens, underscores
+                        $value[$field][$key]['class_name'] = preg_replace(
+                            '/[^a-zA-Z0-9_-]/',
+                            '',
+                            $row['class_name']
+                        );
+                    }
+                }
+            }
+        }
+
+        $this->value = $value;
+    }
+
+    /**
+     * clearCache
+     */
+    public function clearCache()
+    {
+        parent::clearCache();
+
+        Cache::forget($this->cacheKey);
     }
 
     /**
@@ -287,7 +348,7 @@ class EditorSetting extends Model
     public function getEditorToolbarPresets(): array
     {
         return array_map(function($value) {
-            return preg_replace('/\s+/', ' ',$value);
+            return preg_replace('/\s+/', ' ', $value);
         }, $this->editorToolbarPresets);
     }
 
@@ -297,8 +358,9 @@ class EditorSetting extends Model
     public static function renderCss()
     {
         $cacheKey = self::instance()->cacheKey;
-        if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
+
+        if ($cache = Cache::get($cacheKey)) {
+            return $cache;
         }
 
         try {
@@ -326,5 +388,29 @@ class EditorSetting extends Model
         $parser->parse($customStyles);
 
         return $parser->getCss();
+    }
+
+    //
+    // Base line configuration
+    //
+
+    /**
+     * getBaseConfig will only look at base config if the enabled flag is true
+     */
+    public static function getBaseConfig(string $value, $default = null)
+    {
+        if (!self::isBaseConfigured()) {
+            return $default;
+        }
+
+        return Config::get('editor.html_defaults.'.$value, $default);
+    }
+
+    /**
+     * isBaseConfigured checks if base brand settings found in config
+     */
+    public static function isBaseConfigured(): bool
+    {
+        return (bool) Config::get('editor.html_defaults.enabled', false);
     }
 }

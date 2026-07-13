@@ -24,7 +24,7 @@ class RichEditor extends VueComponentBase
     {
         $configuration = [
             'editorLang' => $this->getValidEditorLang(),
-            'useMediaManager' => BackendAuth::userHasAccess('media.manage_media'),
+            'useMediaManager' => BackendAuth::userHasAccess('media.library'),
             'iframeStylesFile' => Url::asset('/modules/backend/vuecomponents/richeditor/assets/css/iframestyles.css'),
 
             'globalToolbarButtons' => $this->getGlobalButtons(),
@@ -37,8 +37,9 @@ class RichEditor extends VueComponentBase
 
             'imageStyles' => EditorSetting::getConfiguredStyles('html_style_image'),
             'linkStyles' => EditorSetting::getConfiguredStyles('html_style_link'),
-            'paragraphStyles' => EditorSetting::getConfiguredStyles('html_style_paragraph'),
             'paragraphFormat' => EditorSetting::getConfiguredFormats('html_paragraph_formats'),
+            'paragraphStyles' => EditorSetting::getConfiguredStyles('html_style_paragraph'),
+            'inlineStyles' => EditorSetting::getConfiguredStyles('html_style_inline'),
             'tableStyles' => EditorSetting::getConfiguredStyles('html_style_table'),
             'tableCellStyles' => EditorSetting::getConfiguredStyles('html_style_table_cell')
         ];
@@ -55,33 +56,25 @@ class RichEditor extends VueComponentBase
     protected function loadAssets()
     {
         // This Vue component uses Froala dependencies from the rich editor form widget
-        //
-        $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/build-min.js', 'core');
-        $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/build-plugins-min.js', 'core');
-        $this->addCss('/modules/backend/formwidgets/richeditor/assets/css/richeditor.css', 'core');
-
-        if ($lang = $this->getValidEditorLang()) {
-            $this->addJs('/modules/backend/formwidgets/richeditor/assets/vendor/froala/js/languages/'.$lang.'.js', 'core');
-        }
+        $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/build-min.js');
+        $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/richeditor.js');
+        $this->addCss('/modules/backend/formwidgets/richeditor/assets/css/richeditor.css');
     }
 
     /**
-     * Returns a valid language code for Redactor.
-     * @return string|mixed
+     * getValidEditorLang returns a proposed language code for Froala.
+     * @return string|null
      */
     protected function getValidEditorLang()
     {
         $locale = App::getLocale();
 
         // English is baked in
-        if ($locale == 'en') {
-            return null;
+        if ($locale !== 'en') {
+            return str_replace('-', '_', strtolower($locale));
         }
 
-        $locale = str_replace('-', '_', strtolower($locale));
-        $path = base_path('modules/backend/formwidgets/richeditor/assets/vendor/froala/js/languages/'.$locale.'.js');
-
-        return File::exists($path) ? $locale : false;
+        return null;
     }
 
     /**

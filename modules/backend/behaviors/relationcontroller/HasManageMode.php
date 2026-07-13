@@ -2,7 +2,6 @@
 
 use Lang;
 use Request;
-use Backend\Behaviors\RelationController;
 use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use Backend\Widgets\Form as FormWidget;
 use Backend\Widgets\Lists as ListWidget;
@@ -14,9 +13,14 @@ use ApplicationException;
 trait HasManageMode
 {
     /**
-     * @var Backend\Classes\WidgetBase manageWidget used for relation management
+     * @var ListWidget|null manageListWidget used for managing as a list
      */
-    protected $manageWidget;
+    protected $manageListWidget;
+
+    /**
+     * @var FormWidget|null manageFormWidget used for managing as a form
+     */
+    protected $manageFormWidget;
 
     /**
      * @var Model manageModel is a reference to the model used for manage form
@@ -39,75 +43,87 @@ trait HasManageMode
     protected $manageMode;
 
     /**
-     * @var string forceManageMode
-     */
-    protected $forceManageMode;
-
-    /**
      * @var int manageId is the primary id of an existing relation record
      */
     protected $manageId;
 
     /**
+     * relationGetManageFormWidget returns the manage form widget used by this behavior
+     */
+    public function relationGetManageFormWidget(): ?FormWidget
+    {
+        return $this->manageFormWidget;
+    }
+
+    /**
+     * relationGetManageListWidget returns the manage list widget used by this behavior
+     */
+    public function relationGetManageListWidget(): ?ListWidget
+    {
+        return $this->manageListWidget;
+    }
+
+    /**
      * relationGetManageWidget returns the manage widget used by this behavior
+     * @deprecated use relationGetManageListWidget or relationGetManageFormWidget
      * @return \Backend\Classes\WidgetBase
      */
     public function relationGetManageWidget()
     {
-        return $this->manageWidget;
-    }
-
-    /**
-     * makeManageWidget returns a form or list widget based on configuration
-     */
-    protected function makeManageWidget()
-    {
         // Multiple (has many, belongs to many)
         if ($this->manageMode === 'list' || $this->manageMode === 'pivot') {
-            return $this->makeManageWidgetAsList();
+            return $this->manageListWidget;
         }
+
         // Single (belongs to, has one)
-        elseif ($this->manageMode === 'form') {
-            return $this->makeManageWidgetAsForm();
+        if ($this->manageMode === 'form') {
+            return $this->manageFormWidget;
         }
 
         return null;
     }
 
     /**
-     * makeManageWidgetAsList prepares the list widget for management
+     * makeManageListWidget prepares the list widget for management
      */
-    protected function makeManageWidgetAsList(): ?ListWidget
+    protected function makeManageListWidget(): ?ListWidget
     {
+        if (!$config = $this->makeConfigForMode('manage', 'list')) {
+            return null;
+        }
+
+        $this->manageModel = $this->relationModel;
+
         $isPivot = $this->manageMode === 'pivot';
 
-        $config = $this->makeConfigForMode('manage', 'list');
-        $config->model = $this->relationModel;
+        $config->model = $this->manageModel;
         $config->alias = $this->alias . 'ManageList';
-        $config->showSetup = false;
+        $config->showSetup = $this->getConfig('manage[showSetup]', false);
         $config->showCheckboxes = $this->getConfig('manage[showCheckboxes]', !$isPivot);
         $config->showSorting = $this->getConfig('manage[showSorting]', !$isPivot);
         $config->defaultSort = $this->getConfig('manage[defaultSort]');
         $config->recordsPerPage = $this->getConfig('manage[recordsPerPage]');
+        $config->customPageName = $this->getConfig('manage[customPageName]', false);
+        $config->recordOnClick = $this->getConfig('manage[recordOnClick]');
 
         if ($this->viewMode === 'single') {
             $config->showCheckboxes = false;
-            $config->recordOnClick = sprintf(
-                "$.oc.relationBehavior.clickManageListRecord(':%s', '%s', '%s')",
-                $this->relationModel->getKeyName(),
+            $config->recordOnClick ??= sprintf(
+                "oc.relationBehavior.clickManageListRecord(this, ':%s', '%s', '%s')",
+                $this->manageModel->getKeyName(),
                 $this->relationGetId(),
-                $this->relationGetSessionKey()
+                $this->relationSessionKey
             );
         }
         elseif ($config->showCheckboxes) {
-            $config->recordOnClick = "$.oc.relationBehavior.toggleListCheckbox(this)";
+            $config->recordOnClick ??= "oc.relationBehavior.toggleListCheckbox(this)";
         }
         elseif ($isPivot) {
-            $config->recordOnClick = sprintf(
-                "$.oc.relationBehavior.clickManagePivotListRecord(':%s', '%s', '%s')",
-                $this->relationModel->getKeyName(),
+            $config->recordOnClick ??= sprintf(
+                "oc.relationBehavior.clickManagePivotListRecord(this, ':%s', '%s', '%s')",
+                $this->manageModel->getKeyName(),
                 $this->relationGetId(),
-                $this->relationGetSessionKey()
+                $this->relationSessionKey
             );
         }
 
@@ -121,16 +137,18 @@ trait HasManageMode
         }
         elseif ($scopeMethod = $this->getConfig('manage[scope]')) {
             $widget->bindEvent('list.extendQueryBefore', function ($query) use ($scopeMethod) {
-                $query->$scopeMethod($this->model);
+                $query->$scopeMethod($this->relationParent);
             });
         }
         else {
             $widget->bindEvent('list.extendQueryBefore', function ($query) {
                 $this->relationObject->addDefinedConstraintsToQuery($query);
 
-                // Reset any orders that may have come from the definition
-                // because it has a tendency to break things
-                $query->getQuery()->orders = [];
+                // Reset any orders that come from the definition since they may
+                // reference the pivot table that isn't included in this query
+                if (in_array($this->relationType, ['belongsToMany', 'morphedByMany', 'morphToMany'])) {
+                    $query->getQuery()->reorder();
+                }
             });
         }
 
@@ -140,9 +158,6 @@ trait HasManageMode
                 $widget->setSearchTerm($this->searchWidget->getActiveTerm());
                 return $widget->onRefresh();
             });
-
-            // Linkage for JS plugins
-            $this->searchWidget->listWidgetId = $widget->getId();
 
             // Pass search options
             $widget->setSearchOptions([
@@ -166,45 +181,46 @@ trait HasManageMode
             $widget->addFilter([$this->manageFilterWidget, 'applyAllScopesToQuery']);
         }
 
-        // Exclude existing relationships
-        $widget->bindEvent('list.extendQuery', function ($query) {
-            // Where not in the current list of related records
-            $existingIds = $this->findExistingRelationIds();
-            if (count($existingIds)) {
-                $query->whereNotIn($this->relationModel->getQualifiedKeyName(), $existingIds);
-            }
-        });
+        // Exclude existing relationships for non-incrementing pivots
+        if (!$this->isPivotIncrementing()) {
+            $widget->bindEvent('list.extendQuery', function ($query) {
+                if (count($existingIds = $this->findExistingRelationIds())) {
+                    $query->whereNotIn($this->manageModel->getQualifiedKeyName(), $existingIds);
+                }
+            });
+        }
 
         return $widget;
     }
 
     /**
-     * makeManageWidgetAsForm prepares the form widget for management
+     * makeManageFormWidget prepares the form widget for management
      */
-    protected function makeManageWidgetAsForm(): ?FormWidget
+    protected function makeManageFormWidget(): ?FormWidget
     {
-        if (!$config = $this->makeConfigForMode('manage', 'form', false)) {
+        if (!$config = $this->makeConfigForMode('manage', 'form')) {
             return null;
         }
 
-        $config->model = $this->relationModel;
-        $config->arrayName = class_basename($this->relationModel);
-        $config->context = $this->evalFormContext('manage', !!$this->manageId);
-        $config->alias = $this->alias . 'ManageForm';
+        $this->manageModel = $this->relationModel;
 
         // Existing record
         if ($this->manageId) {
-            $this->manageModel = $config->model->find($this->manageId);
-            if ($this->manageModel) {
-                $config->model = $this->manageModel;
-            }
-            else {
+            $this->manageModel = $this->findManageModelObject($this->manageId);
+
+            if (!$this->manageModel) {
                 throw new ApplicationException(Lang::get('backend::lang.model.not_found', [
-                    'class' => get_class($config->model),
+                    'class' => get_class($this->relationModel),
                     'id' => $this->manageId,
                 ]));
             }
         }
+
+        $config->model = $this->manageModel;
+        $config->arrayName = class_basename($this->relationModel);
+        $config->context = $this->evalFormContext('manage', !!$this->manageId);
+        $config->alias = $this->alias . 'ManageForm';
+        $config->parentFieldName = $this->field;
 
         $widget = $this->makeWidget(FormWidget::class, $config);
 
@@ -216,19 +232,27 @@ trait HasManageMode
      */
     public function onRelationManageForm()
     {
+        // The form should not share its session key with the parent
+        $this->bumpSessionKeys = true;
+
         $this->beforeAjax();
 
+        if ($this->manageMode === 'form' && !$this->manageFormWidget) {
+            throw new ApplicationException("Missing configuration for [manage.{$this->manageMode}] in RelationController definition [{$this->field}].");
+        }
+
+        if ($this->manageMode !== 'form' && !$this->manageListWidget) {
+            throw new ApplicationException("Missing configuration for [manage.{$this->manageMode}] in RelationController definition [{$this->field}].");
+        }
+
         // Updating an existing record
-        if ($this->manageMode === 'pivot' && $this->manageId) {
+        if ($this->manageMode === 'pivot' && ($this->manageId || $this->pivotId)) {
             return $this->onRelationManagePivotForm();
         }
 
-        // The form should not share its session key with the parent
-        $this->vars['newSessionKey'] = str_random(40);
+        $this->vars['newSessionKey'] = $this->sessionKey;
 
-        $view = 'manage_' . $this->manageMode;
-
-        return $this->relationMakePartial($view);
+        return $this->relationMakePartial('manage_' . $this->manageMode);
     }
 
     /**
@@ -236,21 +260,22 @@ trait HasManageMode
      */
     public function onRelationManageCreate()
     {
-        $this->forceManageMode = 'form';
-
         $this->beforeAjax();
 
-        $saveData = $this->manageWidget->getSaveData();
-        $sessionKey = $this->deferredBinding ? $this->relationGetSessionKey(true) : null;
+        $saveData = $this->manageFormWidget->getSaveData();
+        $sessionKey = $this->deferredBinding ? $this->relationSessionKey : null;
         $parentModel = $this->relationObject->getParent();
         $newModel = $this->relationModel;
 
+        $this->controller->relationBeforeSave($this->field, $newModel);
+        $this->controller->relationBeforeCreate($this->field, $newModel);
+
         $modelsToSave = $this->prepareModelsToSave($newModel, $saveData);
         foreach ($modelsToSave as $modelToSave) {
-            $modelToSave->save(null, $this->manageWidget->getSessionKey());
+            $modelToSave->save(['sessionKey' => $this->manageFormWidget->getSessionKey(), 'propagate' => true]);
         }
 
-        // No need to add relationships that have a valid assocation via HasOneOrMany::make
+        // No need to add relationships that have a valid association via HasOneOrMany::make
         if (!$this->relationObject instanceof HasOneOrMany || !$parentModel->exists) {
             $this->relationObject->add($newModel, $sessionKey);
         }
@@ -262,8 +287,12 @@ trait HasManageMode
 
         // Display updated form
         if ($this->viewMode === 'single') {
-            $this->viewWidget->setFormValues($saveData);
+            $this->viewFormWidget->model = $newModel;
+            $this->viewFormWidget->setFormValues($saveData);
         }
+
+        $this->controller->relationAfterSave($this->field, $newModel);
+        $this->controller->relationAfterCreate($this->field, $newModel);
 
         $this->showFlashMessage('flashCreate');
 
@@ -275,21 +304,25 @@ trait HasManageMode
      */
     public function onRelationManageUpdate()
     {
-        $this->forceManageMode = 'form';
-
         $this->beforeAjax();
 
-        $saveData = $this->manageWidget->getSaveData();
+        $saveData = $this->manageFormWidget->getSaveData();
+
+        $this->controller->relationBeforeSave($this->field, $this->manageModel);
+        $this->controller->relationBeforeUpdate($this->field, $this->manageModel);
 
         $modelsToSave = $this->prepareModelsToSave($this->manageModel, $saveData);
         foreach ($modelsToSave as $modelToSave) {
-            $modelToSave->save(null, $this->manageWidget->getSessionKey());
+            $modelToSave->save(['sessionKey' => $this->manageFormWidget->getSessionKey(), 'propagate' => true]);
         }
 
         // Display updated form
         if ($this->viewMode === 'single') {
-            $this->viewWidget->setFormValues($saveData);
+            $this->viewFormWidget->setFormValues($saveData);
         }
+
+        $this->controller->relationAfterSave($this->field, $this->manageModel);
+        $this->controller->relationAfterUpdate($this->field, $this->manageModel);
 
         $this->showFlashMessage('flashUpdate');
 
@@ -303,31 +336,42 @@ trait HasManageMode
     {
         $this->beforeAjax();
 
-        /*
-         * Multiple (has many, belongs to many)
-         */
+        $deletedModels = [];
+
+        // Multiple (has many, belongs to many)
         if ($this->viewMode === 'multi') {
             if (($checkedIds = post('checked')) && is_array($checkedIds)) {
                 foreach ($checkedIds as $relationId) {
-                    if (!$obj = $this->relationModel->find($relationId)) {
+                    if ($pivotKey = $this->isPivotIncrementing()) {
+                        $obj = $this->relationObject->wherePivot($pivotKey, $relationId)->first();
+                    }
+                    else {
+                        $obj = $this->findManageModelObject($relationId);
+                    }
+
+                    if (!$obj) {
                         continue;
                     }
 
                     $obj->delete();
+                    $deletedModels[] = $obj;
                 }
             }
         }
-        /*
-         * Single (belongs to, has one)
-         */
+        // Single (belongs to, has one)
         elseif ($this->viewMode === 'single') {
             $relatedModel = $this->viewModel;
             if ($relatedModel->exists) {
                 $relatedModel->delete();
+                $deletedModels[] = $relatedModel;
             }
 
             $this->resetViewWidgetModel();
             $this->viewModel = $this->relationModel;
+        }
+
+        foreach ($deletedModels as $model) {
+            $this->controller->relationAfterUpdate($this->field, $model);
         }
 
         $this->showFlashMessage('flashDelete');
@@ -343,18 +387,14 @@ trait HasManageMode
         $this->beforeAjax();
 
         $recordId = post('record_id');
-        $sessionKey = $this->deferredBinding ? $this->relationGetSessionKey() : null;
+        $sessionKey = $this->deferredBinding ? $this->relationSessionKey : null;
 
-        /*
-         * Add
-         */
+        // Add
         if ($this->viewMode === 'multi') {
-            $checkedIds = $recordId ? [$recordId] : post('checked');
+            $checkedIds = $recordId ? [$recordId] : $this->manageListWidget->getAllCheckedIds();
 
             if (is_array($checkedIds)) {
-                /*
-                 * Remove existing relations from the array
-                 */
+                // Remove existing relations from the array
                 $existingIds = $this->findExistingRelationIds($checkedIds);
                 $checkedIds = array_diff($checkedIds, $existingIds);
                 $foreignKeyName = $this->relationModel->getKeyName();
@@ -367,13 +407,11 @@ trait HasManageMode
 
             $this->showFlashMessage('flashAdd');
         }
-        /*
-         * Link
-         */
+        // Link
         elseif ($this->viewMode === 'single') {
-            if ($recordId && ($model = $this->relationModel->find($recordId))) {
+            if ($recordId && ($model = $this->findManageModelObject($recordId))) {
                 $this->relationObject->add($model, $sessionKey);
-                $this->viewWidget->setFormValues($model->attributes);
+                $this->viewFormWidget->setFormValues($model->attributes);
 
                 // Belongs To won't save when using add() so it should occur if the conditions are right.
                 if ($this->relationType === 'belongsTo' && !$this->deferredBinding) {
@@ -398,19 +436,22 @@ trait HasManageMode
         $this->beforeAjax();
 
         $recordId = post('record_id');
-        $sessionKey = $this->deferredBinding ? $this->relationGetSessionKey() : null;
+        $sessionKey = $this->deferredBinding ? $this->relationSessionKey : null;
         $relatedModel = $this->relationModel;
 
-        /*
-         * Remove
-         */
+        // Remove
         if ($this->viewMode === 'multi') {
             $checkedIds = $recordId ? [$recordId] : post('checked');
 
             if (is_array($checkedIds)) {
-                $foreignKeyName = $relatedModel->getKeyName();
+                if ($pivotKey = $this->isPivotIncrementing()) {
+                    $models = $this->relationObject->wherePivotIn($pivotKey, $checkedIds)->get();
+                }
+                else {
+                    $foreignKeyName = $relatedModel->getKeyName();
+                    $models = $relatedModel->whereIn($foreignKeyName, $checkedIds)->get();
+                }
 
-                $models = $relatedModel->whereIn($foreignKeyName, $checkedIds)->get();
                 foreach ($models as $model) {
                     $this->relationObject->remove($model, $sessionKey);
                 }
@@ -418,16 +459,14 @@ trait HasManageMode
 
             $this->showFlashMessage('flashRemove');
         }
-        /*
-         * Unlink
-         */
+        // Unlink
         elseif ($this->viewMode === 'single') {
             if ($this->relationType === 'belongsTo') {
                 $this->relationObject->dissociate();
                 $this->relationObject->getParent()->save();
             }
             elseif ($this->relationType === 'hasOne' || $this->relationType === 'morphOne') {
-                if ($obj = $relatedModel->find($recordId)) {
+                if ($obj = $this->findManageModelObject($recordId)) {
                     $this->relationObject->remove($obj, $sessionKey);
                 }
                 elseif ($this->viewModel->exists) {
@@ -482,14 +521,6 @@ trait HasManageMode
      */
     protected function evalManageMode()
     {
-        if ($mode = post(RelationController::PARAM_MODE)) {
-            return $mode;
-        }
-
-        if ($this->forceManageMode) {
-            return $this->forceManageMode;
-        }
-
         switch ($this->eventTarget) {
             case 'button-create':
             case 'button-update':
@@ -527,5 +558,21 @@ trait HasManageMode
 
                 return 'form';
         }
+    }
+
+    /**
+     * findManageModelObject for the current field
+     */
+    protected function findManageModelObject($recordId)
+    {
+        if (!strlen($recordId)) {
+            return null;
+        }
+
+        $query = $this->relationModel->newQuery();
+
+        $this->controller->relationExtendManageFormQuery($this->field, $query);
+
+        return $query->find($recordId);
     }
 }

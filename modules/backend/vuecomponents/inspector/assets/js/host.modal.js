@@ -1,7 +1,7 @@
 /*
  * Vue modal host implementation
  */
-$.oc.module.register('backend.component.inspector.host.modal', function () {
+oc.Modules.register('backend.component.inspector.host.modal', function () {
     Vue.component('backend-component-inspector-host-modal', {
         props: {
             title: {
@@ -25,6 +25,10 @@ $.oc.module.register('backend.component.inspector.host.modal', function () {
             dataSchema: {
                 type: Array,
                 required: true
+            },
+            liveMode: {
+                type: Boolean,
+                default: false
             },
             data: {
                 type: Object,
@@ -117,6 +121,14 @@ $.oc.module.register('backend.component.inspector.host.modal', function () {
                 }
 
                 this.$refs.modal.hide();
+            },
+
+            onCancelClick: function onCancelClick() {
+                if (this.liveMode) {
+                    this.$refs.inspector.revertChanges();
+                }
+
+                this.onCloseClick();
             },
 
             onResized: function onResized() {

@@ -1,29 +1,36 @@
 <?php namespace Backend\VueComponents;
 
 use Url;
+use Event;
 use Backend\Classes\VueComponentBase;
 use Backend\Models\Preference as BackendPreference;
 
 /**
- * Monaco editor Vue component
+ * MonacoEditor Vue component
  *
- * Dev notes.
- * - Emmet is not currently supported. Available third-party libraries did not work well. (July 2020)
+ * Dev notes:
  * - Automatic tag closing is not implemented. See https://github.com/microsoft/monaco-editor/issues/221
  *
- * @see https://github.com/microsoft/monaco-editor
- *
+ * @link https://github.com/microsoft/monaco-editor
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
 class MonacoEditor extends VueComponentBase
 {
+    /**
+     * @var array require other components
+     */
     protected $require = [
         \Backend\VueComponents\Tabs::class
     ];
 
     /**
-     * Adds dependency assets required for the component.
+     * @var array yamlDefinitions can only be defined once
+     */
+    protected static $yamlDefinitions;
+
+    /**
+     * loadDependencyAssets required for the component.
      * This method is called before the component's default resources are loaded.
      * Use $this->addJs() and $this->addCss() to register new assets to include
      * on the page.
@@ -31,20 +38,26 @@ class MonacoEditor extends VueComponentBase
      */
     protected function loadDependencyAssets()
     {
-        $this->addJs('vendor/emmet-monaco-es@4.6.2/min/emmet-monaco.min.js');
-        $this->addJs('vendor/monaco@0.23.0/min/vs/loader.js');
-        $this->addJsBundle('js/modelreference.js', 'core');
-        $this->addJsBundle('js/modeldefinition.js', 'core');
+        $this->addJs('vendor/monaco-yaml/monaco-yaml.min.js');
+        $this->addJs('vendor/emmet-monaco-es/emmet-monaco.min.js');
+        $this->addJs('vendor/monaco/vs/loader.js');
+        $this->addJsBundle('js/modelreference.js');
+        $this->addJsBundle('js/modeldefinition.js');
     }
 
+    /**
+     * prepareVars
+     */
     protected function prepareVars()
     {
         $preferences = BackendPreference::instance();
 
         $configuration = [
-            'vendorPath' => Url::asset('/modules/backend/vuecomponents/monacoeditor/assets/vendor/monaco@0.23.0/min'),
+            'vendorPath' => Url::asset('/modules/backend/vuecomponents/monacoeditor/assets/vendor/monaco'),
             'fontSize' => $preferences->editor_font_size.'px',
             'tabSize' => $preferences->editor_tab_size,
+            'useEmmet' => !!$preferences->editor_use_emmet,
+            'yamlSchemas' => $this->getYamlSchemaDefinitions(),
             'renderLineHighlight' => $preferences->editor_highlight_active_line ? 'all' : 'none',
             'useTabStops' => !!$preferences->editor_use_hard_tabs,
             'renderIndentGuides' => !!$preferences->editor_display_indent_guides,
@@ -84,5 +97,35 @@ class MonacoEditor extends VueComponentBase
         }
 
         $this->vars['configuration'] = json_encode($configuration);
+    }
+
+    /**
+     * getYamlSchemaDefinitions
+     */
+    protected function getYamlSchemaDefinitions()
+    {
+
+        /**
+         * @event editor.extension.defineYamlSchemas
+         * @link https://github.com/domsew/monaco-yaml
+         * Injects YAML schema definitions for the Monaco Editor based on the monaco-yaml package
+         *
+         * Example usage:
+         *
+         *     Event::listen('editor.extension.defineYamlSchemas', function () {
+         *         return [
+         *             [
+         *                 'uri' => Url::asset('modules/tailor/assets/js/blueprint-yaml-definition.json'),
+         *                 'fileMatch' => ['*-blueprint.yaml']
+         *             ]
+         *         ];
+         *     });
+         *
+         */
+        if (!self::$yamlDefinitions) {
+            self::$yamlDefinitions = array_collapse(Event::fire('editor.extension.defineYamlSchemas'));
+        }
+
+        return self::$yamlDefinitions ?: null;
     }
 }

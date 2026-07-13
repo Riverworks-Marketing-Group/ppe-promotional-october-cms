@@ -16,12 +16,14 @@ use ApplicationException;
  * - purge thumbs: Deletes all thumbnail files in the uploads directory.
  * - purge orphans: Deletes files in "system_files" that do not belong to any other model.
  * - purge uploads: Deletes files in the uploads directory that do not exist in the "system_files" table.
+ * - purge deferred: Cleans up all records that have deferred bindings
  * - git pull: Perform "git pull" on all plugins and themes.
  * - compile assets: Compile registered Language, LESS and JS files.
  * - compile js: Compile registered JS files only.
  * - compile less: Compile registered LESS files only.
  * - compile scss: Compile registered SCSS files only.
  * - compile lang: Compile registered Language files only.
+ * - compile docs: Compile complex documentation file for a theme or plugin.
  * - set build: Pull the latest stable build number from the update gateway and set it as the current build number.
  *
  * Available patch versions:
@@ -37,6 +39,7 @@ class OctoberUtil extends Command
     use \System\Console\OctoberUtilPatches;
     use \System\Console\OctoberUtilCommands;
     use \System\Console\OctoberUtilRefitLang;
+    use \System\Console\OctoberUtilPackageDocs;
 
     /**
      * The console command name.
@@ -112,9 +115,19 @@ class OctoberUtil extends Command
     protected function getOptions()
     {
         return [
-            ['force', null, InputOption::VALUE_NONE, 'Force the operation to run when in production.'],
+            ['force', 'f', InputOption::VALUE_NONE, 'Force the operation to run when in production.'],
             ['debug', null, InputOption::VALUE_NONE, 'Run the operation in debug / development mode.'],
             ['value', null, InputOption::VALUE_REQUIRED, 'Specify a generic value for the command'],
         ];
+    }
+
+    /**
+     * getDefaultConfirmCallback specifies the default confirmation callback
+     */
+    protected function getDefaultConfirmCallback()
+    {
+        return function () {
+            return true;
+        };
     }
 }

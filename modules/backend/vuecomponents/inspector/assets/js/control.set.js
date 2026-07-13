@@ -1,7 +1,7 @@
 /*
  * Vue Inspector set control implementation
  */
-$.oc.module.register('backend.component.inspector.control.set', function () {
+oc.Modules.register('backend.component.inspector.control.set', function () {
     Vue.component('backend-component-inspector-control-set', {
         extends: $.oc.vueComponentHelpers.inspector.controlBase,
         props: {
@@ -44,7 +44,8 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
 
             return {
                 editedObject: initialValue,
-                loadedItems: {}
+                loadedItems: {},
+                unwatches: []
             };
         },
         computed: {
@@ -64,7 +65,7 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
                         'default': false
                     });
                 }
-            
+
                 return result;
             },
 
@@ -79,7 +80,7 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
                 if ($.isArray(value) && value.length > 0) {
                     var items = this.items,
                         titles = [];
-                
+
                     for (var i = 0; i < value.length; i++) {
                         var currentValue = value[i];
                         if (items[currentValue] != undefined) {
@@ -100,7 +101,7 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
         methods: {
             updateValue: function updateValue(value) {
                 var storedValue = [];
-            
+
                 if (typeof value === 'object') {
                     for (var prop in value) {
                         if (!value.hasOwnProperty(prop)) {
@@ -128,6 +129,18 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
             getDefaultValue: function getDefaultValue() {
                 return {};
             },
+
+            findOptionByValue: function findOptionByValue(value) {
+                if (!this.options) {
+                    return null;
+                }
+
+                for (var index = 0; index < this.options.length; index++) {
+                    if (this.options[index].code == value) {
+                        return this.options[index];
+                    }
+                }
+            },
         },
         created: function created() {
 
@@ -135,9 +148,26 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
         mounted: function mounted() {
             this.$emit('hidefullwidthlabel');
             this.$emit('hidebottomborder');
-        
+
             if (!this.control.items) {
                 this.loadDynamicOptions();
+            }
+
+            if (Array.isArray(this.control.depends)) {
+                this.control.depends.forEach(dependsOn => {
+                    this.unwatches.push(
+                        this.$watch('obj.' + dependsOn, (newVal) => {
+                            const originalValue = this.value;
+                            this.loadDynamicOptions().then(() => {
+                                if (!this.findOptionByValue(originalValue)) {
+                                    this.setManagedValue([]);
+                                }
+                            })
+                        }, {
+                            deep: true
+                        })
+                    );
+                })
             }
         },
         watch: {
@@ -147,6 +177,11 @@ $.oc.module.register('backend.component.inspector.control.set', function () {
                     this.updateValue(newValue);
                 }
             }
+        },
+        beforeDestroy: function () {
+            this.unwatches.forEach(unwatch => {
+                unwatch();
+            })
         },
         template: '#backend_vuecomponents_inspector_control_set'
     });

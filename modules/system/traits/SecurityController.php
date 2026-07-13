@@ -1,11 +1,10 @@
 <?php namespace System\Traits;
 
+use Date;
 use Crypt;
 use Config;
 use Request;
 use Session;
-use Carbon\Carbon;
-use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
@@ -28,7 +27,7 @@ trait SecurityController
         return new Cookie(
             'XSRF-TOKEN',
             Session::token(),
-            Carbon::now()->addMinutes((int) $config['lifetime'])->getTimestamp(),
+            Date::now()->addMinutes((int) $config['lifetime'])->getTimestamp(),
             $config['path'],
             $config['domain'],
             $config['secure'],
@@ -60,7 +59,7 @@ trait SecurityController
             $token = Crypt::decrypt($header, false);
         }
 
-        if (!strlen($token) || !strlen(Session::token())) {
+        if (!is_string($token) || !strlen($token) || !strlen(Session::token())) {
             return false;
         }
 

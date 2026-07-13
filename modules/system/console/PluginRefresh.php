@@ -1,13 +1,13 @@
 <?php namespace System\Console;
 
+use App;
 use Illuminate\Console\Command;
 use System\Classes\UpdateManager;
 use System\Classes\PluginManager;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
+use October\Rain\Database\Updater;
 
 /**
- * PluginRefresh refreshes a plugin.
+ * PluginRefresh refreshes a plugin or the app directory.
  *
  * This destroys all database tables for a specific plugin, then builds them up again.
  * It is a great way for developers to debug and develop new plugins.
@@ -17,10 +17,16 @@ use Symfony\Component\Console\Input\InputOption;
  */
 class PluginRefresh extends Command
 {
+    use \Illuminate\Console\ConfirmableTrait;
+
     /**
-     * @var string name of console command
+     * @var string signature for the command
      */
-    protected $name = 'plugin:refresh';
+    protected $signature = 'plugin:refresh
+        {namespace : App or Plugin Namespace. <info>(eg: Acme.Blog)</info>}
+        {--f|force : Force the operation to run.}
+        {--rollback=false : Specify a version to rollback to, otherwise rollback to the beginning.}
+        {--skip-errors : Continue with migration through exceptions.}';
 
     /**
      * @var string description of the console command
@@ -32,18 +38,77 @@ class PluginRefresh extends Command
      */
     public function handle()
     {
-        $manager = PluginManager::instance();
-        $name = $manager->normalizeIdentifier($this->argument('name'));
-
-        if (!$manager->hasPlugin($name)) {
-            return $this->output->error("Unable to find plugin '${name}'");
+        $skipErrors = $this->option('skip-errors');
+        if ($skipErrors) {
+            Updater::skipErrors();
         }
 
-        if ($this->userAbortedFromWarning($name)) {
+        if ($this->isAppNamespace()) {
+            $this->handleApp();
+        }
+        else {
+            $this->handlePlugin();
+        }
+
+        if ($skipErrors) {
+            Updater::skipErrors(false);
+        }
+    }
+
+    /**
+     * handleApp refreshes the app namespace
+     *
+     * @todo this method should be properly isolated to the "App" namespace, it currently
+     * relies on a file not being found to protect tables and if the internals are ever
+     * made smarter to locate missing migration files, it could be seriously problematic.
+     */
+    public function handleApp()
+    {
+        $message = "This will DESTROY database tables for the app directory.";
+        if (!$this->confirmToProceed($message)) {
             return;
         }
 
-        if ($this->option('rollback') !== false) {
+        // This rollback depends on vendor logic, which may be unsafe (see below)
+        $message = "Do not run this command without a backup of the database.";
+        if (!$this->confirmToProceed($message)) {
+            return;
+        }
+
+        $this->components->info('Rolling back app migrations.');
+
+        $manager = UpdateManager::instance()->setNotesCommand($this);
+        $manager->rollbackApp();
+
+        if (!$this->isRollback()) {
+            $manager->migrateApp();
+            $manager->seedApp();
+        }
+    }
+
+    /**
+     * handlePlugin refreshes a plugin
+     */
+    public function handlePlugin()
+    {
+        $manager = PluginManager::instance();
+        $name = $manager->normalizeIdentifier($this->argument('namespace'));
+
+        if (!$manager->hasPlugin($name)) {
+            return $this->output->error("Unable to find plugin [{$name}]");
+        }
+
+        $message = "This will DESTROY database tables for plugin [{$name}].";
+        if ($this->isRollback()) {
+            $toVersion = $this->option('rollback');
+            $message = "This will DESTROY database tables for plugin [{$name}] up to version [{$toVersion}].";
+        }
+
+        if (!$this->confirmToProceed($message)) {
+            return;
+        }
+
+        if ($this->isRollback()) {
             return $this->handleRollback($name);
         }
         else {
@@ -52,17 +117,17 @@ class PluginRefresh extends Command
     }
 
     /**
-     * handleRollback performs a database rollback
+     * handleRefresh performs a database rollback
      */
     protected function handleRefresh($name)
     {
         // Rollback plugin migration
-        $manager = UpdateManager::instance()->setNotesOutput($this->output);
+        $manager = UpdateManager::instance()->setNotesCommand($this);
         $manager->rollbackPlugin($name);
 
         // Rerun migration
-        $this->output->writeln('<info>Reinstalling plugin...</info>');
-        $manager->updatePlugin($name);
+        $this->line('Reinstalling plugin...');
+        $manager->migratePlugin($name);
     }
 
     /**
@@ -71,7 +136,7 @@ class PluginRefresh extends Command
     protected function handleRollback($name)
     {
         // Rollback plugin migration
-        $manager = UpdateManager::instance()->setNotesOutput($this->output);
+        $manager = UpdateManager::instance()->setNotesCommand($this);
 
         if ($toVersion = $this->option('rollback')) {
             $manager->rollbackPluginToVersion($name, $toVersion);
@@ -82,48 +147,28 @@ class PluginRefresh extends Command
     }
 
     /**
-     * userAbortedFromWarning
+     * getDefaultConfirmCallback specifies the default confirmation callback
      */
-    protected function userAbortedFromWarning($name): bool
+    protected function getDefaultConfirmCallback()
     {
-        // Bypass from force
-        if ($this->option('force', false)) {
-            return false;
-        }
-
-        // Warn user
-        if ($toVersion = $this->option('rollback')) {
-            if (!$this->confirm("This will DESTROY database tables for plugin '${name}' up to version '${toVersion}'.")) {
-                return true;
-            }
-        }
-        else {
-            if (!$this->confirm("This will DESTROY database tables for plugin '${name}'.")) {
-                return true;
-            }
-        }
-
-        return false;
+        return function() {
+            return true;
+        };
     }
 
     /**
-     * getArguments get the console command arguments
+     * isRollback overcomes an issue where Laravel no longer provides an optional option
      */
-    protected function getArguments()
+    protected function isRollback(): bool
     {
-        return [
-            ['name', InputArgument::REQUIRED, 'The name of the plugin. Eg: AuthorName.PluginName'],
-        ];
+        return $this->option('rollback') !== 'false';
     }
 
     /**
-     * getOptions get the console command options
+     * isAppNamespace
      */
-    protected function getOptions()
+    protected function isAppNamespace(): bool
     {
-        return [
-            ['force', 'f', InputOption::VALUE_NONE, 'Force the operation to run.'],
-            ['rollback', 'r', InputOption::VALUE_OPTIONAL, 'Specify a version to rollback to, otherwise rollback to the beginning.', false],
-        ];
+        return mb_strtolower(trim($this->argument('namespace'))) === 'app';
     }
 }

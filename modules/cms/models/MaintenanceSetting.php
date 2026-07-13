@@ -1,11 +1,12 @@
 <?php namespace Cms\Models;
 
-use Model;
+use Site;
 use System;
 use BackendAuth;
 use Cms\Classes\Page;
 use Cms\Classes\Theme;
 use ApplicationException;
+use System\Models\SettingModel;
 use Exception;
 
 /**
@@ -14,16 +15,10 @@ use Exception;
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
-class MaintenanceSetting extends Model
+class MaintenanceSetting extends SettingModel
 {
+    use \October\Rain\Database\Traits\Multisite;
     use \October\Rain\Database\Traits\Validation;
-
-    /**
-     * @var array implement behaviors
-     */
-    public $implement = [
-        \System\Behaviors\SettingsModel::class
-    ];
 
     /**
      * @var string settingsCode is a unique code
@@ -31,7 +26,7 @@ class MaintenanceSetting extends Model
     public $settingsCode = 'cms_maintenance_settings';
 
     /**
-     * @var mixed settingsFields defitions
+     * @var mixed settingsFields definitions
      */
     public $settingsFields = 'fields.yaml';
 
@@ -39,6 +34,11 @@ class MaintenanceSetting extends Model
      * @var array rules for validation
      */
     public $rules = [];
+
+    /**
+     * @var array propagatable fields
+     */
+    protected $propagatable = [];
 
     /**
      * initSettingsData initializes the seed data for this model. This only executes when the
@@ -55,7 +55,27 @@ class MaintenanceSetting extends Model
      */
     public static function isEnabled(): bool
     {
-        if (!System::hasDatabase() || BackendAuth::getUser()) {
+        if (!System::hasDatabase()) {
+            return false;
+        }
+
+        if (BackendAuth::userHasAccess('general.view_offline')) {
+            return false;
+        }
+
+        return self::get('is_enabled', false);
+    }
+
+    /**
+     * isEnabledForBackend
+     */
+    public static function isEnabledForBackend(): bool
+    {
+        if (!System::hasDatabase()) {
+            return false;
+        }
+
+        if (BackendAuth::userHasAccess('general.backend.view_offline')) {
             return false;
         }
 
@@ -72,7 +92,7 @@ class MaintenanceSetting extends Model
         }
 
         return array_map(function($code) use ($theme) {
-            return "{$theme->getDirName()}/${code}";
+            return "{$theme->getDirName()}/{$code}";
         }, Page::listInTheme($theme)->lists('fileName', 'fileName'));
     }
 
@@ -85,14 +105,13 @@ class MaintenanceSetting extends Model
             throw new ApplicationException('Unable to find the active theme.');
         }
 
-        $themeMap = $this->getSettingsValue('theme_map', []);
-        $themeMap[$theme->getDirName()] = $this->getSettingsValue('cms_page');
-        $this->setSettingsValue('theme_map', $themeMap);
+        $themeMap = (array) $this->theme_map;
+        $themeMap[$theme->getDirName()] = $this->cms_page;
+        $this->theme_map = $themeMap;
     }
 
     /**
-     * afterFetch restores the CMS page found in the mapping array, or disable the
-     * maintenance mode.
+     * afterFetch restores the CMS page found in the mapping array.
      */
     public function afterFetch()
     {
@@ -102,9 +121,6 @@ class MaintenanceSetting extends Model
             && ($cmsPage = array_get($themeMap, $theme->getDirName()))
         ) {
             $this->cms_page = $cmsPage;
-        }
-        else {
-            $this->is_enabled = false;
         }
     }
 
@@ -119,5 +135,14 @@ class MaintenanceSetting extends Model
         catch (Exception $ex) {
             return Theme::getActiveTheme();
         }
+    }
+
+    /**
+     * isMultisiteEnabled allows for programmatic toggling
+     * @return bool
+     */
+    public function isMultisiteEnabled()
+    {
+        return Site::hasFeature('cms_maintenance_setting');
     }
 }

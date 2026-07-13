@@ -16,6 +16,7 @@ use Backend\Models\User as UserModel;
 use System\Classes\UpdateManager;
 use ApplicationException;
 use ValidationException;
+use NotFoundException;
 use Exception;
 
 /**
@@ -41,6 +42,11 @@ class Auth extends Controller
     ];
 
     /**
+     * @var array vueComponents classes to implement
+     */
+    public $vueComponents = [];
+
+    /**
      * __construct is the constructor
      */
     public function __construct()
@@ -48,6 +54,13 @@ class Auth extends Controller
         parent::__construct();
 
         $this->layout = 'auth';
+    }
+
+    /**
+     * registerDefaultVueComponents
+     */
+    public function registerDefaultVueComponents()
+    {
     }
 
     /**
@@ -93,20 +106,27 @@ class Auth extends Controller
             'password' => 'required|between:4,255'
         ];
 
-        $validation = Validator::make(post(), $rules);
+        $validation = Validator::make(post(), $rules, [], [
+            'login' => __('Username'),
+            'password' => __('Password'),
+        ]);
+
         if ($validation->fails()) {
             throw new ValidationException($validation);
         }
 
-        if (is_null($remember = Config::get('backend.force_remember', true))) {
-            $remember = (bool) post('remember');
+        // Determine remember policy
+        $remember = Config::get('backend.force_remember');
+
+        if ($remember === null) {
+            $remember = post('remember');
         }
 
         // Authenticate user
         $user = BackendAuth::authenticate([
             'login' => post('login'),
             'password' => post('password')
-        ], $remember);
+        ], (bool) $remember);
 
         // Log the sign in event
         AccessLog::add($user);
@@ -138,6 +158,10 @@ class Auth extends Controller
      */
     public function restore()
     {
+        if (!$this->checkCanReset()) {
+            throw new NotFoundException;
+        }
+
         try {
             if ($this->checkPostbackFlag()) {
                 return $this->handleSubmitRestore();
@@ -157,7 +181,8 @@ class Auth extends Controller
             'login' => 'required|between:2,255'
         ];
 
-        $validation = Validator::make(post(), $rules);
+        $validation = Validator::make(post(), $rules, [], ['login' => __('Username')]);
+
         if ($validation->fails()) {
             throw new ValidationException($validation);
         }
@@ -168,7 +193,7 @@ class Auth extends Controller
             // For security reasons, only show detailed error when debug mode is on
             if (System::checkDebugMode()) {
                 throw new ValidationException([
-                    'login' => trans('backend::lang.account.restore_error', ['login' => post('login')])
+                    'login' => __("A user could not be found with a login value of ':login'", ['login' => post('login')])
                 ]);
             }
         }
@@ -182,12 +207,12 @@ class Auth extends Controller
                 'link' => $link,
             ];
 
-            Mail::send('backend::mail.restore', $data, function ($message) use ($user) {
-                $message->to($user->email, $user->full_name)->subject(trans('backend::lang.account.password_reset'));
+            Mail::send('backend:restore', $data, function ($message) use ($user) {
+                $message->to($user->email, $user->full_name)->subject(__('Password Reset'));
             });
         }
 
-        Flash::success(trans('backend::lang.account.restore_success'));
+        Flash::success(__('If your account was found, a message has been sent to your email address with instructions.'));
         return Backend::redirect('backend/auth/signin');
     }
 
@@ -196,13 +221,17 @@ class Auth extends Controller
      */
     public function reset($userId = null, $code = null)
     {
+        if (!$this->checkCanReset()) {
+            throw new NotFoundException;
+        }
+
         try {
             if ($this->checkPostbackFlag()) {
                 return $this->handleSubmitReset();
             }
 
             if (!$userId || !$code) {
-                throw new ApplicationException(trans('backend::lang.account.reset_error'));
+                throw new ApplicationException(__('Invalid password reset data supplied. Please try again!'));
             }
         }
         catch (Exception $ex) {
@@ -219,14 +248,17 @@ class Auth extends Controller
     protected function handleSubmitReset()
     {
         if (!post('id') || !post('code')) {
-            throw new ApplicationException(trans('backend::lang.account.reset_error'));
+            throw new ApplicationException(__('Invalid password reset data supplied. Please try again!'));
         }
 
         $rules = [
             'password' => 'required|between:4,255'
         ];
 
-        $validation = Validator::make(post(), $rules);
+        $validation = Validator::make(post(), $rules, [], [
+            'password' => __('Password'),
+        ]);
+
         if ($validation->fails()) {
             throw new ValidationException($validation);
         }
@@ -234,26 +266,24 @@ class Auth extends Controller
         $code = post('code');
         $user = BackendAuth::findUserById(post('id'));
 
-        if (!$user) {
-            throw new ApplicationException(trans('backend::lang.account.reset_error'));
+        if (!$user || !$user->checkResetPasswordCode($code)) {
+            throw new ApplicationException(__('Invalid password reset data supplied. Please try again!'));
         }
 
         // Validate password against policy
         $user->validatePasswordPolicy(post('password'));
 
-        if (!$user->checkResetPasswordCode($code)) {
-            throw new ApplicationException(trans('backend::lang.account.reset_error'));
-        }
-
         if (!$user->attemptResetPassword($code, post('password'))) {
-            throw new ApplicationException(trans('backend::lang.account.reset_fail'));
+            throw new ApplicationException(__('Unable to reset your password!'));
         }
 
+        // Clear the code used to reset the password
         $user->clearResetPassword();
 
+        // Clear throttles
         BackendAuth::clearThrottleForUserId($user->id);
 
-        Flash::success(trans('backend::lang.account.reset_success'));
+        Flash::success(__('Password has been reset. You may now sign in.'));
 
         return Backend::redirect('backend/auth/signin');
     }
@@ -298,7 +328,15 @@ class Auth extends Controller
             'password_confirmation' => 'required_with:password|between:4,255'
         ];
 
-        $validation = Validator::make(post(), $rules);
+        $validation = Validator::make(post(), $rules, [], [
+            'first_name' => __('First name'),
+            'last_name' => __('Last name'),
+            'email' => __('Email'),
+            'login' => __('Username'),
+            'password' => __('Password'),
+            'password_confirmation' => __('Confirm Password'),
+        ]);
+
         if ($validation->fails()) {
             throw new ValidationException($validation);
         }
@@ -312,7 +350,7 @@ class Auth extends Controller
 
         // Redirect
         Flash::success(__('Welcome to your Administration Area, :name', ['name' => post('first_name')]));
-        return Backend::redirect('backend');
+        return Backend::redirectIntended('backend');
     }
 
     /**
@@ -376,5 +414,13 @@ class Auth extends Controller
         }
 
         return true;
+    }
+
+    /**
+     * checkCanReset password via self service
+     */
+    protected function checkCanReset(): bool
+    {
+        return (bool) Config::get('backend.password_policy.allow_reset', true);
     }
 }

@@ -42,19 +42,8 @@ div.multiselect {
         margin: 0;
     }
 
-    .multiselect__input {
-        &::-webkit-input-placeholder {
-            color: @inspector-placeholder-color!important;
-        }
-        &::-moz-placeholder {
-            color: @inspector-placeholder-color!important;
-        }
-        &:-ms-input-placeholder {
-            color: @inspector-placeholder-color!important;
-        }
-        &::placeholder {
-            color: @inspector-placeholder-color!important;
-        }
+    .multiselect__input::placeholder {
+        color: @inspector-placeholder-color!important;
     }
 
     .multiselect__content-wrapper {
@@ -62,8 +51,8 @@ div.multiselect {
         margin-top: 3px;
         border-radius: 4px;
         box-sizing: content-box;
-        border-color: @color-grey-3;
-        border-top: 1px solid @color-grey-3;
+        border-color: @primary-border;
+        border-top: 1px solid @primary-border;
         padding: 3px;
         .box-shadow(@box-shadow-z1);
 
@@ -81,7 +70,7 @@ div.multiselect {
                 }
 
                 &.multiselect__option--selected {
-                    font-weight: 500;
+                    font-weight: 600;
                 }
 
                 span {
@@ -128,7 +117,7 @@ div.multiselect {
         .multiselect__content-wrapper {
             margin-top: 0;
             margin-bottom: 3px;
-            border-bottom: 1px solid @color-grey-3;
+            border-bottom: 1px solid @primary-border;
         }
     }
 
@@ -141,5 +130,54 @@ div.multiselect {
     .multiselect-enter-active,
     .multiselect-leave-active {
         transition: none;
+    }
+
+    .option-with-icon {
+        display: flex;
+
+        .option-icon {
+            width: 26px;
+            font-size: 22px;
+            position: relative;
+
+            &:before {
+                top: 4px;
+                left: -4px;
+                position: absolute;
+            }
+        }
+    }
+
+    .option-with-color {
+        display: flex;
+
+        .option-color {
+            width: 18px;
+            height: 18px;
+            position: relative;
+            top: 5px;
+            border: 1px solid white;
+            margin-right: 5px;
+        }
+    }
+}
+
+// Override vendor styles
+div.multiselect {
+    .multiselect__input,
+    .multiselect__single,
+    .multiselect__tags {
+        background: transparent;
+        color: @input-color;
+    }
+    .multiselect__content-wrapper {
+        background: @input-bg;
+    }
+    .multiselect__option--selected {
+        color: @secondary-color;
+        background: @tertiary-bg;
+    }
+    .multiselect__option--highlight {
+        color: #fff;
     }
 }

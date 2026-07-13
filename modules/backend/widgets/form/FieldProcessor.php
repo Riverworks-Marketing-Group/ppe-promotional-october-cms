@@ -10,6 +10,26 @@ use October\Rain\Html\Helper as HtmlHelper;
 trait FieldProcessor
 {
     /**
+     * processAutoOrder applies a default sort order to all fields
+     */
+    protected function processAutoOrder(FormTabs $tabs)
+    {
+        // Apply incremental default orders
+        $orderCount = 0;
+        foreach ($tabs->getFields() as $fields) {
+            foreach ($fields as $field) {
+                if ($field->order !== -1) {
+                    continue;
+                }
+                $field->order = ($orderCount += 100);
+            }
+        }
+
+        // Sort fields internally
+        $tabs->sortAllFields();
+    }
+
+    /**
      * processAutoSpan converts fields with a span set to 'auto' as either
      * 'left' or 'right' depending on the previous field.
      */
@@ -36,7 +56,7 @@ trait FieldProcessor
                     $field->size = 'adaptive';
                     $field->stretch = true;
                     $tabs->stretch = true;
-                    $tabs->addAdaptive($field->tab);
+                    $tabs->addAdaptive($field->tab ?: $tabs->defaultTab);
                 }
             }
         }
@@ -46,12 +66,12 @@ trait FieldProcessor
      * processPermissionCheck check if user has permissions to show the field
      * and removes it if permission is denied
      */
-    protected function processPermissionCheck(array $fields): void
+    protected function processPermissionCheck(array $fields)
     {
         foreach ($fields as $fieldName => $field) {
             if (
                 $field->permissions &&
-                !BackendAuth::getUser()->hasAccess($field->permissions, false)
+                !BackendAuth::userHasAccess($field->permissions, false)
             ) {
                 $this->removeField($fieldName);
             }
@@ -62,7 +82,7 @@ trait FieldProcessor
      * processFormWidgetFields will mutate fields types that are registered as widgets,
      * convert their type to 'widget' and internally allocate the widget object
      */
-    protected function processFormWidgetFields(array $fields): void
+    protected function processFormWidgetFields(array $fields)
     {
         foreach ($fields as $field) {
             if (!$this->isFormWidget((string) $field->type)) {
@@ -77,9 +97,7 @@ trait FieldProcessor
 
             $field->useConfig($newConfig)->displayAs('widget');
 
-            /*
-             * Create form widget instance and bind to controller
-             */
+            // Create form widget instance and bind to controller
             $this->makeFormFieldWidget($field)->bindToController();
         }
     }
@@ -87,37 +105,48 @@ trait FieldProcessor
     /**
      * processValidationAttributes applies the field name to the validation engine
      */
-    protected function processValidationAttributes(array $fields): void
+    protected function processValidationAttributes(array $fields)
     {
         if (!$this->model || !method_exists($this->model, 'setValidationAttributeName')) {
             return;
         }
 
         foreach ($fields as $field) {
-            $attrName = implode('.', HtmlHelper::nameToArray($field->fieldName));
-            $this->model->setValidationAttributeName($attrName, $field->label);
+            $this->model->setValidationAttributeName(
+                HtmlHelper::nameToDot($field->fieldName),
+                $field->label
+            );
         }
     }
 
     /**
      * processFieldOptionValues sets the callback for retrieving options
+     * from fields that specifically require it
      */
-    protected function processFieldOptionValues(array $fields): void
+    protected function processFieldOptionValues(array $fields)
     {
-        $optionModelTypes = ['dropdown', 'radio', 'checkboxlist', 'balloon-selector'];
+        // Fields that demand options
+        $requiredTypes = [
+            'dropdown',
+            'radio',
+            'checkboxlist',
+            'balloon-selector'
+        ];
 
         foreach ($fields as $field) {
-            if (!in_array($field->type, $optionModelTypes, false)) {
+            if (!in_array($field->type, $requiredTypes, false)) {
                 continue;
             }
 
             // Specified explicitly on the object already
-            if ($field->hasOptions() && is_array($field->options)) {
+            if ($field->hasOptions()) {
                 continue;
             }
 
-            // Look at config value in case it was missed
-            $fieldOptions = $field->options ?: ($field->config['options'] ?? null);
+            // If options are defined by config but are in an unusable state
+            $fieldOptions = $field->optionsPreset
+                ? 'preset:' . $field->optionsPreset
+                : ($field->optionsMethod ?: $field->options);
 
             // Defer the execution of option data collection
             $field->options(function () use ($field, $fieldOptions) {
@@ -129,9 +158,9 @@ trait FieldProcessor
     /**
      * processRequiredAttributes will set the required flag based on the model preference
      */
-    protected function processRequiredAttributes(array $fields): void
+    protected function processRequiredAttributes(array $fields)
     {
-        if (!$this->model || !method_exists($this->model, 'setValidationAttributeName')) {
+        if (!$this->model || !method_exists($this->model, 'isAttributeRequired')) {
             return;
         }
 
@@ -140,8 +169,35 @@ trait FieldProcessor
                 continue;
             }
 
-            $attrName = implode('.', HtmlHelper::nameToArray($field->fieldName));
-            $field->required = $this->model->isAttributeRequired($attrName);
+            $field->required = $this->model->isAttributeRequired(
+                HtmlHelper::nameToDot($field->fieldName)
+            );
+        }
+    }
+
+    /**
+     * processTranslatableAttributes will set the translatable flag based on the model preference
+     */
+    protected function processTranslatableAttributes(array $fields)
+    {
+        if (!$this->model || !method_exists($this->model, 'isMultisiteSyncEnabled')) {
+            return;
+        }
+
+        if (!$this->model->isMultisiteSyncEnabled()) {
+            return;
+        }
+
+        foreach ($fields as $field) {
+            if ($field->translatable !== null) {
+                continue;
+            }
+
+            // Does not propagate therefore translatable
+            $attrName = HtmlHelper::nameToDot($field->fieldName);
+            if (!$this->model->isAttributePropagatable($attrName)) {
+                $field->translatable = true;
+            }
         }
     }
 }

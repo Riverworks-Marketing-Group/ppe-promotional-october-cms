@@ -1,7 +1,7 @@
 /*
  * Vue Inspector group host implementation
  */
-$.oc.module.register('backend.component.inspector.grouphost', function () {
+oc.Modules.register('backend.component.inspector.grouphost', function () {
     Vue.component('backend-component-inspector-grouphost', {
         props: {
             controls: {
@@ -11,6 +11,10 @@ $.oc.module.register('backend.component.inspector.grouphost', function () {
             obj: {
                 type: Object,
                 required: true
+            },
+            parentObj: {
+                type: Object,
+                required: false
             },
             splitterData: {
                 type: Object,

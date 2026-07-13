@@ -1,14 +1,22 @@
 <?php namespace Cms\Twig;
 
+use App;
+use Cms;
+use Flash;
 use Block;
 use Event;
-use Redirect;
+use Request;
+use Response;
+use Cms\Classes\PageManager;
+use Cms\Classes\Controller;
+use Cms\Classes\ThisVariable;
+use Twig\Environment as TwigEnvironment;
 use Twig\TwigFilter as TwigSimpleFilter;
 use Twig\TwigFunction as TwigSimpleFunction;
 use Twig\Extension\AbstractExtension as TwigExtension;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Cms\Classes\Controller;
 
 /**
  * Extension implements the basic CMS Twig functions and filters.
@@ -24,11 +32,38 @@ class Extension extends TwigExtension
     protected $controller;
 
     /**
+     * @var array putOnceCache stores the cache for yieldBlockOnce
+     */
+    protected $putOnceCache = [];
+
+    /**
      * __construct the extension instance.
      */
     public function __construct(Controller $controller = null)
     {
         $this->controller = $controller;
+    }
+
+    /**
+     * addExtensionToTwig adds this extension to the Twig environment and also
+     * creates a hook for others.
+     */
+    public static function addExtensionToTwig(TwigEnvironment $twig, Controller $controller = null)
+    {
+        $twig->addExtension(new static($controller));
+
+        /**
+         * @event cms.extendTwig
+         * Provides an opportunity to extend the Twig environment used by the CMS
+         *
+         * Example usage:
+         *
+         *     Event::listen('system.extendTwig', function ((Twig\Environment) $twig) {
+         *         $twig->addExtension(new \Twig\Extension\StringLoaderExtension);
+         *     });
+         *
+         */
+        Event::fire('cms.extendTwig', [$twig]);
     }
 
     /**
@@ -45,8 +80,12 @@ class Extension extends TwigExtension
             new TwigSimpleFunction('hasContent', [$this, 'hasContentFunction'], ['is_safe' => ['html']]),
             new TwigSimpleFunction('component', [$this, 'componentFunction'], ['is_safe' => ['html']]),
             new TwigSimpleFunction('placeholder', [$this, 'placeholderFunction'], ['is_safe' => ['html']]),
+            new TwigSimpleFunction('hasPlaceholder', [$this, 'hasPlaceholderFunction'], ['is_safe' => ['html']]),
+            new TwigSimpleFunction('ajaxHandler', [$this, 'ajaxHandlerFunction'], []),
+            new TwigSimpleFunction('response', [$this, 'responseFunction'], []),
             new TwigSimpleFunction('redirect', [$this, 'redirectFunction'], []),
             new TwigSimpleFunction('abort', [$this, 'abortFunction'], []),
+            new TwigSimpleFunction('flash', [$this, 'flashFunction'], []),
         ];
     }
 
@@ -59,6 +98,7 @@ class Extension extends TwigExtension
         return [
             new TwigSimpleFilter('page', [$this, 'pageFilter'], ['is_safe' => ['html']]),
             new TwigSimpleFilter('theme', [$this, 'themeFilter'], ['is_safe' => ['html']]),
+            new TwigSimpleFilter('content', [$this, 'contentFilter'], ['is_safe' => ['html']]),
         ];
     }
 
@@ -71,6 +111,7 @@ class Extension extends TwigExtension
         return [
             new PageTokenParser,
             new PartialTokenParser,
+            new AjaxPartialTokenParser,
             new ContentTokenParser,
             new PutTokenParser,
             new PlaceholderTokenParser,
@@ -80,6 +121,7 @@ class Extension extends TwigExtension
             new FlashTokenParser,
             new ScriptsTokenParser,
             new StylesTokenParser,
+            new MetaTokenParser,
         ];
     }
 
@@ -97,10 +139,15 @@ class Extension extends TwigExtension
     /**
      * pageFunction renders a page.
      * This function should be used in the layout code to output the requested page.
+     * @param array|null $context
      * @return string
      */
-    public function pageFunction()
+    public function pageFunction($context = null)
     {
+        if ($this->controller->getLayout()->isPriority() && is_array($context)) {
+            $this->controller->vars += $context;
+        }
+
         return $this->controller->renderPage();
     }
 
@@ -179,9 +226,78 @@ class Extension extends TwigExtension
             return null;
         }
 
-        $result = str_replace('<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->', trim($default), $result);
+        if (is_string($result)) {
+            $result = str_replace('<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->', trim($default), $result);
+        }
 
         return $result;
+    }
+
+    /**
+     * hasPlaceholderFunction checks that a placeholder exists without rendering it
+     */
+    public function hasPlaceholderFunction($name)
+    {
+        return Block::has($name);
+    }
+
+    /**
+     * ajaxHandlerFunction runs an ajax handler
+     * @param string $name
+     * @param array|null $postVars
+     */
+    public function ajaxHandlerFunction($name = '', $postVars = null)
+    {
+        if (is_array($postVars)) {
+            Request::merge($postVars);
+        }
+
+        return $this->controller->runAjaxHandlerAsResponse($name);
+    }
+
+    /**
+     * flashFunction returns flash messages as an object
+     * @param string $type
+     */
+    public function flashFunction($type = null)
+    {
+        if ($type === 'all') {
+            return Flash::messages();
+        }
+
+        if ($type) {
+            return array_first(Flash::{$type}());
+        }
+
+        return Flash::all();
+    }
+
+    /**
+     * responseFunction returns a new response from the application.
+     * @param \Illuminate\Contracts\View\View|string|array|null $content
+     * @param int|null $status
+     * @param array $headers
+     */
+    public function responseFunction($content = '', $status = null, array $headers = [])
+    {
+        if ($content instanceof \Illuminate\Contracts\Support\Responsable) {
+            $response = $content->toResponse(App::make('request'));
+        }
+        elseif ($content instanceof \Symfony\Component\HttpFoundation\Response) {
+            $response = $content;
+        }
+        else {
+            $response = Response::make($content, $status ?: 200, $headers);
+        }
+
+        if ($status !== null) {
+            $response->setStatusCode($status);
+        }
+
+        // Allow headers and interception from Response Maker
+        $response = $this->controller->makeResponse($response);
+
+        throw new HttpResponseException($response);
     }
 
     /**
@@ -191,14 +307,7 @@ class Extension extends TwigExtension
      */
     public function redirectFunction($to, $parameters = [], $code = 302)
     {
-        if (is_int($parameters)) {
-            $code = $parameters;
-            $parameters = [];
-        }
-
-        $url = $this->controller->pageUrl($to, $parameters) ?: $to;
-
-        $this->controller->setResponse(Redirect::to($url, $code));
+        throw new HttpResponseException(Cms::redirect($to, $parameters, $code));
     }
 
     /**
@@ -221,15 +330,19 @@ class Extension extends TwigExtension
     }
 
     /**
-     * pageFilter looks up the URL for a supplied page and returns it relative to the website root.
-     * @param mixed $name Specifies the Cms Page file name.
-     * @param array $parameters Route parameters to consider in the URL.
-     * @param bool $routePersistence By default the existing routing parameters will be included
-     * when creating the URL, set to false to disable this feature.
+     * pageFilter looks up the URL for a supplied page name and returns it relative to the website root,
+     * including route parameters. Parameters can be persisted from the current page parameters.
+     * @param mixed $name
+     * @param array $parameters
+     * @param bool $routePersistence
      * @return string
      */
     public function pageFilter($name, $parameters = [], $routePersistence = true)
     {
+        if ($name instanceof ThisVariable) {
+            $name = '';
+        }
+
         return $this->controller->pageUrl($name, $parameters, $routePersistence);
     }
 
@@ -245,20 +358,13 @@ class Extension extends TwigExtension
     }
 
     /**
-     * startBlock opens a layout block.
-     * @param string $name Specifies the block name
+     * contentFilter processes content for links and snippets
+     * @param string $content
+     * @return string
      */
-    public function startBlock($name)
+    public function contentFilter($content)
     {
-        Block::startBlock($name);
-    }
-
-    /**
-     * setBlock sets a block value as a variable.
-     */
-    public function setBlock(string $name, $value)
-    {
-        Block::set($name, $value);
+        return PageManager::processMarkup($content);
     }
 
     /**
@@ -296,10 +402,59 @@ class Extension extends TwigExtension
     }
 
     /**
-     * endBlock closes a layout block.
+     * setBlock sets a block name as a variable value.
+     */
+    public function setBlock(string $name, $value)
+    {
+        Block::set($name, $value);
+    }
+
+    /**
+     * yieldBlock yields the contents of a block by appending or overwriting,
+     * and storing its name alongside the content.
+     */
+    public function yieldBlock(string $name, $callable, $append = true)
+    {
+        $content = '';
+        foreach ($callable() as $value) {
+            $content .= $value;
+        }
+
+        if ($append) {
+            Block::append($name, $content);
+        }
+        else {
+            Block::set($name, $content);
+        }
+    }
+
+    /**
+     * yieldBlockOnce will append or set some content once per template (partial)
+     */
+    public function yieldBlockOnce(string $templateName, $placeholderName, $callable, $append = false)
+    {
+        $cacheKey = "{$templateName}-{$placeholderName}";
+
+        if (!isset($this->putOnceCache[$cacheKey])) {
+            $this->yieldBlock($placeholderName, $callable, $append);
+
+            $this->putOnceCache[$cacheKey] = true;
+        }
+    }
+
+    /**
+     * @deprecated use yieldBlock
      */
     public function endBlock($append = true)
     {
         Block::endBlock($append);
+    }
+
+    /**
+     * @deprecated use yieldBlock
+     */
+    public function startBlock($name)
+    {
+        Block::startBlock($name);
     }
 }

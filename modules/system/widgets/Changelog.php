@@ -29,8 +29,8 @@ class Changelog extends WidgetBase
      */
     protected function loadAssets()
     {
-        $this->addCss('css/changelog.css', 'core');
-        // $this->addJs('js/changelog.js', 'core');
+        $this->addCss('css/changelog.css');
+        // $this->addJs('js/changelog.js');
     }
 
     /**
@@ -80,9 +80,9 @@ class Changelog extends WidgetBase
             $plugin = $manager->findByIdentifier($code);
             $path = $manager->getPluginPath($plugin);
 
-            $changelog = $this->getPluginVersionFile($path, 'updates/version.yaml');
-            if (!is_array($changelog)) {
-                $changelog = null;
+            $changelog = null;
+            if ($path) {
+                $changelog = (array) $this->getPluginVersionFile($path, 'updates/version.yaml');
             }
 
             $this->vars['changelog'] = $changelog;
@@ -121,7 +121,7 @@ class Changelog extends WidgetBase
         }
 
         uksort($contents, function ($a, $b) {
-            return version_compare($b, $a);
+            return version_compare((string) $b, (string) $a);
         });
 
         return $contents;

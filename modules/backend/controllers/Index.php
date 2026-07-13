@@ -1,9 +1,9 @@
 <?php namespace Backend\Controllers;
 
 use Redirect;
+use BackendAuth;
 use BackendMenu;
 use Backend\Classes\Controller;
-use Backend\Widgets\ReportContainer;
 
 /**
  * Index controller for the dashboard
@@ -15,12 +15,18 @@ use Backend\Widgets\ReportContainer;
 class Index extends Controller
 {
     use \Backend\Traits\InspectableContainer;
+    use \Backend\Controllers\Index\HasVueDashboard;
 
     /**
      * @var array requiredPermissions to view this page.
      * @see checkPermissionRedirect()
      */
     public $requiredPermissions = [];
+
+    /**
+     * @var bool turboVisitControl
+     */
+    public $turboVisitControl = 'reload';
 
     /**
      * __construct the controller
@@ -31,11 +37,11 @@ class Index extends Controller
 
         BackendMenu::setContextOwner('October.Backend');
 
-        $this->addCss('/modules/backend/assets/css/dashboard/dashboard.css', 'core');
+        $this->addCss('/modules/backend/assets/css/dashboard/dashboard.css');
     }
 
     /**
-     * index
+     * index controller action
      */
     public function index()
     {
@@ -43,7 +49,12 @@ class Index extends Controller
             return $redirect;
         }
 
-        $this->initReportContainer();
+        if ($this->usingVueDashboard()) {
+            $this->actionVueDashIndex();
+        }
+        else {
+            $this->initReportContainer();
+        }
 
         $this->pageTitle = 'backend::lang.dashboard.menu_label';
 
@@ -67,7 +78,14 @@ class Index extends Controller
      */
     protected function initReportContainer()
     {
-        new ReportContainer($this, 'config_dashboard.yaml');
+        $widgetConfig = $this->makeConfig('config_dashboard.yaml');
+        $widgetConfig->showConfigure = BackendAuth::userHasAccess('dashboard.manage');
+        $widgetConfig->showAddRemove = BackendAuth::userHasAccess('dashboard.manage');
+        $widgetConfig->showReorder = $widgetConfig->showConfigure || $widgetConfig->showAddRemove;
+        $widgetConfig->showMakeDefault = BackendAuth::userHasAccess('dashboard.manage');
+
+        $reportWidget = $this->makeWidget(\Backend\Widgets\ReportContainer::class, $widgetConfig);
+        $reportWidget->bindToController();
     }
 
     /**
@@ -76,7 +94,7 @@ class Index extends Controller
      */
     protected function checkPermissionRedirect()
     {
-        if ($this->user->hasAccess('backend.access_dashboard')) {
+        if ($this->user->hasAnyAccess(['dashboard', 'dashboard.*'])) {
             return;
         }
 

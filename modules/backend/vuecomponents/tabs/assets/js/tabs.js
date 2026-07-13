@@ -4,7 +4,7 @@
  * @see https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/Tab_Role
  * @see https://www.w3.org/TR/wai-aria-practices/examples/tabs/tabs-2/tabs.html
  */
-$.oc.module.register('backend.component.tabs', function () {
+oc.Modules.register('backend.component.tabs', function () {
     Vue.component('backend-component-tabs', {
         props: {
             tabs: Array,
@@ -233,7 +233,7 @@ $.oc.module.register('backend.component.tabs', function () {
                     return;
                 }
 
-                Vue.nextTick($.oc.octoberTooltips.clear, 1);
+                Vue.nextTick(oc.octoberTooltips.clear, 1);
 
                 if (tabIndex === null || !this.tabs.length) {
                     this.selectedTabKey = null;
@@ -284,6 +284,17 @@ $.oc.module.register('backend.component.tabs', function () {
                 return result[0];
             },
 
+            getTabComponent: function getTabComponent(tabKey) {
+                var refName = 'tab-component-' + tabKey;
+                var result = this.$refs[refName];
+
+                if (result === undefined || !result.length) {
+                    return null;
+                }
+
+                return result[0];
+            },
+
             onKeyDown: function onKeyDown(ev) {
                 // Right/left arrow handling. See w3.org accessibility
                 // requirements for details.
@@ -326,6 +337,10 @@ $.oc.module.register('backend.component.tabs', function () {
                 Vue.nextTick(function () {
                     $(that.$refs.tabList).children().eq(that.focusedTabKeyIndex).focus();
                 });
+            },
+
+            onMiddleClick: function onMiddleClick(tab) {
+                this.onCloseClick(tab);
             },
 
             onCloseClick: function onCloseClick(tab) {

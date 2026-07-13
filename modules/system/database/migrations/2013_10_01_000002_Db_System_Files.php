@@ -3,7 +3,7 @@
 use October\Rain\Database\Schema\Blueprint;
 use October\Rain\Database\Updates\Migration;
 
-class DbSystemFiles extends Migration
+return new class extends Migration
 {
     public function up()
     {
@@ -16,14 +16,14 @@ class DbSystemFiles extends Migration
                 $table->string('content_type');
                 $table->string('title')->nullable();
                 $table->text('description')->nullable();
-                $table->string('field')->nullable()->index();
+                $table->string('field')->nullable();
                 $table->integer('attachment_id')->nullable();
                 $table->string('attachment_type')->nullable();
                 $table->boolean('is_public')->default(true);
                 $table->integer('sort_order')->nullable();
                 $table->timestamps();
 
-                $table->index(['attachment_id', 'attachment_type'], 'system_files_master_index');
+                $table->index(['attachment_type', 'attachment_id', 'field'], 'system_files_master_index');
             });
         }
         catch (Exception $ex) {
@@ -36,4 +36,4 @@ class DbSystemFiles extends Migration
     {
         Schema::dropIfExists('system_files');
     }
-}
+};

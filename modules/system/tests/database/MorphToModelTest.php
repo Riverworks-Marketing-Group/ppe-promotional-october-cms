@@ -14,7 +14,7 @@ class MorphToModelTest extends PluginTestCase
         include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/Post.php';
         include_once base_path() . '/modules/system/tests/fixtures/plugins/database/tester/models/EventLog.php';
 
-        $this->runPluginRefreshCommand('Database.Tester');
+        $this->migratePlugin('Database.Tester');
     }
 
     public function testSetRelationValue()
@@ -57,6 +57,6 @@ class MorphToModelTest extends PluginTestCase
         $event = EventLog::make(['action' => "user-created", 'related_id' => $author->id, 'related_type' => get_class($author)]);
         Model::reguard();
 
-        $this->assertEquals([$author->id, get_class($author)], $event->getRelationValue('related'));
+        $this->assertEquals([$author->id, get_class($author)], $event->getRelationSimpleValue('related'));
     }
 }

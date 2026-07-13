@@ -1,162 +1,204 @@
 /*
- * Field Repeater - Builder Mode
+ * Repeater Form Widget plugin (Builder mode)
  *
- * Logic for the builder visual mode
+ * Data attributes:
+ * - data-control="repeaterbuilder" - enables the plugin on an element
+ * - data-option="value" - an option with a value
  *
+ * JavaScript API:
+ * RepeaterFormWidgetBuilder.getOrCreateInstance(el);
  */
-+function ($) {
-    "use strict";
+'use strict';
 
-    var RepeaterBuilder = $.fn.fieldRepeater.Constructor;
+oc.Modules.register('backend.formwidget.repeater.builder', function() {
+    const BaseClass = oc.Modules.import('backend.formwidget.repeater.base');
 
-    // OVERLOADED MODULE
-    // =================
+    oc.registerControl('repeaterbuilder', class RepeaterFormWidgetAccordion extends BaseClass {
+        init() {
+            // Overrides
+            this.selectorToolbar = '> .field-repeater-builder > .field-repeater-toolbar:first';
+            this.selectorHeader = '> .field-repeater-builder > .field-repeater-groups > .field-repeater-group > .repeater-header';
+            this.selectorSortable = '> .field-repeater-builder > .field-repeater-groups';
+            this.selectorChecked = '> .field-repeater-builder > .field-repeater-groups > .field-repeater-group > .repeater-header input[type=checkbox]:checked';
 
-    var overloadedInit = RepeaterBuilder.prototype.init;
-
-    RepeaterBuilder.prototype.init = function () {
-        if (this.options.displayMode === 'builder') {
-            this.initBuilderMode();
-            overloadedInit.apply(this);
-        }
-        else {
-            overloadedInit.apply(this);
-        }
-    }
-
-    // NEW MODULE
-    // =================
-
-    RepeaterBuilder.prototype.initBuilderMode = function() {
-        // Overrides
-        this.selectorToolbar = '> .field-repeater-builder > .field-repeater-toolbar:first';
-        this.selectorHeader = '> .field-repeater-builder > .field-repeater-groups > .field-repeater-group > .repeater-header';
-        this.selectorSortable = '> .field-repeater-builder > .field-repeater-groups';
-        this.selectorChecked = '> .field-repeater-builder > .field-repeater-groups > .field-repeater-group > .repeater-header input[type=checkbox]:checked';
-        this.eventSortableOnEnd = this.builderSortableOnEnd;
-        this.eventOnChange = null;
-        this.eventOnAddItem = this.builderOnAddItem;
-        this.eventOnRemoveItem = this.builderOnRemoveItem;
-        this.eventMenuFilter = this.builderMenuFilter;
-
-        // Locals
-        this.$sidebar = $('> .field-repeater-builder > .field-repeater-groups:first', this.$el);
-        this.$sidebar.on('click', '> li', this.proxy(this.clickBuilderItem));
-
-        // Core logic
-        $(document).on('render', this.proxy(this.builderOnRender));
-        this.transferBuilderItemHeaders();
-
-        this.selectBuilderItem();
-    }
-
-    RepeaterBuilder.prototype.disposeBuilderMode = function() {
-        this.$sidebar = null;
-
-        $(document).off('render', this.proxy(this.builderOnRender));
-    }
-
-    RepeaterBuilder.prototype.builderMenuFilter = function($item, $list) {
-        // Hide/show remove button and divider
-        $('[data-repeater-remove]', $list).closest('li').toggleClass('disabled', !this.canRemove);
-
-        // Hide/show up/down
-        $('[data-repeater-move-up]', $list).closest('li').toggle(!!$item.prev().length);
-        $('[data-repeater-move-down]', $list).closest('li').toggle(!!$item.next().length);
-
-        // Hide/show expand/collapse
-        $('[data-repeater-expand]', $list).closest('li').hide();
-        $('[data-repeater-collapse]', $list).closest('li').hide();
-    }
-
-    RepeaterBuilder.prototype.builderSortableOnEnd = function() {
-        var self = this;
-
-        $('> li', this.$sidebar).each(function() {
-            var itemIndex = $(this).data('repeater-index');
-            self.$itemContainer.append(self.findItemFromIndex(itemIndex));
-        });
-    }
-
-    RepeaterBuilder.prototype.builderOnRender = function() {
-        this.transferBuilderItemHeaders();
-    }
-
-    RepeaterBuilder.prototype.builderOnAddItem = function() {
-        var templateHtml = $('> [data-group-loading-template]', this.$el).html(),
-            $loadingItem = $(templateHtml);
-
-        this.$sidebar.append($loadingItem);
-    }
-
-    RepeaterBuilder.prototype.builderOnRemoveItem = function($item) {
-        var itemIndex = $item.data('repeater-index'),
-            $containerItem = this.findItemFromIndex(itemIndex);
-
-        this.diposeItem($containerItem);
-        $containerItem.remove();
-    }
-
-    RepeaterBuilder.prototype.clickBuilderItem = function(ev) {
-        var $item = $(ev.target).closest('.field-repeater-group'),
-            inControlArea = $(ev.target).closest('.group-controls').length;
-
-        if (inControlArea) {
-            return;
+            super.init();
         }
 
-        this.selectBuilderItem($item.data('repeater-index'));
-    }
+        connect() {
+            // Locals
+            this.$el = $(this.element);
+            this.$itemContainer = $('> .field-repeater-items', this.$el);
+            this.$sidebar = $('> .field-repeater-builder > .field-repeater-groups:first', this.$el);
+            this.$sidebar.on('click', '> li:not(.is-placeholder)', this.proxy(this.clickBuilderItem));
 
-    RepeaterBuilder.prototype.selectBuilderItem = function(itemIndex) {
-        if (itemIndex === undefined) {
-            itemIndex = $('> li:first', this.$sidebar).data('repeater-index');
+            // Core logic
+            $(document).on('render', this.proxy(this.builderOnRender));
+            this.transferBuilderItemHeaders();
+
+            this.selectBuilderItem();
+            super.connect();
         }
 
-        $('> li.is-selected', this.$sidebar).removeClass('is-selected');
-        $('> li[data-repeater-index='+itemIndex+']', this.$sidebar).addClass('is-selected');
+        disconnect() {
+            // Locals
+            this.$sidebar.off('click', '> li:not(.is-placeholder)', this.proxy(this.clickBuilderItem));
 
-        $('> li.is-selected', this.$itemContainer).removeClass('is-selected');
-        $('> li[data-repeater-index='+itemIndex+']', this.$itemContainer).addClass('is-selected');
+            // Core logic
+            $(document).off('render', this.proxy(this.builderOnRender));
 
-        this.setCollapsedTitles();
-    }
+            this.$sidebar = null;
 
-    RepeaterBuilder.prototype.setCollapsedTitles = function() {
-        var self = this;
+            super.disconnect();
+        }
 
-        $('> .field-repeater-item', this.$itemContainer).each(function() {
-            var $item = $(this),
-                itemIndex = $item.data('repeater-index'),
-                $groupItem = $('> li[data-repeater-index='+itemIndex+']', self.$sidebar);
+        builderOnRender() {
+            this.transferBuilderItemHeaders();
+        }
 
-            $('[data-group-title]:first', $groupItem).html(self.getCollapseTitle($item));
-        });
-    }
+        clickBuilderItem(ev) {
+            var $item = $(ev.target).closest('.field-repeater-group'),
+                inControlArea = $(ev.target).closest('.group-controls').length;
 
-    RepeaterBuilder.prototype.transferBuilderItemHeaders = function() {
-        var self = this,
-            templateHtml = $('> [data-group-template]', this.$el).html();
+            if (inControlArea) {
+                return;
+            }
 
-        $('> .field-repeater-item > .repeater-header', this.$itemContainer).each(function() {
-            var $groupItem = $(templateHtml),
-                $item = $(this).closest('li');
+            this.selectBuilderItem($item.data('repeater-index'));
 
-            self.$sidebar.append($groupItem);
-            $('[data-group-controls]:first', $groupItem).replaceWith($(this).addClass('group-controls'));
-            $('[data-group-image]:first > i', $groupItem).addClass($item.data('item-icon'));
-            $('[data-group-title]:first', $groupItem).html($item.data('item-title'));
-            $('[data-group-description]:first', $groupItem).html($item.data('item-description'));
+            $(window).trigger('oc.updateUi');
+        }
 
-            $groupItem.attr('data-repeater-index', $item.data('repeater-index'));
-            $groupItem.attr('data-repeater-group', $item.data('repeater-group'));
+        selectBuilderItem(itemIndex) {
+            if (itemIndex === undefined) {
+                itemIndex = $('> li:first', this.$sidebar).data('repeater-index');
+            }
 
-            // Remove last loader if there is one
-            $('li.is-placeholder:first', self.$sidebar).remove();
+            $('> li.is-selected', this.$sidebar).removeClass('is-selected');
+            $('> li[data-repeater-index='+itemIndex+']', this.$sidebar).addClass('is-selected');
 
-            // Select this item
-            self.selectBuilderItem($item.data('repeater-index'));
-        });
-    }
+            $('> li.is-selected', this.$itemContainer).removeClass('is-selected');
+            $('> li[data-repeater-index='+itemIndex+']', this.$itemContainer).addClass('is-selected');
 
-}(window.jQuery);
+            this.setCollapsedTitles();
+        }
+
+        setCollapsedTitles() {
+            var self = this;
+
+            $('> .field-repeater-item', this.$itemContainer).each(function() {
+                var $item = $(this),
+                    itemIndex = $item.data('repeater-index'),
+                    $groupItem = $('> li[data-repeater-index='+itemIndex+']', self.$sidebar);
+
+                $('[data-group-title]:first', $groupItem).html(self.getCollapseTitle($item));
+            });
+        }
+
+        transferBuilderItemHeaders() {
+            var self = this,
+                templateHtml = $('> [data-group-template]', this.$el).html();
+
+            $('> .field-repeater-item > .repeater-header', this.$itemContainer).each(function() {
+                var $groupItem = $(templateHtml),
+                    $item = $(this).closest('li');
+
+                self.$sidebar.append($groupItem);
+                $('[data-group-controls]:first', $groupItem).replaceWith($(this).addClass('group-controls'));
+                $('[data-group-image]:first > i', $groupItem).addClass($item.data('item-icon'));
+                $('[data-group-title]:first', $groupItem).html($item.data('item-title'));
+                $('[data-group-description]:first', $groupItem).html($item.data('item-description'));
+
+                $groupItem.attr('data-repeater-index', $item.data('repeater-index'));
+                $groupItem.attr('data-repeater-group', $item.data('repeater-group'));
+
+                // Remove last loader if there is one
+                $('li.is-placeholder:first', self.$sidebar).remove();
+
+                // Select this item
+                self.selectBuilderItem($item.data('repeater-index'));
+            });
+        }
+
+        sortItemsToSidebar() {
+            $('> li', this.$sidebar).each((index, sbItem) => {
+                var itemIndex = $(sbItem).data('repeater-index'),
+                    $item = this.findItemFromIndex(itemIndex);
+
+                this.$itemContainer.append($item);
+            });
+        }
+
+        sortSidebarToItems() {
+            $('> .field-repeater-item', this.$itemContainer).each((index, rItem) => {
+                var $item = $(rItem).closest('li'),
+                    itemIndex = $item.attr('data-repeater-index'),
+                    $sidebarItem = $('> li[data-repeater-index='+itemIndex+']:first', this.$sidebar);
+
+                this.$sidebar.append($sidebarItem);
+            });
+        }
+
+        appendLoadingItem($afterItem) {
+            var templateHtml = $('> [data-group-loading-template]', this.$el).html(),
+                $loadingItem = $(templateHtml);
+
+            if ($afterItem) {
+                $afterItem.after($loadingItem);
+            }
+            else {
+                this.$sidebar.append($loadingItem);
+            }
+        }
+
+        //
+        // Event Overrides
+        //
+
+        eventMenuFilter($item, $list) {
+            // Hide/show duplicate button
+            $('[data-repeater-duplicate]', $list).closest('li').toggleClass('disabled', !this.canAdd);
+
+            // Hide/show remove button
+            $('[data-repeater-remove]', $list).closest('li').toggleClass('disabled', !this.canRemove);
+
+            // Hide/show up/down
+            $('[data-repeater-move-up]', $list).closest('li').toggle(!!$item.prev().length);
+            $('[data-repeater-move-down]', $list).closest('li').toggle(!!$item.next().length);
+
+            // Hide/show expand/collapse
+            $('[data-repeater-expand]', $list).closest('li').hide();
+            $('[data-repeater-collapse]', $list).closest('li').hide();
+        }
+
+        eventSortableOnEnd() {
+            this.sortable.option('disabled', true);
+            this.sortItemsToSidebar();
+            this.sortable.option('disabled', false);
+        }
+
+        eventOnAddItem() {
+            this.appendLoadingItem();
+        }
+
+        eventOnDuplicateItem($fromItem) {
+            this.appendLoadingItem($fromItem);
+        }
+
+        eventDuplicateOnEnd() {
+            this.sortSidebarToItems();
+        }
+
+        eventOnErrorAddItem() {
+            $('li.is-placeholder:first', this.$sidebar).remove();
+        }
+
+        eventOnRemoveItem($item) {
+            var itemIndex = $item.data('repeater-index'),
+                $containerItem = this.findItemFromIndex(itemIndex);
+
+            this.disposeItem($containerItem);
+            $containerItem.remove();
+        }
+    });
+
+});

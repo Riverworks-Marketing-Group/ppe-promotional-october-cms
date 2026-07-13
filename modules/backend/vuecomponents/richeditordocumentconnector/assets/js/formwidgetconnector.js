@@ -1,4 +1,4 @@
-$.oc.module.register('backend.component.richeditor.document.connector.formwidgetconnector', function () {
+oc.Modules.register('backend.component.richeditor.document.connector.formwidgetconnector', function () {
     Vue.component('backend-component-richeditor-document-connector-formwidgetconnector', {
         props: {
             textarea: null,
@@ -9,25 +9,36 @@ $.oc.module.register('backend.component.richeditor.document.connector.formwidget
             },
             options: Object
         },
-        data: function data() {
-            var toolbarExtensionPoint = [];
+        data: function () {
+            const toolbarExtensionPoint = [];
 
             return {
-                toolbarExtensionPoint: toolbarExtensionPoint,
+                toolbarExtensionPoint,
                 fullScreen: false,
                 value: ''
             };
         },
         computed: {
             toolbarElements: function computeToolbarElements() {
-                return [this.toolbarExtensionPoint, {
-                    type: 'button',
-                    icon: this.fullScreen ? 'octo-icon-fullscreen-collapse' : 'octo-icon-fullscreen',
-                    command: 'document:toggleFullscreen',
-                    pressed: this.fullScreen,
-                    fixedRight: true,
-                    tooltip: this.lang.langFullscreen
-                }];
+                return [
+                    this.toolbarExtensionPoint,
+                    {
+                        type: 'button',
+                        icon: this.fullScreen ? 'icon-fullscreen-collapse' : 'icon-fullscreen',
+                        command: 'document:toggleFullscreen',
+                        pressed: this.fullScreen,
+                        fixedRight: true,
+                        tooltip: this.lang.langFullscreen
+                    }
+                ];
+            },
+
+            editorOptions: function computeEditorOptions() {
+                if (typeof this.options.editorOptions !== 'object') {
+                    return {};
+                }
+
+                return this.options.editorOptions;
             },
 
             toolbarButtons: function computeToolbarButtons() {
@@ -35,7 +46,7 @@ $.oc.module.register('backend.component.richeditor.document.connector.formwidget
                     return [];
                 }
 
-                return this.options.toolbarButtons.split(',').map(function (button) {
+                return this.options.toolbarButtons.split(',').map((button) => {
                     return button.trim();
                 });
             },
@@ -48,8 +59,8 @@ $.oc.module.register('backend.component.richeditor.document.connector.formwidget
                 return this.options.readOnly;
             },
 
-            externalToolbarEventBus: function computeExternalToolbarEventBus() {
-                return this.options.externalToolbarEventBus;
+            externalToolbarAppState: function computeExternalToolbarAppState() {
+                return this.options.externalToolbarAppState;
             },
 
             toolbarExtensionPointProxy: function computeToolbarExtensionPointProxy() {
@@ -57,22 +68,20 @@ $.oc.module.register('backend.component.richeditor.document.connector.formwidget
                     return this.toolbarExtensionPoint;
                 }
 
-                // Expected format: tailor.app::toolbarExtensionPoint
-                var parts = this.options.externalToolbarAppState.split('::');
-                if (parts.length !== 2) {
-                    throw new Error('Invalid externalToolbarAppState format. Expected format: module.name::stateElementName');
-                }
+                const point = $.oc.vueUtils.getToolbarExtensionPoint(
+                    this.options.externalToolbarAppState,
+                    this.textarea
+                );
 
-                var app = $.oc.module.import(parts[0]);
-                return app.state[parts[1]];
+                return point ? point.state : this.toolbarExtensionPoint;
             },
 
             hasExternalToolbar: function computeHasExternalToolbar() {
                 return !!this.options.externalToolbarAppState;
             },
 
-            resizable: function computeResizable() {
-                return this.options.resizable ? true : false;
+            showMargins: function computeShowMargins() {
+                return this.options.showMargins ? true : false;
             }
         },
         mounted: function onMounted() {

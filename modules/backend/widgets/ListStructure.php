@@ -1,8 +1,11 @@
 <?php namespace Backend\Widgets;
 
+use Site;
 use Backend;
+use BackendAuth;
 use October\Rain\Database\Model;
 use ApplicationException;
+use ForbiddenException;
 
 /**
  * ListStructure
@@ -38,6 +41,12 @@ class ListStructure extends Lists
     public $includeSortOrders = false;
 
     /**
+     * @var bool includeReferencePool should be used when sorting within subset of records.
+     * For example, sorting with pagination.
+     */
+    public $includeReferencePool = false;
+
+    /**
      * @var int|null maxDepth defines the maximum levels allowed for reordering.
      */
     public $maxDepth = null;
@@ -46,6 +55,11 @@ class ListStructure extends Lists
      * @var bool dragRow allows dragging the entire row in addition to the reorder handle.
      */
     public $dragRow = true;
+
+    /**
+     * @var array permissions needed to modify the structure.
+     */
+    protected $permissions;
 
     /**
      * __construct the widget
@@ -66,6 +80,12 @@ class ListStructure extends Lists
      */
     public function init()
     {
+        // Defaults needed for reinit
+        $this->useStructure = true;
+        $this->showReorder = true;
+        $this->showPagination = false;
+        $this->showTree = true;
+
         $this->fillFromConfig([
             'maxDepth',
             'dragRow',
@@ -73,18 +93,26 @@ class ListStructure extends Lists
             'showReorder',
             'treeExpanded',
             'includeSortOrders',
+            'permissions'
         ]);
 
         parent::init();
 
-        $this->showSorting = false;
-        $this->showPagination = false;
+        // Hide tree when sorting
+        if ($this->isUserSorting()) {
+            $this->disableStructure();
+        }
 
         if ($this->showTree) {
             $this->validateTree();
         }
         else {
             $this->maxDepth = 1;
+        }
+
+        // Hide reorder without permission
+        if (!$this->hasStructurePermission()) {
+            $this->showReorder = false;
         }
     }
 
@@ -93,8 +121,8 @@ class ListStructure extends Lists
      */
     protected function loadAssets()
     {
-        $this->addJs('js/october.liststructure.js', 'core');
-        $this->addJs('/modules/backend/widgets/lists/assets/js/october.list.js', 'core');
+        $this->addJs('js/october.liststructure.js');
+        $this->addJs('/modules/backend/widgets/lists/assets/js/october.list.js');
     }
 
     /**
@@ -118,6 +146,66 @@ class ListStructure extends Lists
     }
 
     /**
+     * disableStructure toggles the settings to completely disable the structure
+     */
+    protected function disableStructure()
+    {
+        $this->useStructure = false;
+        $this->showReorder = false;
+        $this->showPagination = true;
+        $this->showTree = false;
+    }
+
+    /**
+     * enableStructure reverts disableStructure
+     */
+    protected function enableStructure()
+    {
+        $this->sortColumn = null;
+        $this->putSession('sort', null);
+        $this->init();
+    }
+
+    /**
+     * onSort AJAX handler for sorting the list.
+     */
+    public function onSort()
+    {
+        $column = post('sortColumn');
+        if (!$column) {
+            return;
+        }
+
+        // Spool up cache
+        $this->getSortColumn();
+
+        // Detect third click
+        $isSameColumn = $column === $this->getSortColumn();
+        $isFinalStep = $this->getSortStep() >= 2;
+        $isSearchEmpty = empty($this->searchTerm);
+
+        // Reset the list state and cache
+        if ($isSameColumn && $isFinalStep && $isSearchEmpty) {
+            $this->enableStructure();
+            return $this->onRefresh();
+        }
+
+        // Disable structure when sorting
+        $this->disableStructure();
+
+        return parent::onSort();
+    }
+
+    /**
+     * onShowStructure
+     */
+    public function onShowStructure()
+    {
+        $this->enableStructure();
+        return $this->onRefresh();
+    }
+
+    /**
      * useSorting
      */
     protected function useSorting(): bool
@@ -126,14 +214,18 @@ class ListStructure extends Lists
     }
 
     /**
-     * setSearchTerm
+     * setSearchTerm will disable the structure if a value is supplied.
      */
-    public function setSearchTerm($term, $resetPagination = false)
+    public function setSearchTerm($term, $resetState = false)
     {
-        // Hide tree when searching
-        $this->useStructure = empty($term);
+        if (!empty($term)) {
+            $this->disableStructure();
+        }
+        elseif ($resetState) {
+            $this->enableStructure();
+        }
 
-        parent::setSearchTerm($term, $resetPagination);
+        parent::setSearchTerm($term, $resetState);
     }
 
     /**
@@ -165,11 +257,11 @@ class ListStructure extends Lists
     {
         $total = parent::getTotalColumns();
 
-        if (!$this->useStructure) {
-            return $total;
+        if ($this->showReorder) {
+            $total++;
         }
 
-        return $total++;
+        return $total;
     }
 
     /**
@@ -215,8 +307,9 @@ class ListStructure extends Lists
     public function validateTree()
     {
         if (!$this->model->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)) {
+            $modelClass = get_class($this->model);
             throw new ApplicationException(
-                'To display list as a tree, the specified model must implement methods found in October\Contracts\Database\TreeInterface'
+                "To display list as a tree, the model {$modelClass} must implement methods found in October\Contracts\Database\TreeInterface, or set showTree to false"
             );
         }
     }
@@ -234,19 +327,33 @@ class ListStructure extends Lists
      */
     public function onReorder()
     {
-        $item = $this->model->newQueryWithoutScopes()->find(post('record_id'));
+        if (!$this->hasStructurePermission()) {
+            throw new ForbiddenException;
+        }
 
-        if ($this->model->isClassInstanceOf(\October\Contracts\Database\NestedSetInterface::class)) {
-            $this->reorderForNestedTree($item);
+        $itemId = post('record_id');
+        if (!$itemId) {
+            return;
+        }
+
+        $item = $this->model->newQueryWithoutScopes()->find($itemId);
+        if (!$item) {
+            return;
+        }
+
+        if ($this->fireSystemEvent('backend.list.beforeReorderStructure', [$item], true) === false) {
+            return $this->onRefresh();
+        }
+
+        if (
+            $item->isClassInstanceOf(\October\Contracts\Database\MultisiteInterface::class) &&
+            $item->isMultisiteSyncEnabled() &&
+            $item->getMultisiteConfig('structure', true)
+        ) {
+            $this->reorderForOtherSites($item);
         }
         else {
-            if ($this->model->hasRelation('parent')) {
-                $this->reorderForSimpleTree($item);
-            }
-
-            if ($this->model->isClassInstanceOf(\October\Contracts\Database\SortableInterface::class)) {
-                $this->reorderForSortable($item);
-            }
+            $this->reorderForItem($item);
         }
 
         $this->fireSystemEvent('backend.list.reorderStructure', [$item]);
@@ -255,35 +362,57 @@ class ListStructure extends Lists
     }
 
     /**
-     * reorderForSimpleTree
+     * reorderForOtherSites
      */
-    protected function reorderForSimpleTree($item)
+    protected function reorderForOtherSites($item)
     {
-        $item->parent = post('parent_id');
-        $item->save(['force' => true]);
+        // This query will include the main item itself
+        $otherItems = $item->newOtherSiteQuery()->get();
+        if (!$otherItems || !$otherItems->count()) {
+            return;
+        }
+
+        foreach (Site::listEditEnabled() as $site) {
+            $otherItem = $otherItems->where('site_id', $site->id)->first();
+            if ($otherItem) {
+                Site::withContext($site->id, function() use ($otherItem) {
+                    $this->reorderForItem($otherItem, true);
+                });
+            }
+        }
     }
 
     /**
-     * reorderForSortable
+     * reorderForItem applies generic reordering logic
      */
-    protected function reorderForSortable($item)
+    protected function reorderForItem($item, $multisite = false)
     {
-        $item->setSortableOrder(post('sort_orders'), array_keys((array) post('sort_orders')));
-    }
+        // Nested Tree
+        if ($this->model->isClassInstanceOf(\October\Contracts\Database\NestedSetInterface::class)) {
+            if ($prevId = post($multisite ? 'previous_root_id' : 'previous_id')) {
+                $item->moveAfter($prevId);
+            }
+            elseif ($nextId = post($multisite ? 'next_root_id' : 'next_id')) {
+                $item->moveBefore($nextId);
+            }
+            elseif ($parentId = post($multisite ? 'parent_root_id' : 'parent_id')) {
+                $item->makeChildOf($parentId);
+            }
+        }
+        else {
+            // Simple Tree
+            if ($this->model->hasRelation('parent')) {
+                $item->parent = post($multisite ? 'parent_root_id' : 'parent_id');
+                $item->save(['force' => true]);
+            }
 
-    /**
-     * reorderForNestedTree
-     */
-    protected function reorderForNestedTree($item)
-    {
-        if ($prevId = post('previous_id')) {
-            $item->moveAfter($prevId);
-        }
-        elseif ($nextId = post('next_id')) {
-            $item->moveBefore($nextId);
-        }
-        elseif ($parentId = post('parent_id')) {
-            $item->makeChildOf($parentId);
+            // Sortable
+            if ($this->model->isClassInstanceOf(\October\Contracts\Database\SortableInterface::class)) {
+                $item->setSortableOrder(
+                    post($multisite ? 'root_sort_orders' : 'sort_orders'),
+                    $this->includeReferencePool ? null : true
+                );
+            }
         }
     }
 
@@ -301,10 +430,22 @@ class ListStructure extends Lists
     /**
      * isTreeNodeExpanded checks if a node (model) is expanded in the session.
      * @param  Model $node
-     * @return boolean
+     * @return bool
      */
     public function isTreeNodeExpanded($node)
     {
         return $this->getSession('tree_node_status_' . $node->getKey(), $this->treeExpanded);
+    }
+
+    /**
+     * hasStructurePermission checks if the user has permissions to modify the structure.
+     */
+    protected function hasStructurePermission(): bool
+    {
+        if (!$this->permissions) {
+            return true;
+        }
+
+        return BackendAuth::userHasAccess($this->permissions, false);
     }
 }

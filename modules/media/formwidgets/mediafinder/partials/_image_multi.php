@@ -7,7 +7,6 @@
     data-template="#<?= $this->getId('template') ?>"
     data-input-name="<?= $field->getName() ?>"
     <?php if ($externalToolbarAppState): ?>data-external-toolbar-app-state="<?= e($externalToolbarAppState)?>"<?php endif ?>
-    <?php if ($externalToolbarEventBus): ?>data-external-toolbar-event-bus="<?= e($externalToolbarEventBus)?>"<?php endif ?>
     <?php if ($maxItems): ?>data-max-items="<?= $maxItems ?>"<?php endif ?>
     <?= $field->getAttributes() ?>
 >
@@ -18,16 +17,16 @@
     <div class="mediafinder-control-container <?= $externalToolbarAppState ? 'external-toolbar' : null ?>">
         <div class="mediafinder-control-toolbar">
             <a href="javascript:;" class="backend-toolbar-button control-button toolbar-find-button">
-                <i class="octo-icon-common-file-star"></i>
-                <span class="button-label"><?= e(trans('backend::lang.mediafinder.select')) ?></span>
+                <i class="icon-common-file-star"></i>
+                <span class="button-label"><?= __("Select") ?></span>
             </a>
 
             <button
                 class="backend-toolbar-button control-button toolbar-delete-selected populated-only"
                 disabled
             >
-                <i class="octo-icon-common-file-remove"></i>
-                <span class="button-label"><?= e(trans('backend::lang.fileupload.delete_selected')) ?> <span></span></span>
+                <i class="icon-common-file-remove"></i>
+                <span class="button-label"><?= __("Remove Selected") ?> <span></span></span>
             </button>
         </div>
 
@@ -36,8 +35,10 @@
             <?php foreach ($fileList as $file): ?>
                 <div class="server-file"
                     data-public-url="<?= e($file->publicUrl ?? '') ?>"
-                    data-path="<?= e($file->spawnPath ?? '') ?>"
+                    data-thumb-url="<?= $file->thumbUrl ?? '' ?>"
+                    data-path="<?= e($file->path ?? '') ?>"
                     data-title="<?= e($file->title ?? '') ?>"
+                    data-document-type="<?= e($file->getFileType() ?: '') ?>"
                 ></div>
             <?php endforeach ?>
         </div>
@@ -49,10 +50,10 @@
             <input
                 type="hidden"
                 name="<?= $field->getName() ?>[]"
-                value="<?= e($file->spawnPath) ?>"
+                value="<?= e($file->path) ?>"
                 />
         <?php endforeach ?>
     </div>
 </div>
 
-<?= $this->makePartial('image_item_template', ['modeMulti' => true]) ?>
+<?= $this->makePartial('template_image', ['modeMulti' => true]) ?>

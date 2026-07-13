@@ -59,6 +59,7 @@ class CmsCompoundObject extends CmsObject
      */
     protected $passthru = [
         'lists',
+        'pluck',
         'where',
         'sortBy',
         'whereComponent',
@@ -165,23 +166,14 @@ class CmsCompoundObject extends CmsObject
     //
 
     /**
-     * runComponents defined in the settings
-     * Process halts if a component returns a value
-     * @return void
+     * runComponents defined in the settings, this process halts
+     * if a component returns a value.
      */
     public function runComponents()
     {
         foreach ($this->components as $component) {
-            if ($event = $component->fireEvent('component.beforeRun', [], true)) {
-                return $event;
-            }
-
-            if ($result = $component->onRun()) {
+            if ($result = $component->runLifeCycle()) {
                 return $result;
-            }
-
-            if ($event = $component->fireEvent('component.run', [], true)) {
-                return $event;
             }
         }
     }
@@ -233,7 +225,7 @@ class CmsCompoundObject extends CmsObject
      * hasComponent checks if the object has a component with the specified name. Returns
      * false or the full component name used on the page (it could include the alias).
      * @param string $componentName Specifies the component name.
-     * @return mixed
+     * @return string|bool
      */
     public function hasComponent($componentName)
     {
@@ -273,14 +265,13 @@ class CmsCompoundObject extends CmsObject
      */
     public function getComponentProperties($componentName)
     {
-        $cache = Cache::driver(Config::get('cms.template_cache_driver', 'file'));
         $key = self::makeComponentPropertyCacheKey($this->theme);
 
         if (self::$objectComponentPropertyMap !== null) {
             $objectComponentMap = self::$objectComponentPropertyMap;
         }
         else {
-            $cached = $cache->get($key, false);
+            $cached = Cache::get($key, false);
             $unserialized = $cached ? @unserialize(@base64_decode($cached)) : false;
             $objectComponentMap = $unserialized ?: [];
             if ($objectComponentMap) {
@@ -326,7 +317,7 @@ class CmsCompoundObject extends CmsObject
         self::$objectComponentPropertyMap = $objectComponentMap;
 
         $expiresAt = now()->addMinutes(Config::get('cms.template_cache_ttl', 1440));
-        $cache->put($key, base64_encode(serialize($objectComponentMap)), $expiresAt);
+        Cache::put($key, base64_encode(serialize($objectComponentMap)), $expiresAt);
 
         if (array_key_exists($componentName, $objectComponentMap[$objectCode])) {
             return $objectComponentMap[$objectCode][$componentName];
@@ -350,8 +341,7 @@ class CmsCompoundObject extends CmsObject
      */
     public static function clearCache($theme)
     {
-        Cache::driver(Config::get('cms.template_cache_driver', 'file'))
-            ->forget(self::makeComponentPropertyCacheKey($theme));
+        Cache::forget(self::makeComponentPropertyCacheKey($theme));
     }
 
     //
@@ -421,14 +411,12 @@ class CmsCompoundObject extends CmsObject
      */
     public function getTwigNodeTree($markup = false)
     {
-        $loader = new TwigLoader();
+        $loader = new TwigLoader;
         $twig = new TwigEnvironment($loader, []);
-        $twig->addExtension(new CmsTwigExtension);
-        $twig->addExtension(new SystemTwigExtension);
 
-        if (System::checkDebugMode()) {
-            $twig->addExtension(new DebugExtension);
-        }
+        CmsTwigExtension::addExtensionToTwig($twig);
+        SystemTwigExtension::addExtensionToTwig($twig);
+        DebugExtension::addExtensionToTwig($twig);
 
         $stream = $twig->tokenize(new TwigSource($markup === false ? $this->markup : $markup, 'getTwigNodeTree'));
         return $twig->parse($stream);
