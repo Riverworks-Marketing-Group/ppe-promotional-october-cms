@@ -1,3 +1,4 @@
+/* @deprecated v4 -sg */
 /*
  * Side navigation tree
  *

@@ -9,13 +9,283 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['sk'] = $.extend(
+window.oc.langMessages['sk'] = Object.assign(
     window.oc.langMessages['sk'] || {},
-    {"markdowneditor":{"formatting":"Form\u00e1tovanie","quote":"Cit\u00e1t","code":"K\u00f3d","header1":"Nadpis 1","header2":"Nadpis 2","header3":"Nadpis 3","header4":"Nadpis 4","header5":"Nadpis 5","header6":"Nadpis 6","bold":"Tu\u010dn\u00e9","italic":"Kurz\u00edva","unorderedlist":"Ne\u010d\u00edslovan\u00fd zoznam","orderedlist":"\u010c\u00edslovan\u00fd zoznam","snippet":"Snippet","video":"Video","image":"Obr\u00e1zok","link":"Odkaz","horizontalrule":"Vlo\u017ei\u0165 horizont\u00e1lnu linku","fullscreen":"Cel\u00e1 obrazovka","preview":"N\u00e1h\u013ead","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Vlo\u017ei\u0165 odkaz","insert_image":"Vlo\u017ei\u0165 obr\u00e1zok","insert_video":"Vlo\u017ei\u0165 video","insert_audio":"Vlo\u017ei\u0165 audio","invalid_file_empty_insert":"Pros\u00edm vyberte s\u00fabor, na ktor\u00fd sa vlo\u017e\u00ed odkaz.","invalid_file_single_insert":"Pros\u00edm vyberte jeden s\u00fabor.","invalid_image_empty_insert":"Pros\u00edm vyberte obr\u00e1zky na vlo\u017eenie.","invalid_video_empty_insert":"Pros\u00edm vyberte video na vlo\u017eenie.","invalid_audio_empty_insert":"Pros\u00edm vyberte audio s\u00fabor na vlo\u017eenie."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Zru\u0161i\u0165","widget_remove_confirm":"Skuto\u010dne zmaza\u0165 tento widget?"},"datepicker":{"previousMonth":"Predch\u00e1dzaj\u00faci mesiac","nextMonth":"Nasleduj\u00faci mesiac","months":["Janu\u00e1r","Febru\u00e1r","Marec","Apr\u00edl","M\u00e1j","J\u00fan","J\u00fal","August","September","Okt\u00f3ber","November","December"],"weekdays":["Nede\u013ea","Pondelok","Utorok","Streda","\u0160tvrtok","Piatok","Sobota"],"weekdaysShort":["Ne","Po","Ut","St","\u0160t","Pi","So"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"v\u0161etko"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"v\u0161etko","filter_button_text":"Filtrova\u0165","reset_button_text":"Zru\u0161i\u0165","date_placeholder":"D\u00e1tum","after_placeholder":"Po","before_placeholder":"Pred"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Zru\u0161i\u0165","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Zobrazi\u0165 stacktrace","hide_stacktrace":"Skry\u0165 stacktrace","tabs":{"formatted":"Form\u00e1tovan\u00e9","raw":"P\u00f4vodn\u00e9 (raw)"},"editor":{"title":"Editor zdrojov\u00e9ho k\u00f3du","description":"V\u00e1\u0161 opera\u010dn\u00fd syst\u00e9m by mal by\u0165 konfigurovan\u00fd tak, aby po\u010d\u00faval jednu z t\u00fdchto URL sh\u00e9m.","openWith":"Otvori\u0165 v","remember_choice":"Zapam\u00e4ta\u0165 si vybran\u00fa vo\u013ebu pre t\u00fato rel\u00e1ciu","open":"Otvori\u0165","cancel":"Zru\u0161i\u0165"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Form\u00e1tovanie",
+        "quote": "Cit\u00e1t",
+        "code": "K\u00f3d",
+        "header1": "Nadpis 1",
+        "header2": "Nadpis 2",
+        "header3": "Nadpis 3",
+        "header4": "Nadpis 4",
+        "header5": "Nadpis 5",
+        "header6": "Nadpis 6",
+        "bold": "Tu\u010dn\u00e9",
+        "italic": "Kurz\u00edva",
+        "unorderedlist": "Ne\u010d\u00edslovan\u00fd zoznam",
+        "orderedlist": "\u010c\u00edslovan\u00fd zoznam",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Obr\u00e1zok",
+        "link": "Odkaz",
+        "horizontalrule": "Vlo\u017ei\u0165 horizont\u00e1lnu linku",
+        "fullscreen": "Cel\u00e1 obrazovka",
+        "preview": "N\u00e1h\u013ead",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Vlo\u017ei\u0165 odkaz",
+        "insert_image": "Vlo\u017ei\u0165 obr\u00e1zok",
+        "insert_video": "Vlo\u017ei\u0165 video",
+        "insert_audio": "Vlo\u017ei\u0165 audio",
+        "invalid_file_empty_insert": "Pros\u00edm vyberte s\u00fabor, na ktor\u00fd sa vlo\u017e\u00ed odkaz.",
+        "invalid_file_single_insert": "Pros\u00edm vyberte jeden s\u00fabor.",
+        "invalid_image_empty_insert": "Pros\u00edm vyberte obr\u00e1zky na vlo\u017eenie.",
+        "invalid_video_empty_insert": "Pros\u00edm vyberte video na vlo\u017eenie.",
+        "invalid_audio_empty_insert": "Pros\u00edm vyberte audio s\u00fabor na vlo\u017eenie."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Zru\u0161i\u0165",
+        "widget_remove_confirm": "Skuto\u010dne zmaza\u0165 tento widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Predch\u00e1dzaj\u00faci mesiac",
+        "nextMonth": "Nasleduj\u00faci mesiac",
+        "months": [
+            "Janu\u00e1r",
+            "Febru\u00e1r",
+            "Marec",
+            "Apr\u00edl",
+            "M\u00e1j",
+            "J\u00fan",
+            "J\u00fal",
+            "August",
+            "September",
+            "Okt\u00f3ber",
+            "November",
+            "December"
+        ],
+        "weekdays": [
+            "Nede\u013ea",
+            "Pondelok",
+            "Utorok",
+            "Streda",
+            "\u0160tvrtok",
+            "Piatok",
+            "Sobota"
+        ],
+        "weekdaysShort": [
+            "Ne",
+            "Po",
+            "Ut",
+            "St",
+            "\u0160t",
+            "Pi",
+            "So"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "v\u0161etko"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "v\u0161etko",
+            "filter_button_text": "Filtrova\u0165",
+            "reset_button_text": "Zru\u0161i\u0165",
+            "date_placeholder": "D\u00e1tum",
+            "after_placeholder": "Po",
+            "before_placeholder": "Pred"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Zru\u0161i\u0165",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Zobrazi\u0165 stacktrace",
+        "hide_stacktrace": "Skry\u0165 stacktrace",
+        "tabs": {
+            "formatted": "Form\u00e1tovan\u00e9",
+            "raw": "P\u00f4vodn\u00e9 (raw)"
+        },
+        "editor": {
+            "title": "Editor zdrojov\u00e9ho k\u00f3du",
+            "description": "V\u00e1\u0161 opera\u010dn\u00fd syst\u00e9m by mal by\u0165 konfigurovan\u00fd tak, aby po\u010d\u00faval jednu z t\u00fdchto URL sh\u00e9m.",
+            "openWith": "Otvori\u0165 v",
+            "remember_choice": "Zapam\u00e4ta\u0165 si vybran\u00fa vo\u013ebu pre t\u00fato rel\u00e1ciu",
+            "open": "Otvori\u0165",
+            "cancel": "Zru\u0161i\u0165",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[nie je nastaven\u00e9]",
+    "1 day (today) if not set": "1 de\u0148 (dnes), ak nie je nastaven\u00fd",
+    "Apply": "Pou\u017ei\u0165",
+    "Ascending": "Vzostupne",
+    "Attribute": "Atrib\u00fat",
+    "Bar": "Bar",
+    "Cancel": "Zru\u0161i\u0165",
+    "Chart": "Graf",
+    "Chart type": "Typ grafu",
+    "Color": "Farba",
+    "Compare Totals": "Porovna\u0165 s\u00fa\u010dty",
+    "Configure": "Konfigurova\u0165",
+    "Custom": "Vlastn\u00e9",
+    "Custom Range": "Vlastn\u00fd rozsah",
+    "Dashboard interval": "Interval dashboardu",
+    "Data source": "Zdroj \u00fadajov",
+    "Date interval": "Interval d\u00e1tumu",
+    "Day": "De\u0148",
+    "Delete": "Odstr\u00e1ni\u0165",
+    "Delete Dashboard": "Odstr\u00e1ni\u0165 informa\u010dn\u00fd panel",
+    "Delete row": "Odstr\u00e1ni\u0165 riadok",
+    "Descending": "Zostupne",
+    "Dimension": "Rozmer",
+    "Direction": "Smer",
+    "Disabled": "Zak\u00e1zan\u00e9",
+    "Display": "Displej",
+    "Display [not set]": "Displej [nie je nastaven\u00e9]",
+    "Display all records": "Zobrazi\u0165 v\u0161etky z\u00e1znamy",
+    "Display relative bars": "Zobrazi\u0165 relat\u00edvne st\u013apce",
+    "Display totals": "Zobrazi\u0165 s\u00fa\u010dty",
+    "Edit Dashboard": "Upravi\u0165 ovl\u00e1dac\u00ed panel",
+    "Empty values": "Pr\u00e1zdne hodnoty",
+    "Enter a positive number": "Zadajte kladn\u00e9 \u010d\u00edslo",
+    "Enter a positive number or leave empty to display all records.": "Zadajte kladn\u00e9 \u010d\u00edslo alebo nechajte pole pr\u00e1zdne, ak chcete zobrazi\u0165 v\u0161etky z\u00e1znamy.",
+    "Equal to": "Rovn\u00e9",
+    "Export Dashboard": "Exportova\u0165 dashboard",
+    "Extra table fields": "Doplnkov\u00e9 polia tabu\u013eky",
+    "Filters": "Filtre",
+    "General": "V\u0161eobecn\u00e9",
+    "Greater or equal to": "V\u00e4\u010d\u0161ie alebo rovn\u00e9",
+    "Greater than": "V\u00e4\u010d\u0161ie ako",
+    "Hide": "Skry\u0165",
+    "Horizontal": "Horizont\u00e1lne",
+    "Icon": "Ikona",
+    "Icon Status": "Stav ikony",
+    "Important": "D\u00f4le\u017eit\u00e9",
+    "Includes": "Zah\u0155\u0148a",
+    "Indicator": "Indik\u00e1tor",
+    "Information": "Inform\u00e1cie",
+    "Last 30 days": "Posledn\u00fdch 30 dn\u00ed",
+    "Last 7 days": "Posledn\u00fdch 7 dn\u00ed",
+    "Last month": "Minul\u00fd mesiac",
+    "Leave empty to disable pagination": "Pre vypnutie str\u00e1nkovania nechajte pole pr\u00e1zdne.",
+    "Leave empty to hide the title": "Ak chcete skry\u0165 n\u00e1zov, nechajte pole pr\u00e1zdne.",
+    "Less or equal to": "Men\u0161ie alebo rovn\u00e9",
+    "Less than": "Menej ako",
+    "Limit": "Limit",
+    "Line": "\u010ciara",
+    "Link Text": "Text odkazu",
+    "Link URL": "URL adresa odkazu",
+    "Make Default": "Nastavi\u0165 ako predvolen\u00e9",
+    "Manage Dashboards": "Spravova\u0165 dashboardy",
+    "Metric": "Metrika",
+    "Metrics": "Metriky",
+    "Month": "Mesiac",
+    "My Custom Widget": "M\u00f4j vlastn\u00fd widget",
+    "No Value": "\u017diadna hodnota",
+    "Notice text": "Text ozn\u00e1menia",
+    "Number of days": "Po\u010det dn\u00ed",
+    "One of": "Jeden z",
+    "One value per line": "Jedna hodnota na riadok",
+    "Operation": "Prev\u00e1dzka",
+    "Order": "Objedn\u00e1vka",
+    "Past hour": "Posledn\u00e1 hodina",
+    "Past X days": "Posledn\u00fdch X dn\u00ed",
+    "Please provide the widget title": "Pros\u00edm, uve\u010fte n\u00e1zov widgetu",
+    "Please select a data source": "Vyberte zdroj \u00fadajov",
+    "Please select a dimension": "Vyberte dimenziu",
+    "Please select an icon": "Vyberte ikonu",
+    "Please select metric(s).": "Vyberte metriku(y).",
+    "Prev period": "Predch\u00e1dzaj\u00face obdobie",
+    "Quarter": "\u0160tvr\u0165rok",
+    "Records per page": "Z\u00e1znamy na str\u00e1nku",
+    "Refresh every minute": "Obnovi\u0165 ka\u017ed\u00fa min\u00fatu",
+    "Rename Dashboard": "Premenova\u0165 dashboard",
+    "Reset Layout": "Obnovi\u0165 rozlo\u017eenie",
+    "Reset layout back to default?": "Obnovi\u0165 rozlo\u017eenie sp\u00e4\u0165 na predvolen\u00e9?",
+    "Same period last year": "Rovnak\u00e9 obdobie minul\u00e9ho roka",
+    "Section": "Sekcia",
+    "Section Title": "N\u00e1zov sekcie",
+    "Select a dimension and metrics": "Vyberte dimenziu a metriky",
+    "Select an attribute": "Vyberte atrib\u00fat",
+    "Select an operation": "Vyberte oper\u00e1ciu",
+    "Select sorting metric or dimension": "Vyberte metriku alebo dimenziu zoradenia",
+    "Select the metric color": "Vyberte farbu metriky",
+    "Set the current layout as the default?": "Nastavi\u0165 aktu\u00e1lne rozlo\u017eenie ako predvolen\u00e9?",
+    "Show Date Interval": "Zobrazi\u0165 interval d\u00e1tumu",
+    "Sort by": "Zoradi\u0165 pod\u013ea",
+    "Sorting": "Triedenie",
+    "Sorting & Filtering": "Triedenie a filtrovanie",
+    "Stacked Bar": "Skladan\u00fd pruhov\u00fd graf",
+    "Starts with": "Za\u010d\u00edna sa s",
+    "Success": "\u00daspech",
+    "Table": "Tabu\u013eka",
+    "Text Notice": "Textov\u00e9 ozn\u00e1menie",
+    "The dashboard layout has been reset to default.": "Rozlo\u017eenie ovl\u00e1dacieho panela bolo obnoven\u00e9 na predvolen\u00e9 hodnoty.",
+    "The dashboard was successfully updated.": "Ovl\u00e1dac\u00ed panel bol \u00faspe\u0161ne aktualizovan\u00fd.",
+    "The limit value must be at least 1": "Limitn\u00e1 hodnota mus\u00ed by\u0165 aspo\u0148 1",
+    "This dashboard is now the default layout.": "Tento dashboard m\u00e1 teraz predvolen\u00e9 rozlo\u017eenie.",
+    "This is a text notice widget.": "Toto je widget s textov\u00fdmi upozorneniami.",
+    "This month": "Tento mesiac",
+    "This quarter": "Tento \u0161tvr\u0165rok",
+    "This week": "Tento t\u00fd\u017ede\u0148",
+    "This year": "Tento rok",
+    "Title": "N\u00e1zov",
+    "Today": "Dnes",
+    "Value": "Hodnota",
+    "Values": "Hodnoty",
+    "Vertical": "Vertik\u00e1lne",
+    "Warning": "POZOR",
+    "Week": "T\u00fd\u017ede\u0148",
+    "Year": "Rok",
+    "Yesterday": "V\u010dera"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Slovak [sk]
+//! author : Martin Minka : https://github.com/k2s
+//! based on work of petrbela : https://github.com/petrbela
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,87 +294,85 @@ window.oc.langMessages['sk'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
-    var months = 'január_február_marec_apríl_máj_jún_júl_august_september_október_november_december'.split('_'),
+    var months =
+            'január_február_marec_apríl_máj_jún_júl_august_september_október_november_december'.split(
+                '_'
+            ),
         monthsShort = 'jan_feb_mar_apr_máj_jún_júl_aug_sep_okt_nov_dec'.split('_');
     function plural(n) {
-        return (n > 1) && (n < 5);
+        return n > 1 && n < 5;
     }
     function translate(number, withoutSuffix, key, isFuture) {
         var result = number + ' ';
         switch (key) {
-            case 's':  // a few seconds / in a few seconds / a few seconds ago
-                return (withoutSuffix || isFuture) ? 'pár sekúnd' : 'pár sekundami';
+            case 's': // a few seconds / in a few seconds / a few seconds ago
+                return withoutSuffix || isFuture ? 'pár sekúnd' : 'pár sekundami';
             case 'ss': // 9 seconds / in 9 seconds / 9 seconds ago
                 if (withoutSuffix || isFuture) {
                     return result + (plural(number) ? 'sekundy' : 'sekúnd');
                 } else {
                     return result + 'sekundami';
                 }
-                break;
-            case 'm':  // a minute / in a minute / a minute ago
-                return withoutSuffix ? 'minúta' : (isFuture ? 'minútu' : 'minútou');
+            case 'm': // a minute / in a minute / a minute ago
+                return withoutSuffix ? 'minúta' : isFuture ? 'minútu' : 'minútou';
             case 'mm': // 9 minutes / in 9 minutes / 9 minutes ago
                 if (withoutSuffix || isFuture) {
                     return result + (plural(number) ? 'minúty' : 'minút');
                 } else {
                     return result + 'minútami';
                 }
-                break;
-            case 'h':  // an hour / in an hour / an hour ago
-                return withoutSuffix ? 'hodina' : (isFuture ? 'hodinu' : 'hodinou');
+            case 'h': // an hour / in an hour / an hour ago
+                return withoutSuffix ? 'hodina' : isFuture ? 'hodinu' : 'hodinou';
             case 'hh': // 9 hours / in 9 hours / 9 hours ago
                 if (withoutSuffix || isFuture) {
                     return result + (plural(number) ? 'hodiny' : 'hodín');
                 } else {
                     return result + 'hodinami';
                 }
-                break;
-            case 'd':  // a day / in a day / a day ago
-                return (withoutSuffix || isFuture) ? 'deň' : 'dňom';
+            case 'd': // a day / in a day / a day ago
+                return withoutSuffix || isFuture ? 'deň' : 'dňom';
             case 'dd': // 9 days / in 9 days / 9 days ago
                 if (withoutSuffix || isFuture) {
                     return result + (plural(number) ? 'dni' : 'dní');
                 } else {
                     return result + 'dňami';
                 }
-                break;
-            case 'M':  // a month / in a month / a month ago
-                return (withoutSuffix || isFuture) ? 'mesiac' : 'mesiacom';
+            case 'M': // a month / in a month / a month ago
+                return withoutSuffix || isFuture ? 'mesiac' : 'mesiacom';
             case 'MM': // 9 months / in 9 months / 9 months ago
                 if (withoutSuffix || isFuture) {
                     return result + (plural(number) ? 'mesiace' : 'mesiacov');
                 } else {
                     return result + 'mesiacmi';
                 }
-                break;
-            case 'y':  // a year / in a year / a year ago
-                return (withoutSuffix || isFuture) ? 'rok' : 'rokom';
+            case 'y': // a year / in a year / a year ago
+                return withoutSuffix || isFuture ? 'rok' : 'rokom';
             case 'yy': // 9 years / in 9 years / 9 years ago
                 if (withoutSuffix || isFuture) {
                     return result + (plural(number) ? 'roky' : 'rokov');
                 } else {
                     return result + 'rokmi';
                 }
-                break;
         }
     }
 
     var sk = moment.defineLocale('sk', {
-        months : months,
-        monthsShort : monthsShort,
-        weekdays : 'nedeľa_pondelok_utorok_streda_štvrtok_piatok_sobota'.split('_'),
-        weekdaysShort : 'ne_po_ut_st_št_pi_so'.split('_'),
-        weekdaysMin : 'ne_po_ut_st_št_pi_so'.split('_'),
-        longDateFormat : {
+        months: months,
+        monthsShort: monthsShort,
+        weekdays: 'nedeľa_pondelok_utorok_streda_štvrtok_piatok_sobota'.split('_'),
+        weekdaysShort: 'ne_po_ut_st_št_pi_so'.split('_'),
+        weekdaysMin: 'ne_po_ut_st_št_pi_so'.split('_'),
+        longDateFormat: {
             LT: 'H:mm',
-            LTS : 'H:mm:ss',
-            L : 'DD.MM.YYYY',
-            LL : 'D. MMMM YYYY',
-            LLL : 'D. MMMM YYYY H:mm',
-            LLLL : 'dddd D. MMMM YYYY H:mm'
+            LTS: 'H:mm:ss',
+            L: 'DD.MM.YYYY',
+            LL: 'D. MMMM YYYY',
+            LLL: 'D. MMMM YYYY H:mm',
+            LLLL: 'dddd D. MMMM YYYY H:mm',
         },
-        calendar : {
+        calendar: {
             sameDay: '[dnes o] LT',
             nextDay: '[zajtra o] LT',
             nextWeek: function () {
@@ -141,30 +409,30 @@ window.oc.langMessages['sk'] = $.extend(
                         return '[minulú sobotu o] LT';
                 }
             },
-            sameElse: 'L'
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'za %s',
-            past : 'pred %s',
-            s : translate,
-            ss : translate,
-            m : translate,
-            mm : translate,
-            h : translate,
-            hh : translate,
-            d : translate,
-            dd : translate,
-            M : translate,
-            MM : translate,
-            y : translate,
-            yy : translate
+        relativeTime: {
+            future: 'za %s',
+            past: 'pred %s',
+            s: translate,
+            ss: translate,
+            m: translate,
+            mm: translate,
+            h: translate,
+            hh: translate,
+            d: translate,
+            dd: translate,
+            M: translate,
+            MM: translate,
+            y: translate,
+            yy: translate,
         },
         dayOfMonthOrdinalParse: /\d{1,2}\./,
-        ordinal : '%d.',
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 4  // The week that contains Jan 4th is the first week of the year.
-        }
+        ordinal: '%d.',
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 4, // The week that contains Jan 4th is the first week of the year.
+        },
     });
 
     return sk;

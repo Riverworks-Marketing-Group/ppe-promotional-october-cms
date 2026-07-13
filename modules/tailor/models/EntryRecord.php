@@ -1,6 +1,7 @@
 <?php namespace Tailor\Models;
 
 use App;
+use Str;
 use Site;
 use October\Contracts\Element\ListElement;
 use October\Contracts\Element\FormElement;
@@ -19,7 +20,6 @@ use SystemException;
 class EntryRecord extends BlueprintModel
 {
     use \Tailor\Traits\DraftableModel;
-    use \Tailor\Traits\NestedTreeModel;
     use \Tailor\Traits\VersionableModel;
     use \Tailor\Traits\DeferredContentModel;
     use \Tailor\Models\EntryRecord\HasDuplication;
@@ -98,16 +98,11 @@ class EntryRecord extends BlueprintModel
         $host->defineColumn('id', 'ID')->invisible();
         $host->defineColumn('title', 'Title')->searchable();
         $host->defineColumn('slug', 'Slug')->searchable()->invisible();
-
-        if ($this->isEntryStructure()) {
-            $host->defineColumn('fullslug', 'Full Slug')->searchable(false)->invisible();
-        }
-
         $host->defineColumn('entry_type_name', 'Entry Type')->shortLabel('Type')->invisible()->sortable(false);
 
         $this->getContentFieldsetDefinition()->defineAllListColumns($host, ['except' => $this->fieldModifiers]);
 
-        $host->defineColumn('published_at_date', 'Published Date')->shortLabel('Published')->displayAs('date')->invisible(!$this->isEntryStream())->sortableDefault($this->isEntryStream() ? 'desc' : false);
+        $host->defineColumn('published_at_date', 'Published Date')->shortLabel('Published')->displayAs('date')->invisible(true)->sortableDefault(false);
         $host->defineColumn('status_code', 'Status')->shortLabel('')->displayAs('selectable')->sortable(false)->align('right');
         $host->defineColumn('created_at', 'Created At')->displayAs('datetime')->invisible();
         $host->defineColumn('updated_at', 'Updated At')->displayAs('datetime')->invisible();
@@ -162,7 +157,6 @@ class EntryRecord extends BlueprintModel
         $host->addFormField('is_enabled', 'Enabled')->displayAs('switch')->defaults(true);
         $host->addFormField('published_at', 'Publish Date')->displayAs('datepicker')->defaultTimeMidnight();
         $host->addFormField('expired_at', 'Expiry Date')->displayAs('datepicker')->defaultTimeMidnight();
-        $host->addFormField('parent_id', 'Parent')->displayAs('dropdown');
         $this->applyCoreFieldModifiers($host);
     }
 
@@ -172,6 +166,22 @@ class EntryRecord extends BlueprintModel
     public function afterBoot()
     {
         static::addGlobalScope(new EntryRecordScope);
+    }
+
+    /**
+     * beforeValidate
+     */
+    public function beforeValidate()
+    {
+        if (!$this->slug && !$this->isDraftStatus()) {
+            if ($this->title) {
+                $this->slug = Str::slug($this->title) . '-' . Str::random(8);
+            }
+
+            if (!$this->slug) {
+                $this->slug = 'slug-' . Str::random(32);
+            }
+        }
     }
 
     /**
@@ -195,12 +205,6 @@ class EntryRecord extends BlueprintModel
      */
     protected function setPublishingDates($useDate)
     {
-        if ($this->isEntryStream()) {
-            $this->published_at_day = $useDate->format('d');
-            $this->published_at_month = $useDate->format('m');
-            $this->published_at_year = $useDate->format('Y');
-        }
-
         $this->published_at_date = $useDate;
     }
 
@@ -214,7 +218,9 @@ class EntryRecord extends BlueprintModel
             throw new SystemException("Section handle [{$handle}] not found");
         }
 
-        return static::inSectionUuid($blueprint->uuid);
+        $model = $blueprint->newModelInstance();
+
+        return $model::inSectionUuid($blueprint->uuid);
     }
 
     /**
@@ -239,7 +245,9 @@ class EntryRecord extends BlueprintModel
             throw new SystemException("Section handle [{$handle}] not found");
         }
 
-        self::extendInSectionUuid($blueprint->uuid, $callback);
+        $model = $blueprint->newModelInstance();
+
+        $model::extendInSectionUuid($blueprint->uuid, $callback);
     }
 
     /**
@@ -357,29 +365,6 @@ class EntryRecord extends BlueprintModel
     }
 
     /**
-     * useNestedTreeStructure only for primary records
-     */
-    public function useNestedTreeStructure(): bool
-    {
-        return $this->isEntryStructure() && !$this->primary_id;
-    }
-
-    /**
-     * newNestedTreeQuery creates a new query for nested sets
-     */
-    protected function newNestedTreeQuery()
-    {
-        $query = $this->newQuery()->withSavedDrafts();
-
-        // Nested tree query must have context
-        if (Site::hasGlobalContext() && $this->isMultisiteEnabled()) {
-            $query->withSite($this->site_id ?: Site::getSiteIdFromContext());
-        }
-
-        return $query;
-    }
-
-    /**
      * getVersionableTransferAttributes
      */
     protected function getVersionableTransferAttributes()
@@ -393,7 +378,7 @@ class EntryRecord extends BlueprintModel
      */
     public function getMorphClass()
     {
-        return parent::getMorphClass() . '@' . $this->getTable();
+        return self::class . '@' . $this->getTable();
     }
 
     /**

@@ -1,22 +1,18 @@
 <?php namespace Backend\Widgets;
 
-use File;
 use Lang;
 use Flash;
 use Request;
-use BackendAuth;
 use Backend\Classes\WidgetBase;
-use Backend\Classes\WidgetManager;
+use Backend\Classes\DashManager;
 use Backend\Models\UserPreference;
 use System\Models\Parameter as SystemParameters;
 use ApplicationException;
 use ForbiddenException;
 
 /**
- * ReportContainer Widget creates an area hosting report widgets.
- *
- * @package october\backend
- * @author Alexey Bobkov, Samuel Georges
+ * ReportContainer has been deprecated
+ * @deprecated this has been replaced by the `Backend\Widgets\Dash` widget
  */
 class ReportContainer extends WidgetBase
 {
@@ -161,7 +157,7 @@ class ReportContainer extends WidgetBase
 
         $this->vars['widgets'] = $this->reportWidgets;
 
-        Flash::success(Lang::get('backend::lang.dashboard.reset_layout_success'));
+        Flash::success(__("Layout has been reset"));
 
         return ['#'.$this->getId('container-list') => $this->makePartial('widget_list')];
     }
@@ -179,7 +175,7 @@ class ReportContainer extends WidgetBase
 
         SystemParameters::set($this->getSystemParametersKey(), $widgets);
 
-        Flash::success(Lang::get('backend::lang.dashboard.make_default_success'));
+        Flash::success(__("Current layout is now the default"));
     }
 
     /**
@@ -233,7 +229,7 @@ class ReportContainer extends WidgetBase
         }
 
         $this->vars['sizes'] = $sizes;
-        $this->vars['widgets'] = WidgetManager::instance()->listReportWidgets();
+        $this->vars['widgets'] = DashManager::instance()->listReportWidgets();
 
         return $this->makePartial('new_widget_popup');
     }
@@ -416,7 +412,7 @@ class ReportContainer extends WidgetBase
         $configuration['alias'] = $alias;
 
         $className = $widgetInfo['class'];
-        $availableReportWidgets = array_keys(WidgetManager::instance()->listReportWidgets());
+        $availableReportWidgets = array_keys(DashManager::instance()->listReportWidgets());
         if (!class_exists($className) || !in_array($className, $availableReportWidgets)) {
             return;
         }
@@ -463,32 +459,32 @@ class ReportContainer extends WidgetBase
 
         $property = [
             'property' => 'ocWidgetWidth',
-            'title' => Lang::get('backend::lang.dashboard.widget_columns_label', ['columns' => '(1-12)']),
-            'description' => Lang::get('backend::lang.dashboard.widget_columns_description'),
+            'title' => __("Width :columns", ['columns' => '(1-12)']),
+            'description' => __("The widget width, a number between 1 and 10."),
             'type' => 'dropdown',
             'validationPattern' => '^[0-9]+$',
-            'validationMessage' => Lang::get('backend::lang.dashboard.widget_columns_error'),
+            'validationMessage' => __("Please enter the widget width as a number between 1 and 10."),
             'options' => [
-                1  => '1 ' . Lang::choice('backend::lang.dashboard.columns', 1),
-                2  => '2 ' . Lang::choice('backend::lang.dashboard.columns', 2),
-                3  => '3 ' . Lang::choice('backend::lang.dashboard.columns', 3),
-                4  => '4 ' . Lang::choice('backend::lang.dashboard.columns', 4),
-                5  => '5 ' . Lang::choice('backend::lang.dashboard.columns', 5),
-                6  => '6 ' . Lang::choice('backend::lang.dashboard.columns', 6),
-                7  => '7 ' . Lang::choice('backend::lang.dashboard.columns', 7),
-                8  => '8 ' . Lang::choice('backend::lang.dashboard.columns', 8),
-                9  => '9 ' . Lang::choice('backend::lang.dashboard.columns', 9),
-                10 => '10 ' . Lang::choice('backend::lang.dashboard.columns', 10),
-                11 => '11 ' . Lang::choice('backend::lang.dashboard.columns', 11),
-                12 => '12 ' . Lang::choice('backend::lang.dashboard.columns', 12)
+                1  => '1 ' . trans_choice("{1} column|[2,Inf] columns", 1),
+                2  => '2 ' . trans_choice("{1} column|[2,Inf] columns", 2),
+                3  => '3 ' . trans_choice("{1} column|[2,Inf] columns", 3),
+                4  => '4 ' . trans_choice("{1} column|[2,Inf] columns", 4),
+                5  => '5 ' . trans_choice("{1} column|[2,Inf] columns", 5),
+                6  => '6 ' . trans_choice("{1} column|[2,Inf] columns", 6),
+                7  => '7 ' . trans_choice("{1} column|[2,Inf] columns", 7),
+                8  => '8 ' . trans_choice("{1} column|[2,Inf] columns", 8),
+                9  => '9 ' . trans_choice("{1} column|[2,Inf] columns", 9),
+                10 => '10 ' . trans_choice("{1} column|[2,Inf] columns", 10),
+                11 => '11 ' . trans_choice("{1} column|[2,Inf] columns", 11),
+                12 => '12 ' . trans_choice("{1} column|[2,Inf] columns", 12)
             ]
         ];
         $result[] = $property;
 
         $property = [
             'property' => 'ocWidgetNewRow',
-            'title' => Lang::get('backend::lang.dashboard.widget_new_row_label'),
-            'description' => Lang::get('backend::lang.dashboard.widget_new_row_description'),
+            'title' => __("Force new row"),
+            'description' => __("Put the widget in a new row."),
             'type' => 'checkbox'
         ];
 

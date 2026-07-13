@@ -1,7 +1,5 @@
 <?php namespace Tailor\Classes\Blueprint;
 
-use Tailor\Classes\Blueprint;
-
 /**
  * StructureBlueprint
  *
@@ -14,6 +12,14 @@ class StructureBlueprint extends EntryBlueprint
      * @var string typeName of the blueprint
      */
     protected $typeName = 'structure';
+
+    /**
+     * getModelClassName
+     */
+    public function getModelClassName()
+    {
+        return \Tailor\Models\StructureRecord::class;
+    }
 
     /**
      * hasTree

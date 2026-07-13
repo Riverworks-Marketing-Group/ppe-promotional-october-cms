@@ -2,6 +2,7 @@
 
 use Lang;
 use Flash;
+use Artisan;
 use Backend;
 use BackendAuth;
 use BackendMenu;
@@ -13,7 +14,7 @@ use System\Helpers\Cache as CacheHelper;
 use System\Widgets\Changelog;
 use System\Widgets\Updater;
 use Backend\Classes\Controller;
-use October\Rain\Composer\Manager as ComposerManager;
+use October\Rain\Composer\ComposerManager;
 use ValidationException;
 use Exception;
 
@@ -135,23 +136,16 @@ class Updates extends Controller
                     continue;
                 }
 
-                $savePlugin = true;
                 switch ($bulkAction) {
-                    // Disables plugin on the system
                     case 'disable':
-                        $plugin->is_disabled = 1;
-                        $manager->disablePlugin($plugin->code, true);
+                        $plugin->setContextDisabled();
                         break;
 
-                    // Enables plugin on the system
                     case 'enable':
-                        $plugin->is_disabled = 0;
-                        $manager->enablePlugin($plugin->code, true);
+                        $plugin->setContextEnabled();
                         break;
 
-                    // Rebuilds plugin database migrations
                     case 'refresh':
-                        $savePlugin = false;
                         if ($plugin->orphaned) {
                             UpdateManager::instance()->rollbackPlugin($plugin->code);
                         }
@@ -160,21 +154,15 @@ class Updates extends Controller
                         }
                         break;
 
-                    // Rollback and remove plugins from the system
                     case 'remove':
-                        $savePlugin = false;
                         $manager->deletePlugin($plugin->code);
                         break;
-                }
-
-                if ($savePlugin) {
-                    $plugin->save();
                 }
             }
         }
 
         // Reload plugin dependency tree
-        PluginManager::instance()->reloadDisabledCache();
+        PluginManager::instance()->clearDisabledCache();
 
         Flash::success(Lang::get("system::lang.plugins.{$bulkAction}_success"));
         return $this->listRefresh('manage');
@@ -188,6 +176,19 @@ class Updates extends Controller
         CacheHelper::clear();
 
         Flash::success(__("Cache cleared successfully."));
+    }
+
+    /**
+     * manage_onMigrateDatabase runs all pending migrations
+     */
+    public function manage_onMigrateDatabase()
+    {
+        Artisan::call('october:migrate');
+        Artisan::call('tailor:migrate');
+
+        Flash::success(__("Database migrated successfully."));
+
+        return $this->listRefresh('manage');
     }
 
     /**
@@ -209,7 +210,7 @@ class Updates extends Controller
             return 'hidden';
         }
 
-        if ($record->orphaned || $record->is_disabled) {
+        if ($record->orphaned || $record->context_disabled) {
             return 'safe disabled';
         }
 
@@ -256,17 +257,32 @@ class Updates extends Controller
             $manager->storeProjectDetails($result);
 
             // Add gateway as a composer repo
-            $composer = ComposerManager::instance();
-            $composerUrl = $manager->getComposerUrl();
-            if (!$composer->hasRepository($composerUrl)) {
-                $composer->addOctoberRepository($composerUrl);
-            }
+            $this->ensureComposerRegistered();
 
             Flash::success(__("Thanks for being a customer of October CMS!"));
             return Backend::redirect('system/updates');
         }
         catch (Exception $ex) {
             throw new ValidationException(['project_id' => $ex->getMessage()]);
+        }
+    }
+
+    /**
+     * Make sure composer is ready to receive updates
+     */
+    protected function ensureComposerRegistered()
+    {
+        $manager = UpdateManager::instance();
+        $composer = ComposerManager::instance();
+
+        $composerUrl = $manager->getComposerUrl();
+
+        if (!$composer->hasRepository($composerUrl)) {
+            $composer->addOctoberRepository($composerUrl);
+        }
+
+        if (!$composer->getPackageVersions(['october/system'])) {
+            $composer->addPackages(['october/all' => "^".\System\Facades\System::VERSION]);
         }
     }
 }

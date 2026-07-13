@@ -39,7 +39,11 @@ trait HasThemeAssetMaker
      */
     public function getAssetPath($fileName, $assetPath = null)
     {
-        if (starts_with($fileName, ['//', 'http://', 'https://'])) {
+        if (
+            str_starts_with($fileName, '//') ||
+            str_starts_with($fileName, 'http://') ||
+            str_starts_with($fileName, 'https://')
+        ) {
             return $fileName;
         }
 
@@ -98,7 +102,7 @@ trait HasThemeAssetMaker
     /**
      * getThemeAssetPath
      */
-    protected function getThemeAssetRelativePath(string $relativePath = null): string
+    protected function getThemeAssetRelativePath(?string $relativePath = null): string
     {
         $dirName = $this->getTheme()->getDirName();
 
@@ -114,7 +118,7 @@ trait HasThemeAssetMaker
     /**
      * getThemeAssetUrl returns the public directory for theme assets
      */
-    protected function getThemeAssetUrl(string $relativePath = null): string
+    protected function getThemeAssetUrl(?string $relativePath = null): string
     {
         // Determine directory name for asset
         $theme = $this->getTheme();

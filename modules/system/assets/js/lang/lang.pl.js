@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['pl'] = $.extend(
+window.oc.langMessages['pl'] = Object.assign(
     window.oc.langMessages['pl'] || {},
-    {"markdowneditor":{"formatting":"Formaty","quote":"Cytat","code":"Widok kod","header1":"Nag\u0142\u00f3wek 1","header2":"Nag\u0142\u00f3wek 2","header3":"Nag\u0142\u00f3wek 3","header4":"Nag\u0142\u00f3wek 4","header5":"Nag\u0142\u00f3wek 5","header6":"Nag\u0142\u00f3wek 6","bold":"Pogrubienie","italic":"Kursywa","unorderedlist":"\"Lista nieuporz\u0105dkowana","orderedlist":"Uporz\u0105dkowana lista","snippet":"Snippet","video":"Wideo","image":"Obrazek","link":"Link","horizontalrule":"Wstaw lini\u0119 poziom\u0105","fullscreen":"Pe\u0142ny ekran","preview":"Podgl\u0105d","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Wstaw Link","insert_image":"Wstaw Obraz","insert_video":"Wstaw Wideo","insert_audio":"Wstaw Audio","invalid_file_empty_insert":"Prosimy wybra\u0107 plik do podlinkowania.","invalid_file_single_insert":"Prosimy wybra\u0107 pojedynczy plik.","invalid_image_empty_insert":"Prosimy wybra\u0107 obrazy do wstawienia.","invalid_video_empty_insert":"Prosimy wybra\u0107 wideo do wstawienia.","invalid_audio_empty_insert":"Prosimy wybra\u0107 audio do wstawienia."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Anuluj","widget_remove_confirm":"Remove this widget?"},"datepicker":{"previousMonth":"Poprzedni miesi\u0105c","nextMonth":"Nast\u0119pny miesi\u0105c","months":["Stycze\u0144","Luty","Marzec","Kwiecie\u0144","Maj","Czerwiec","Lipiec","Sierpie\u0144","Wrzesie\u0144","Pa\u017adziernik","Listopad","Grudzie\u0144"],"weekdays":["Niedziela","Poniedzia\u0142ek","Wtorek","\u015aroda","Czwartek","Pi\u0105tek","Sobota"],"weekdaysShort":["Nie","Pn","Wt","\u015ar","Czw","Pt","So"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"wszystkie"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"wszystkie","filter_button_text":"Filtruj","reset_button_text":"Resetuj","date_placeholder":"Data","after_placeholder":"Po","before_placeholder":"Przed"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Poka\u017c stos wywo\u0142a\u0144","hide_stacktrace":"Ukryj stos wywo\u0142a\u0144","tabs":{"formatted":"Sformatowany","raw":"Nieprzetworzony"},"editor":{"title":"Edytor kodu \u017ar\u00f3d\u0142owego","description":"Tw\u00f3j system operacyjny powinien by\u0107 skonfigurowany aby nas\u0142uchiwa\u0107 na jednym z podanych schemat\u00f3w URL.","openWith":"Otw\u00f3rz za pomoc\u0105","remember_choice":"Zapami\u0119taj wybran\u0105 opcj\u0119 dla tej sesji","open":"Otw\u00f3rz","cancel":"Anuluj"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Formaty",
+        "quote": "Cytat",
+        "code": "Widok kodu",
+        "header1": "Nag\u0142\u00f3wek 1",
+        "header2": "Nag\u0142\u00f3wek 2",
+        "header3": "Nag\u0142\u00f3wek 3",
+        "header4": "Nag\u0142\u00f3wek 4",
+        "header5": "Nag\u0142\u00f3wek 5",
+        "header6": "Nag\u0142\u00f3wek 6",
+        "bold": "Pogrubienie",
+        "italic": "Kursywa",
+        "unorderedlist": "\"Lista nieuporz\u0105dkowana",
+        "orderedlist": "Uporz\u0105dkowana lista",
+        "snippet": "Snippet",
+        "video": "Wideo",
+        "image": "Obrazek",
+        "link": "Link",
+        "horizontalrule": "Wstaw lini\u0119 poziom\u0105",
+        "fullscreen": "Pe\u0142ny ekran",
+        "preview": "Podgl\u0105d",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Wstaw Link",
+        "insert_image": "Wstaw Obraz",
+        "insert_video": "Wstaw Wideo",
+        "insert_audio": "Wstaw Audio",
+        "invalid_file_empty_insert": "Prosimy wybra\u0107 plik do podlinkowania.",
+        "invalid_file_single_insert": "Prosimy wybra\u0107 pojedynczy plik.",
+        "invalid_image_empty_insert": "Prosimy wybra\u0107 obrazy do wstawienia.",
+        "invalid_video_empty_insert": "Prosimy wybra\u0107 wideo do wstawienia.",
+        "invalid_audio_empty_insert": "Prosimy wybra\u0107 audio do wstawienia."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Anuluj",
+        "widget_remove_confirm": "Remove this widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Poprzedni miesi\u0105c",
+        "nextMonth": "Nast\u0119pny miesi\u0105c",
+        "months": [
+            "Stycze\u0144",
+            "Luty",
+            "Marzec",
+            "Kwiecie\u0144",
+            "Maj",
+            "Czerwiec",
+            "Lipiec",
+            "Sierpie\u0144",
+            "Wrzesie\u0144",
+            "Pa\u017adziernik",
+            "Listopad",
+            "Grudzie\u0144"
+        ],
+        "weekdays": [
+            "Niedziela",
+            "Poniedzia\u0142ek",
+            "Wtorek",
+            "\u015aroda",
+            "Czwartek",
+            "Pi\u0105tek",
+            "Sobota"
+        ],
+        "weekdaysShort": [
+            "Nie",
+            "Pn",
+            "Wt",
+            "\u015ar",
+            "Czw",
+            "Pt",
+            "So"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "wszystkie"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "wszystkie",
+            "filter_button_text": "Filtruj",
+            "reset_button_text": "Resetuj",
+            "date_placeholder": "Data",
+            "after_placeholder": "Po",
+            "before_placeholder": "Przed"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Poka\u017c stos wywo\u0142a\u0144",
+        "hide_stacktrace": "Ukryj stos wywo\u0142a\u0144",
+        "tabs": {
+            "formatted": "Sformatowany",
+            "raw": "Nieprzetworzony"
+        },
+        "editor": {
+            "title": "Edytor kodu \u017ar\u00f3d\u0142owego",
+            "description": "Tw\u00f3j system operacyjny powinien by\u0107 skonfigurowany aby nas\u0142uchiwa\u0107 na jednym z podanych schemat\u00f3w URL.",
+            "openWith": "Otw\u00f3rz za pomoc\u0105",
+            "remember_choice": "Zapami\u0119taj wybran\u0105 opcj\u0119 dla tej sesji",
+            "open": "Otw\u00f3rz",
+            "cancel": "Anuluj",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[nie ustawiono]",
+    "1 day (today) if not set": "1 dzie\u0144 (dzisiaj), je\u015bli nie ustawiono",
+    "Apply": "Stosowa\u0107",
+    "Ascending": "Rosn\u0105co",
+    "Attribute": "Atrybut",
+    "Bar": "Bar",
+    "Cancel": "Anuluj",
+    "Chart": "Wykres",
+    "Chart type": "Typ wykresu",
+    "Color": "Kolor",
+    "Compare Totals": "Por\u00f3wnaj sumy",
+    "Configure": "Konfiguruj",
+    "Custom": "Zwyczaj",
+    "Custom Range": "Niestandardowy zakres",
+    "Dashboard interval": "Interwa\u0142 pulpitu nawigacyjnego",
+    "Data source": "\u0179r\u00f3d\u0142o danych",
+    "Date interval": "Przedzia\u0142 dat",
+    "Day": "Dzie\u0144",
+    "Delete": "Usuwa\u0107",
+    "Delete Dashboard": "Usu\u0144 pulpit nawigacyjny",
+    "Delete row": "Usu\u0144 wiersz",
+    "Descending": "Zst\u0119puj\u0105cy",
+    "Dimension": "Wymiar",
+    "Direction": "Kierunek",
+    "Disabled": "Wy\u0142\u0105czony",
+    "Display": "Wy\u015bwietlacz",
+    "Display [not set]": "Wy\u015bwietl [nie ustawiono]",
+    "Display all records": "Wy\u015bwietl wszystkie rekordy",
+    "Display relative bars": "Wy\u015bwietl wzgl\u0119dne s\u0142upki",
+    "Display totals": "Wy\u015bwietl sumy",
+    "Edit Dashboard": "Edytuj pulpit nawigacyjny",
+    "Empty values": "Puste warto\u015bci",
+    "Enter a positive number": "Wprowad\u017a liczb\u0119 dodatni\u0105",
+    "Enter a positive number or leave empty to display all records.": "Wprowad\u017a liczb\u0119 dodatni\u0105 lub pozostaw puste pole, aby wy\u015bwietli\u0107 wszystkie rekordy.",
+    "Equal to": "R\u00f3wny",
+    "Export Dashboard": "Panel eksportu",
+    "Extra table fields": "Dodatkowe pola tabeli",
+    "Filters": "Filtry",
+    "General": "Og\u00f3lny",
+    "Greater or equal to": "Wi\u0119kszy lub r\u00f3wny",
+    "Greater than": "Wi\u0119kszy ni\u017c",
+    "Hide": "Ukrywa\u0107",
+    "Horizontal": "Poziomy",
+    "Icon": "Ikona",
+    "Icon Status": "Status ikony",
+    "Important": "Wa\u017cny",
+    "Includes": "Zawiera",
+    "Indicator": "Wska\u017anik",
+    "Information": "Informacja",
+    "Last 30 days": "Ostatnie 30 dni",
+    "Last 7 days": "Ostatnie 7 dni",
+    "Last month": "W zesz\u0142ym miesi\u0105cu",
+    "Leave empty to disable pagination": "Pozostaw puste, aby wy\u0142\u0105czy\u0107 paginacj\u0119",
+    "Leave empty to hide the title": "Pozostaw puste, aby ukry\u0107 tytu\u0142",
+    "Less or equal to": "Mniejsze lub r\u00f3wne",
+    "Less than": "Mniej ni\u017c",
+    "Limit": "Limit",
+    "Line": "Linia",
+    "Link Text": "Tekst linku",
+    "Link URL": "Adres URL \u0142\u0105cza",
+    "Make Default": "Ustaw jako domy\u015blne",
+    "Manage Dashboards": "Zarz\u0105dzaj pulpitami nawigacyjnymi",
+    "Metric": "Metryczny",
+    "Metrics": "Metryka",
+    "Month": "Miesi\u0105c",
+    "My Custom Widget": "M\u00f3j niestandardowy widget",
+    "No Value": "Brak warto\u015bci",
+    "Notice text": "Tekst powiadomienia",
+    "Number of days": "Liczba dni",
+    "One of": "Jeden z",
+    "One value per line": "Jedna warto\u015b\u0107 na wiersz",
+    "Operation": "Dzia\u0142anie",
+    "Order": "Zam\u00f3wienie",
+    "Past hour": "Ostatnia godzina",
+    "Past X days": "Ostatnie X dni",
+    "Please provide the widget title": "Prosz\u0119 poda\u0107 tytu\u0142 wid\u017cetu",
+    "Please select a data source": "Prosz\u0119 wybra\u0107 \u017ar\u00f3d\u0142o danych",
+    "Please select a dimension": "Prosz\u0119 wybra\u0107 wymiar",
+    "Please select an icon": "Prosz\u0119 wybra\u0107 ikon\u0119",
+    "Please select metric(s).": "Prosz\u0119 wybra\u0107 jednostk\u0119(y) metryczn\u0105(e).",
+    "Prev period": "Poprzedni okres",
+    "Quarter": "Kwarta\u0142",
+    "Records per page": "Rekordy na stron\u0119",
+    "Refresh every minute": "Od\u015bwie\u017caj co minut\u0119",
+    "Rename Dashboard": "Zmie\u0144 nazw\u0119 pulpitu nawigacyjnego",
+    "Reset Layout": "Resetuj uk\u0142ad",
+    "Reset layout back to default?": "Przywr\u00f3ci\u0107 uk\u0142ad do ustawie\u0144 domy\u015blnych?",
+    "Same period last year": "Ten sam okres w zesz\u0142ym roku",
+    "Section": "Sekcja",
+    "Section Title": "Tytu\u0142 sekcji",
+    "Select a dimension and metrics": "Wybierz wymiar i metryki",
+    "Select an attribute": "Wybierz atrybut",
+    "Select an operation": "Wybierz operacj\u0119",
+    "Select sorting metric or dimension": "Wybierz metryk\u0119 lub wymiar sortowania",
+    "Select the metric color": "Wybierz kolor metryki",
+    "Set the current layout as the default?": "Ustawi\u0107 obecny uk\u0142ad jako domy\u015blny?",
+    "Show Date Interval": "Poka\u017c interwa\u0142 dat",
+    "Sort by": "Sortuj wed\u0142ug",
+    "Sorting": "Sortowanie",
+    "Sorting & Filtering": "Sortowanie i filtrowanie",
+    "Stacked Bar": "Stacked Bar",
+    "Starts with": "Zaczyna si\u0119 od",
+    "Success": "Sukces",
+    "Table": "Tabela",
+    "Text Notice": "Powiadomienie tekstowe",
+    "The dashboard layout has been reset to default.": "Przywr\u00f3cono domy\u015blny uk\u0142ad pulpitu nawigacyjnego.",
+    "The dashboard was successfully updated.": "Panel zosta\u0142 pomy\u015blnie zaktualizowany.",
+    "The limit value must be at least 1": "Warto\u015b\u0107 graniczna musi wynosi\u0107 co najmniej 1",
+    "This dashboard is now the default layout.": "Ten panel jest teraz uk\u0142adem domy\u015blnym.",
+    "This is a text notice widget.": "To jest widget powiadomie\u0144 tekstowych.",
+    "This month": "W tym miesi\u0105cu",
+    "This quarter": "W tym kwartale",
+    "This week": "W tym tygodniu",
+    "This year": "W tym roku",
+    "Title": "Tytu\u0142",
+    "Today": "Dzisiaj",
+    "Value": "Warto\u015b\u0107",
+    "Values": "Warto\u015bci",
+    "Vertical": "Pionowy",
+    "Warning": "Ostrze\u017cenie",
+    "Week": "Tydzie\u0144",
+    "Year": "Rok",
+    "Yesterday": "Wczoraj"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Polish [pl]
+//! author : Rafal Hirsz : https://github.com/evoL
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,11 +293,32 @@ window.oc.langMessages['pl'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
-    var monthsNominative = 'styczeń_luty_marzec_kwiecień_maj_czerwiec_lipiec_sierpień_wrzesień_październik_listopad_grudzień'.split('_'),
-        monthsSubjective = 'stycznia_lutego_marca_kwietnia_maja_czerwca_lipca_sierpnia_września_października_listopada_grudnia'.split('_');
+    var monthsNominative =
+            'styczeń_luty_marzec_kwiecień_maj_czerwiec_lipiec_sierpień_wrzesień_październik_listopad_grudzień'.split(
+                '_'
+            ),
+        monthsSubjective =
+            'stycznia_lutego_marca_kwietnia_maja_czerwca_lipca_sierpnia_września_października_listopada_grudnia'.split(
+                '_'
+            ),
+        monthsParse = [
+            /^sty/i,
+            /^lut/i,
+            /^mar/i,
+            /^kwi/i,
+            /^maj/i,
+            /^cze/i,
+            /^lip/i,
+            /^sie/i,
+            /^wrz/i,
+            /^paź/i,
+            /^lis/i,
+            /^gru/i,
+        ];
     function plural(n) {
-        return (n % 10 < 5) && (n % 10 > 1) && ((~~(n / 10) % 10) !== 1);
+        return n % 10 < 5 && n % 10 > 1 && ~~(n / 10) % 10 !== 1;
     }
     function translate(number, withoutSuffix, key) {
         var result = number + ' ';
@@ -40,9 +330,11 @@ window.oc.langMessages['pl'] = $.extend(
             case 'mm':
                 return result + (plural(number) ? 'minuty' : 'minut');
             case 'h':
-                return withoutSuffix  ? 'godzina'  : 'godzinę';
+                return withoutSuffix ? 'godzina' : 'godzinę';
             case 'hh':
                 return result + (plural(number) ? 'godziny' : 'godzin');
+            case 'ww':
+                return result + (plural(number) ? 'tygodnie' : 'tygodni');
             case 'MM':
                 return result + (plural(number) ? 'miesiące' : 'miesięcy');
             case 'yy':
@@ -51,33 +343,32 @@ window.oc.langMessages['pl'] = $.extend(
     }
 
     var pl = moment.defineLocale('pl', {
-        months : function (momentToFormat, format) {
+        months: function (momentToFormat, format) {
             if (!momentToFormat) {
                 return monthsNominative;
-            } else if (format === '') {
-                // Hack: if format empty we know this is used to generate
-                // RegExp by moment. Give then back both valid forms of months
-                // in RegExp ready format.
-                return '(' + monthsSubjective[momentToFormat.month()] + '|' + monthsNominative[momentToFormat.month()] + ')';
             } else if (/D MMMM/.test(format)) {
                 return monthsSubjective[momentToFormat.month()];
             } else {
                 return monthsNominative[momentToFormat.month()];
             }
         },
-        monthsShort : 'sty_lut_mar_kwi_maj_cze_lip_sie_wrz_paź_lis_gru'.split('_'),
-        weekdays : 'niedziela_poniedziałek_wtorek_środa_czwartek_piątek_sobota'.split('_'),
-        weekdaysShort : 'ndz_pon_wt_śr_czw_pt_sob'.split('_'),
-        weekdaysMin : 'Nd_Pn_Wt_Śr_Cz_Pt_So'.split('_'),
-        longDateFormat : {
-            LT : 'HH:mm',
-            LTS : 'HH:mm:ss',
-            L : 'DD.MM.YYYY',
-            LL : 'D MMMM YYYY',
-            LLL : 'D MMMM YYYY HH:mm',
-            LLLL : 'dddd, D MMMM YYYY HH:mm'
+        monthsShort: 'sty_lut_mar_kwi_maj_cze_lip_sie_wrz_paź_lis_gru'.split('_'),
+        monthsParse: monthsParse,
+        longMonthsParse: monthsParse,
+        shortMonthsParse: monthsParse,
+        weekdays:
+            'niedziela_poniedziałek_wtorek_środa_czwartek_piątek_sobota'.split('_'),
+        weekdaysShort: 'ndz_pon_wt_śr_czw_pt_sob'.split('_'),
+        weekdaysMin: 'Nd_Pn_Wt_Śr_Cz_Pt_So'.split('_'),
+        longDateFormat: {
+            LT: 'HH:mm',
+            LTS: 'HH:mm:ss',
+            L: 'DD.MM.YYYY',
+            LL: 'D MMMM YYYY',
+            LLL: 'D MMMM YYYY HH:mm',
+            LLLL: 'dddd, D MMMM YYYY HH:mm',
         },
-        calendar : {
+        calendar: {
             sameDay: '[Dziś o] LT',
             nextDay: '[Jutro o] LT',
             nextWeek: function () {
@@ -111,30 +402,32 @@ window.oc.langMessages['pl'] = $.extend(
                         return '[W zeszły] dddd [o] LT';
                 }
             },
-            sameElse: 'L'
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'za %s',
-            past : '%s temu',
-            s : 'kilka sekund',
-            ss : translate,
-            m : translate,
-            mm : translate,
-            h : translate,
-            hh : translate,
-            d : '1 dzień',
-            dd : '%d dni',
-            M : 'miesiąc',
-            MM : translate,
-            y : 'rok',
-            yy : translate
+        relativeTime: {
+            future: 'za %s',
+            past: '%s temu',
+            s: 'kilka sekund',
+            ss: translate,
+            m: translate,
+            mm: translate,
+            h: translate,
+            hh: translate,
+            d: '1 dzień',
+            dd: '%d dni',
+            w: 'tydzień',
+            ww: translate,
+            M: 'miesiąc',
+            MM: translate,
+            y: 'rok',
+            yy: translate,
         },
         dayOfMonthOrdinalParse: /\d{1,2}\./,
-        ordinal : '%d.',
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 4  // The week that contains Jan 4th is the first week of the year.
-        }
+        ordinal: '%d.',
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 4, // The week that contains Jan 4th is the first week of the year.
+        },
     });
 
     return pl;

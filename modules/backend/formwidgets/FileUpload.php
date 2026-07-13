@@ -64,18 +64,16 @@ class FileUpload extends FormWidgetBase
     public $maxFiles;
 
     /**
-     * @var string Defines a mount point for the editor toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: stateElementName
+     * @var string externalToolbarBus defines a mount point for the editor toolbar.
      * Only works in Vue applications and form document layouts.
      */
-    public $externalToolbarAppState = null;
+    public $externalToolbarBus = null;
 
     /**
      * @var array thumbOptions used for generating thumbnails
      */
     public $thumbOptions = [
-        'mode' => 'crop',
+        'mode' => 'auto',
         'extension' => 'auto'
     ];
 
@@ -121,7 +119,7 @@ class FileUpload extends FormWidgetBase
             'thumbOptions',
             'useCaption',
             'deferredBinding',
-            'externalToolbarAppState'
+            'externalToolbarBus'
         ]);
 
         // @deprecated API
@@ -178,7 +176,7 @@ class FileUpload extends FormWidgetBase
         $this->vars['maxFiles'] = $this->maxFiles;
         $this->vars['cssDimensions'] = $this->getCssDimensions();
         $this->vars['useCaption'] = $this->useCaption;
-        $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
+        $this->vars['externalToolbarBus'] = $this->externalToolbarBus;
     }
 
     /**
@@ -190,7 +188,7 @@ class FileUpload extends FormWidgetBase
         $record = false;
 
         if ($fileId = post('file_id')) {
-            $record = $this->getRelationModel()->find($fileId) ?: false;
+            $record = $this->getRelationObject()->find($fileId) ?: false;
         }
 
         return $record;
@@ -320,7 +318,7 @@ class FileUpload extends FormWidgetBase
         $types = $this->fileTypes;
 
         if ($types === false) {
-            $definitionCode = starts_with($this->getDisplayMode(), 'image')
+            $definitionCode = str_starts_with($this->getDisplayMode(), 'image')
                 ? 'image_extensions'
                 : 'default_extensions';
 
@@ -363,8 +361,7 @@ class FileUpload extends FormWidgetBase
      */
     public function onRemoveAttachment()
     {
-        $fileModel = $this->getRelationModel();
-        if (($fileId = post('file_id')) && ($file = $fileModel::find($fileId))) {
+        if (($fileId = post('file_id')) && ($file = $this->getRelationObject()->find($fileId))) {
             $this->getRelationObject()->remove($file, $this->getSessionKey());
         }
     }
@@ -379,8 +376,13 @@ class FileUpload extends FormWidgetBase
             $ids = array_keys($sortData);
             $orders = array_values($sortData);
 
-            $fileModel = $this->getRelationModel();
-            $fileModel->setSortableOrder($ids, $orders);
+            // Validate IDs against existing ones
+            $relationIds = $this->getRelationObject()->pluck('id')->all();
+            $ids = array_intersect($ids, $relationIds);
+
+            if ($ids) {
+                $this->getRelationModel()->setSortableOrder($ids, $orders);
+            }
         }
     }
 

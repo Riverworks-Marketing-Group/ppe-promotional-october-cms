@@ -5,13 +5,15 @@ use App;
 use Str;
 use File;
 use Log;
+use Site;
 use Config;
 use Schema;
 use System;
 use Manifest;
-use October\Rain\Composer\Manager as ComposerManager;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
+use System\Models\PluginSiteGroup;
+use October\Rain\Composer\ComposerManager;
+use DirectoryIterator;
+use UnexpectedValueException;
 use SystemException;
 use Throwable;
 
@@ -60,9 +62,14 @@ class PluginManager
     protected $metaFile;
 
     /**
-     * @var array disabledPlugins collection of disabled plugins
+     * @var array disabledPlugins collection of disabled plugins for the active context.
      */
     protected $disabledPlugins = [];
+
+    /**
+     * @var array disabledCache stores the raw structured cache data for cross-site lookups.
+     */
+    protected $disabledCache = [];
 
     /**
      * @var array registrationMethodCache cache of registration method results.
@@ -79,7 +86,7 @@ class PluginManager
         $this->loadDisabled();
         $this->loadPlugins();
 
-        if ($this->app->runningInBackend()) {
+        if ($this->app->runningInBackend() || $this->app->runningInOctane()) {
             $this->loadDependencies();
         }
     }
@@ -308,7 +315,9 @@ class PluginManager
             return;
         }
 
-        $plugin->boot();
+        if (method_exists($plugin, 'boot')) {
+            $this->app->call([$plugin, 'boot']);
+        }
     }
 
     /**
@@ -440,7 +449,7 @@ class PluginManager
     public function getPluginNamespace($id): ?string
     {
         if ($classObj = $this->findByIdentifier($id)) {
-            return dirname(get_class($classObj));
+            return implode('\\', explode('\\', get_class($classObj), -1));
         }
 
         return null;
@@ -500,25 +509,55 @@ class PluginManager
         $plugins = [];
 
         $dirPath = plugins_path();
-        if (!is_dir($dirPath)) {
+        if (!is_dir($dirPath) || !is_readable($dirPath)) {
             return $plugins;
         }
 
-        $it = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dirPath, RecursiveDirectoryIterator::FOLLOW_SYMLINKS)
-        );
-        $it->setMaxDepth(2);
-        $it->rewind();
+        // Iterate vendors directly to avoid recursion exceptions on unreadable children
+        try {
+            $vendorIterator = new DirectoryIterator($dirPath);
+        }
+        catch (UnexpectedValueException $e) {
+            return $plugins;
+        }
 
-        while ($it->valid()) {
-            if (($it->getDepth() > 1) && $it->isFile() && (strtolower($it->getFilename()) === "plugin.php")) {
-                $filePath = dirname($it->getPathname());
-                $pluginName = basename($filePath);
-                $vendorName = basename(dirname($filePath));
-                $plugins[$vendorName][$pluginName] = "$vendorName/$pluginName";
+        foreach ($vendorIterator as $vendor) {
+            if ($vendor->isDot()) {
+                continue;
             }
 
-            $it->next();
+            if (!$vendor->isDir() || !is_readable($vendor->getPathname())) {
+                continue;
+            }
+
+            $vendorName = $vendor->getFilename();
+            $vendorPath = $vendor->getPathname();
+
+            // Iterate plugins under this vendor, skip unreadable vendor directories
+            try {
+                $pluginIterator = new DirectoryIterator($vendorPath);
+            }
+            catch (UnexpectedValueException $e) {
+                continue;
+            }
+
+            foreach ($pluginIterator as $plugin) {
+                if ($plugin->isDot()) {
+                    continue;
+                }
+
+                if (!$plugin->isDir() || !is_readable($plugin->getPathname())) {
+                    continue;
+                }
+
+                $pluginName = $plugin->getFilename();
+                $pluginPath = $plugin->getPathname();
+
+                // Only include valid plugin directories that contain Plugin.php
+                if (is_file($pluginPath . DIRECTORY_SEPARATOR . 'Plugin.php')) {
+                    $plugins[$vendorName][$pluginName] = $vendorName . '/' . $pluginName;
+                }
+            }
         }
 
         return $plugins;
@@ -568,8 +607,10 @@ class PluginManager
      */
     public function getRegistrationMethodValues($methodName)
     {
-        if (isset($this->registrationMethodCache[$methodName])) {
-            return $this->registrationMethodCache[$methodName];
+        $cacheKey = $this->getRegistrationCacheKey($methodName);
+
+        if (isset($this->registrationMethodCache[$cacheKey])) {
+            return $this->registrationMethodCache[$cacheKey];
         }
 
         $results = [];
@@ -597,7 +638,26 @@ class PluginManager
             }
         }
 
-        return $this->registrationMethodCache[$methodName] = $results;
+        return $this->registrationMethodCache[$cacheKey] = $results;
+    }
+
+    /**
+     * getRegistrationCacheKey returns a cache key for the given method name,
+     * scoped by the active site or site group context.
+     */
+    protected function getRegistrationCacheKey(string $methodName): string
+    {
+        if (Site::hasFeature('system_plugin_sites')) {
+            $siteId = Site::getSiteIdFromContext();
+            return $siteId ? $methodName . '.s' . $siteId : $methodName;
+        }
+
+        if (Site::hasFeature('system_plugin_site_groups')) {
+            $siteGroupId = Site::getSiteGroupIdFromContext();
+            return $siteGroupId ? $methodName . '.g' . $siteGroupId : $methodName;
+        }
+
+        return $methodName;
     }
 
     //
@@ -626,8 +686,9 @@ class PluginManager
      */
     public function reloadDisabledCache()
     {
-        $this->clearDisabledCache();
         $this->disabledPlugins = [];
+        $this->disabledCache = [];
+        $this->registrationMethodCache = [];
 
         $this->loadDisabled();
         $this->loadPlugins();
@@ -640,6 +701,8 @@ class PluginManager
     public function clearDisabledCache()
     {
         File::delete($this->metaFile);
+
+        $this->reloadDisabledCache();
     }
 
     /**
@@ -654,13 +717,40 @@ class PluginManager
         }
 
         if (file_exists($path)) {
-            $disabled = (array) (File::getRequire($path) ?: []);
-            $this->disabledPlugins = array_merge($this->disabledPlugins, $disabled);
+            try {
+                $data = (array) (File::getRequire($path) ?: []);
+                $this->loadDisabledFromCache($data);
+            }
+            catch (Throwable $ex) {
+                $this->populateDisabledPluginsFromDb();
+            }
         }
         else {
             $this->populateDisabledPluginsFromDb();
             $this->writeDisabled();
         }
+    }
+
+    /**
+     * loadDisabledFromCache loads the disabled plugins from the cached data,
+     * resolving the active site/group context into the flat disabledPlugins array.
+     */
+    protected function loadDisabledFromCache(array $data)
+    {
+        if (!isset($data['global'])) {
+            // @deprecated legacy format - flat array, regenerate cache on next clear
+            $this->disabledPlugins = array_merge($this->disabledPlugins, $data);
+            return;
+        }
+
+        $this->disabledCache = $data;
+
+        $this->disabledPlugins = array_merge(
+            $this->disabledPlugins,
+            (array) $data['global']
+        );
+
+        $this->mergeActiveSiteContext($data);
     }
 
     /**
@@ -680,14 +770,112 @@ class PluginManager
     }
 
     /**
-     * writeDisabled writes the disabled plugins to a meta file.
+     * isDisabledForSiteDefinition checks if a plugin is disabled for a given
+     * site definition, considering the active feature flags and cached data.
+     */
+    public function isDisabledForSiteDefinition($id, $site): bool
+    {
+        $code = $this->getIdentifier($id);
+
+        if (isset($this->disabledCache['global'][$code])) {
+            return true;
+        }
+
+        if (
+            Site::hasFeature('system_plugin_sites') &&
+            isset($this->disabledCache['sites'][$site->id])
+        ) {
+            return in_array($code, (array) $this->disabledCache['sites'][$site->id]);
+        }
+
+        if (
+            Site::hasFeature('system_plugin_site_groups') &&
+            $site->group_id &&
+            isset($this->disabledCache['groups'][$site->group_id])
+        ) {
+            return in_array($code, (array) $this->disabledCache['groups'][$site->group_id]);
+        }
+
+        return false;
+    }
+
+    /**
+     * writeDisabled writes the disabled plugins to a meta file, always using
+     * the structured format with global, sites, and groups keys.
      */
     protected function writeDisabled()
     {
-        File::put(
-            $this->metaFile,
-            '<?php return '.var_export($this->disabledPlugins, true).';'
-        );
+        // Build global from database to avoid persisting site-context entries
+        $global = [];
+        if ($this->app->hasDatabase() && Schema::hasTable('system_plugin_versions')) {
+            $disabled = Db::table('system_plugin_versions')
+                ->where('is_disabled', 1)
+                ->pluck('is_disabled', 'code')
+                ->all();
+
+            foreach ($disabled as $code => $val) {
+                $global[$code] = true;
+            }
+        }
+
+        $data = [
+            'global' => $global,
+            'sites' => [],
+            'groups' => [],
+        ];
+
+        if (
+            (Site::hasFeature('system_plugin_sites') || Site::hasFeature('system_plugin_site_groups')) &&
+            $this->app->hasDatabase() &&
+            Schema::hasTable('system_plugin_site_groups')
+        ) {
+            $rows = Db::table('system_plugin_site_groups')
+                ->where('is_enabled', 0)
+                ->get(['plugin_code', 'site_id', 'site_group_id']);
+
+            foreach ($rows as $row) {
+                if ($row->site_id) {
+                    $data['sites'][$row->site_id][] = $row->plugin_code;
+                }
+                elseif ($row->site_group_id) {
+                    $data['groups'][$row->site_group_id][] = $row->plugin_code;
+                }
+            }
+        }
+
+        try {
+            File::put(
+                $this->metaFile,
+                '<?php return '.var_export($data, true).';'
+            );
+        }
+        catch (Throwable $ex) {
+            // Cache write failure is non-fatal, will rebuild next request
+        }
+    }
+
+    /**
+     * mergeActiveSiteContext merges the per-site or per-group disabled plugins
+     * for the active context into the flat disabledPlugins array.
+     */
+    protected function mergeActiveSiteContext(array $data)
+    {
+        if (Site::hasFeature('system_plugin_sites')) {
+            $siteId = Site::getSiteIdFromContext();
+            if ($siteId && isset($data['sites'][$siteId])) {
+                foreach ((array) $data['sites'][$siteId] as $code) {
+                    $this->disabledPlugins[$code] = true;
+                }
+            }
+        }
+        elseif (Site::hasFeature('system_plugin_site_groups')) {
+            $groupId = Site::getSiteGroupIdFromContext();
+            if ($groupId && isset($data['groups'][$groupId])) {
+                foreach ((array) $data['groups'][$groupId] as $code) {
+                    $this->disabledPlugins[$code] = true;
+                }
+            }
+        }
     }
 
     /**
@@ -915,12 +1103,19 @@ class PluginManager
      */
     public function deletePlugin($id)
     {
+        $code = $this->getIdentifier($id);
+
         // Rollback plugin
         UpdateManager::instance()->rollbackPlugin($id);
 
         // Delete from file system
         if ($pluginPath = self::instance()->getPluginPath($id)) {
             File::deleteDirectory($pluginPath);
+        }
+
+        // Clean up per-site/group overrides
+        if (Schema::hasTable('system_plugin_site_groups')) {
+            PluginSiteGroup::where('plugin_code', $code)->delete();
         }
     }
 

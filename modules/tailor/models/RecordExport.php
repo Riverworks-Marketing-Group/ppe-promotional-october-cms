@@ -12,7 +12,7 @@ use October\Contracts\Element\FormElement;
  */
 class RecordExport extends ExportModel
 {
-    use \Tailor\Models\RecordImport\HasGeneralBlueprint;
+    use \Tailor\Traits\BlueprintModel;
 
     /**
      * defineListColumns
@@ -78,6 +78,9 @@ class RecordExport extends ExportModel
             $relationModel = $model->makeRelation($attr);
             if ($relationModel instanceof RepeaterItem) {
                 $value = $this->encodeRepeaterItems($model, $attr);
+            }
+            elseif ($relationModel instanceof \System\Models\File) {
+                $value = $this->encodeFileRelation($model, $attr);
             }
             else {
                 $value = $model->getRelationSimpleValue($attr);

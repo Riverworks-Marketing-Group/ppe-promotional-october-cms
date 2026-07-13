@@ -7,9 +7,10 @@ use Yaml;
 use Lang;
 use Cms\Helpers\File as FileHelper;
 use October\Rain\Extension\Extendable;
+use DirectoryIterator;
 use ApplicationException;
 use ValidationException;
-use DirectoryIterator;
+use SystemException;
 use Exception;
 
 /**
@@ -63,7 +64,7 @@ class Blueprint extends Extendable
     public $exists = false;
 
     /**
-     * @var static defaultDatasource is used by unit tests.
+     * @var string defaultDatasource is used by unit tests.
      */
     protected static $defaultDatasource;
 
@@ -127,12 +128,15 @@ class Blueprint extends Extendable
     }
 
     /**
-     * listInProject lists all blueprints in a project (app and plugins)
+     * listInProject lists all blueprints in a project, loaded in priority order:
+     * app, plugins, active theme, then other themes.
      */
     public static function listInProject(array $options = []): BlueprintCollection
     {
+        // 1. App blueprints (highest priority)
         $results = (new static)->get($options);
 
+        // 2. Plugin blueprints
         $plugins = array_pull($options, 'plugins', self::getDefaultPlugins());
 
         foreach ($plugins as $path) {
@@ -142,6 +146,17 @@ class Blueprint extends Extendable
             );
         }
 
+        // 3. Active theme blueprints
+        $activeTheme = array_pull($options, 'activeTheme', self::getDefaultActiveTheme());
+
+        foreach ($activeTheme as $dirName => $path) {
+            $results = array_merge(
+                static::inDatasource($path, $dirName)->get($options),
+                $results,
+            );
+        }
+
+        // 4. Other theme blueprints (lowest priority)
         $themes = array_pull($options, 'themes', self::getDefaultThemes());
 
         foreach ($themes as $dirName => $path) {
@@ -163,7 +178,7 @@ class Blueprint extends Extendable
 
         $instance->exists = true;
 
-        $instance = $instance->promoteToTypeClass();
+        $instance = static::blessBlueprint($instance);
 
         return $instance;
     }
@@ -342,14 +357,14 @@ class Blueprint extends Extendable
         }
 
         // Slugify handle for URLs
-        $this->attributes['handleSlug'] = snake_case(str_replace('\\', ' ', $this->handle));
+        $this->attributes['handleSlug'] = kebab_case(str_replace('\\', ' ', $this->handle));
 
         // Theme for filtering
         if ($this->datasourceTheme) {
             $this->attributes['_theme'] = $this->datasourceTheme;
         }
 
-        return $this->promoteToTypeClass();
+        return static::blessBlueprint($this);
     }
 
     /**
@@ -374,12 +389,14 @@ class Blueprint extends Extendable
     }
 
     /**
-     * promoteToTypeClass
+     * blessBlueprint promotes a blueprint class to its specific type, for example,
+     * a global blueprint resolves to the GlobalBlueprint class object, and relevant
+     * attributes are transferred to the new object.
      */
-    public function promoteToTypeClass()
+    public static function blessBlueprint($blueprint)
     {
         $className = null;
-        switch ($this->type) {
+        switch ($blueprint->type) {
             case 'entry':
                 $className = Blueprint\EntryBlueprint::class;
                 break;
@@ -401,19 +418,19 @@ class Blueprint extends Extendable
         }
 
         if ($className === null) {
-            return $this;
+            return $blueprint;
         }
 
-        $newObj = $this->datasource
-            ? $className::inDatasource($this->datasource, $this->datasourceTheme)
+        $newObj = $blueprint->datasource
+            ? $className::inDatasource($blueprint->datasource, $blueprint->datasourceTheme)
             : new $className;
 
-        $newObj->fileName = $this->fileName;
-        $newObj->originalFileName = $this->originalFileName;
-        $newObj->mtime = $this->mtime;
-        $newObj->content = $this->content;
-        $newObj->attributes = $this->attributes;
-        $newObj->exists = $this->exists;
+        $newObj->fileName = $blueprint->fileName;
+        $newObj->originalFileName = $blueprint->originalFileName;
+        $newObj->mtime = $blueprint->mtime;
+        $newObj->content = $blueprint->content;
+        $newObj->attributes = $blueprint->attributes;
+        $newObj->exists = $blueprint->exists;
 
         return $newObj;
     }
@@ -421,7 +438,7 @@ class Blueprint extends Extendable
     /**
      * save the object to the disk
      */
-    public function save(array $options = null)
+    public function save(?array $options = null)
     {
         $fileName = $this->fileName;
         $fullPath = $this->getFilePath();
@@ -526,7 +543,7 @@ class Blueprint extends Extendable
      * validateFileName, extension and path.
      * @param string $fileName
      */
-    protected function validateFileName(string $fileName = null): void
+    protected function validateFileName(?string $fileName = null): void
     {
         if ($fileName === null) {
             $fileName = $this->fileName;
@@ -585,7 +602,7 @@ class Blueprint extends Extendable
     /**
      * getMessage looks up a custom message from the blueprint
      */
-    public function getMessage(string $name, string $default = null, array $vars = []): string
+    public function getMessage(string $name, ?string $default = null, array $vars = []): string
     {
         $foundKey = $this->customMessages[$name] ?? null;
 
@@ -633,6 +650,14 @@ class Blueprint extends Extendable
     }
 
     /**
+     * getModelClassName
+     */
+    public function getModelClassName()
+    {
+        throw new SystemException('Blueprint does not specify a model class to use');
+    }
+
+    /**
      * getPermissionCodeName
      */
     public function getPermissionCodeName($name = null): string
@@ -664,6 +689,25 @@ class Blueprint extends Extendable
     }
 
     /**
+     * newModelInstance returns a new instance of the model associated with this blueprint
+     */
+    public function newModelInstance()
+    {
+        $modelClass = $this->getModelClassName();
+        $customModelClass = $this->modelClass;
+
+        if (!$customModelClass) {
+            return new $modelClass;
+        }
+
+        if (!is_a($customModelClass, $modelClass, true)) {
+            throw new SystemException("Blueprint Model class [{$customModelClass}] must extend the [{$modelClass}] base class");
+        }
+
+        return new $customModelClass;
+    }
+
+    /**
      * newCollection instance
      */
     public function newCollection(array $templates = []): BlueprintCollection
@@ -688,7 +732,7 @@ class Blueprint extends Extendable
     /**
      * getFilePath returns the absolute file path of an template
      */
-    public function getFilePath(string $fileName = null): string
+    public function getFilePath(?string $fileName = null): string
     {
         if ($fileName === null) {
             $fileName = $this->fileName;

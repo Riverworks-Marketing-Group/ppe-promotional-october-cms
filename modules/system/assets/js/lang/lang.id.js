@@ -9,13 +9,283 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['id'] = $.extend(
+window.oc.langMessages['id'] = Object.assign(
     window.oc.langMessages['id'] || {},
-    {"markdowneditor":{"formatting":"Formatting","quote":"Quote","code":"Code","header1":"Header 1","header2":"Header 2","header3":"Header 3","header4":"Header 4","header5":"Header 5","header6":"Header 6","bold":"Bold","italic":"Italic","unorderedlist":"Unordered List","orderedlist":"Ordered List","snippet":"Snippet","video":"Video","image":"Image","link":"Link","horizontalrule":"Insert Horizontal Rule","fullscreen":"Full Screen","preview":"Preview","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Insert Media Link","insert_image":"Insert Media Image","insert_video":"Insert Media Video","insert_audio":"Insert Media Audio","invalid_file_empty_insert":"Please select file to insert a links to.","invalid_file_single_insert":"Please select a single file.","invalid_image_empty_insert":"Please select image(s) to insert.","invalid_video_empty_insert":"Please select a video file to insert.","invalid_audio_empty_insert":"Please select an audio file to insert."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Cancel","widget_remove_confirm":"Remove this widget?"},"datepicker":{"previousMonth":"Previous Month","nextMonth":"Next Month","months":["January","February","March","April","May","June","July","August","September","October","November","December"],"weekdays":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"weekdaysShort":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"all"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","date_placeholder":"Date","after_placeholder":"After","before_placeholder":"Before"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Show the stacktrace","hide_stacktrace":"Hide the stacktrace","tabs":{"formatted":"Formatted","raw":"Raw"},"editor":{"title":"Source Code Editor","description":"Your operating system should be configured to listen to one of these URL schemes.","openWith":"Open with","remember_choice":"Remember selected option for this session","open":"Open","cancel":"Cancel"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Formatting",
+        "quote": "Quote",
+        "code": "Code",
+        "header1": "Header 1",
+        "header2": "Header 2",
+        "header3": "Header 3",
+        "header4": "Header 4",
+        "header5": "Header 5",
+        "header6": "Header 6",
+        "bold": "Bold",
+        "italic": "Italic",
+        "unorderedlist": "Unordered List",
+        "orderedlist": "Ordered List",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Image",
+        "link": "Link",
+        "horizontalrule": "Insert Horizontal Rule",
+        "fullscreen": "Full Screen",
+        "preview": "Preview",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Insert Media Link",
+        "insert_image": "Insert Media Image",
+        "insert_video": "Insert Media Video",
+        "insert_audio": "Insert Media Audio",
+        "invalid_file_empty_insert": "Please select file to insert a links to.",
+        "invalid_file_single_insert": "Please select a single file.",
+        "invalid_image_empty_insert": "Please select image(s) to insert.",
+        "invalid_video_empty_insert": "Please select a video file to insert.",
+        "invalid_audio_empty_insert": "Please select an audio file to insert."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Cancel",
+        "widget_remove_confirm": "Remove this widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Previous Month",
+        "nextMonth": "Next Month",
+        "months": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "weekdays": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+        ],
+        "weekdaysShort": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "all"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "date_placeholder": "Date",
+            "after_placeholder": "After",
+            "before_placeholder": "Before"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Show the stacktrace",
+        "hide_stacktrace": "Hide the stacktrace",
+        "tabs": {
+            "formatted": "Formatted",
+            "raw": "Raw"
+        },
+        "editor": {
+            "title": "Source Code Editor",
+            "description": "Your operating system should be configured to listen to one of these URL schemes.",
+            "openWith": "Open with",
+            "remember_choice": "Remember selected option for this session",
+            "open": "Open",
+            "cancel": "Cancel",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[belum diatur]",
+    "1 day (today) if not set": "1 hari (hari ini) jika belum diatur",
+    "Apply": "Menerapkan",
+    "Ascending": "Naik",
+    "Attribute": "Atribut",
+    "Bar": "Batang",
+    "Cancel": "Batal",
+    "Chart": "Bagan",
+    "Chart type": "Jenis grafik",
+    "Color": "Warna",
+    "Compare Totals": "Bandingkan Total",
+    "Configure": "Konfigurasi",
+    "Custom": "Kebiasaan",
+    "Custom Range": "Rentang Kustom",
+    "Dashboard interval": "Interval dasbor",
+    "Data source": "Sumber data",
+    "Date interval": "Interval tanggal",
+    "Day": "Hari",
+    "Delete": "Menghapus",
+    "Delete Dashboard": "Hapus Dasbor",
+    "Delete row": "Hapus baris",
+    "Descending": "Menurun",
+    "Dimension": "Dimensi",
+    "Direction": "Arah",
+    "Disabled": "Dengan disabilitas",
+    "Display": "Menampilkan",
+    "Display [not set]": "Tampilan [belum diatur]",
+    "Display all records": "Tampilkan semua catatan",
+    "Display relative bars": "Tampilkan batang relatif",
+    "Display totals": "Tampilkan total",
+    "Edit Dashboard": "Edit Dasbor",
+    "Empty values": "Nilai kosong",
+    "Enter a positive number": "Masukkan angka positif",
+    "Enter a positive number or leave empty to display all records.": "Masukkan angka positif atau biarkan kosong untuk menampilkan semua data.",
+    "Equal to": "Sama dengan",
+    "Export Dashboard": "Ekspor Dasbor",
+    "Extra table fields": "Kolom tabel tambahan",
+    "Filters": "Filter",
+    "General": "Umum",
+    "Greater or equal to": "Lebih besar atau sama dengan",
+    "Greater than": "Lebih besar dari",
+    "Hide": "Bersembunyi",
+    "Horizontal": "Horisontal",
+    "Icon": "Ikon",
+    "Icon Status": "Status Ikon",
+    "Important": "Penting",
+    "Includes": "Termasuk",
+    "Indicator": "Indikator",
+    "Information": "Informasi",
+    "Last 30 days": "30 hari terakhir",
+    "Last 7 days": "7 hari terakhir",
+    "Last month": "Bulan lalu",
+    "Leave empty to disable pagination": "Biarkan kosong untuk menonaktifkan paginasi.",
+    "Leave empty to hide the title": "Biarkan kosong untuk menyembunyikan judul.",
+    "Less or equal to": "Kurang dari atau sama dengan",
+    "Less than": "Kurang dari",
+    "Limit": "Membatasi",
+    "Line": "Garis",
+    "Link Text": "Teks Tautan",
+    "Link URL": "Tautan URL",
+    "Make Default": "Jadikan Default",
+    "Manage Dashboards": "Kelola Dasbor",
+    "Metric": "Metrik",
+    "Metrics": "Metrik",
+    "Month": "Bulan",
+    "My Custom Widget": "Widget Kustom Saya",
+    "No Value": "Tidak Bernilai",
+    "Notice text": "Teks pemberitahuan",
+    "Number of days": "Jumlah hari",
+    "One of": "Salah satu",
+    "One value per line": "Satu nilai per baris",
+    "Operation": "Operasi",
+    "Order": "Memesan",
+    "Past hour": "Satu jam yang lalu",
+    "Past X days": "X hari terakhir",
+    "Please provide the widget title": "Mohon berikan judul widgetnya.",
+    "Please select a data source": "Silakan pilih sumber data.",
+    "Please select a dimension": "Silakan pilih dimensi",
+    "Please select an icon": "Silakan pilih ikon",
+    "Please select metric(s).": "Silakan pilih metrik.",
+    "Prev period": "Periode sebelumnya",
+    "Quarter": "Seperempat",
+    "Records per page": "Jumlah catatan per halaman",
+    "Refresh every minute": "Segarkan setiap menit",
+    "Rename Dashboard": "Ganti nama Dasbor",
+    "Reset Layout": "Atur Ulang Tata Letak",
+    "Reset layout back to default?": "Apakah tata letak perlu dikembalikan ke pengaturan default?",
+    "Same period last year": "Periode yang sama tahun lalu",
+    "Section": "Bagian",
+    "Section Title": "Judul Bagian",
+    "Select a dimension and metrics": "Pilih dimensi dan metrik",
+    "Select an attribute": "Pilih atribut",
+    "Select an operation": "Pilih operasi",
+    "Select sorting metric or dimension": "Pilih metrik atau dimensi pengurutan",
+    "Select the metric color": "Pilih warna metrik",
+    "Set the current layout as the default?": "Jadikan tata letak saat ini sebagai tata letak default?",
+    "Show Date Interval": "Tampilkan Interval Tanggal",
+    "Sort by": "Urutkan berdasarkan",
+    "Sorting": "Penyortiran",
+    "Sorting & Filtering": "Pengurutan & Pemfilteran",
+    "Stacked Bar": "Batang Bertumpuk",
+    "Starts with": "Dimulai dengan",
+    "Success": "Kesuksesan",
+    "Table": "Meja",
+    "Text Notice": "Pemberitahuan Teks",
+    "The dashboard layout has been reset to default.": "Tata letak dasbor telah diatur ulang ke pengaturan default.",
+    "The dashboard was successfully updated.": "Dasbor berhasil diperbarui.",
+    "The limit value must be at least 1": "Nilai batasnya harus minimal 1.",
+    "This dashboard is now the default layout.": "Dasbor ini sekarang menjadi tata letak default.",
+    "This is a text notice widget.": "Ini adalah widget pemberitahuan teks.",
+    "This month": "Bulan ini",
+    "This quarter": "Kuartal ini",
+    "This week": "Minggu ini",
+    "This year": "tahun ini",
+    "Title": "Judul",
+    "Today": "Hari ini",
+    "Value": "Nilai",
+    "Values": "Nilai-nilai",
+    "Vertical": "Vertikal",
+    "Warning": "Peringatan",
+    "Week": "Pekan",
+    "Year": "Tahun",
+    "Yesterday": "Kemarin"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Indonesian [id]
+//! author : Mohammad Satrio Utomo : https://github.com/tyok
+//! reference: http://id.wikisource.org/wiki/Pedoman_Umum_Ejaan_Bahasa_Indonesia_yang_Disempurnakan
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,23 +294,26 @@ window.oc.langMessages['id'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     var id = moment.defineLocale('id', {
-        months : 'Januari_Februari_Maret_April_Mei_Juni_Juli_Agustus_September_Oktober_November_Desember'.split('_'),
-        monthsShort : 'Jan_Feb_Mar_Apr_Mei_Jun_Jul_Agt_Sep_Okt_Nov_Des'.split('_'),
-        weekdays : 'Minggu_Senin_Selasa_Rabu_Kamis_Jumat_Sabtu'.split('_'),
-        weekdaysShort : 'Min_Sen_Sel_Rab_Kam_Jum_Sab'.split('_'),
-        weekdaysMin : 'Mg_Sn_Sl_Rb_Km_Jm_Sb'.split('_'),
-        longDateFormat : {
-            LT : 'HH.mm',
-            LTS : 'HH.mm.ss',
-            L : 'DD/MM/YYYY',
-            LL : 'D MMMM YYYY',
-            LLL : 'D MMMM YYYY [pukul] HH.mm',
-            LLLL : 'dddd, D MMMM YYYY [pukul] HH.mm'
+        months: 'Januari_Februari_Maret_April_Mei_Juni_Juli_Agustus_September_Oktober_November_Desember'.split(
+            '_'
+        ),
+        monthsShort: 'Jan_Feb_Mar_Apr_Mei_Jun_Jul_Agt_Sep_Okt_Nov_Des'.split('_'),
+        weekdays: 'Minggu_Senin_Selasa_Rabu_Kamis_Jumat_Sabtu'.split('_'),
+        weekdaysShort: 'Min_Sen_Sel_Rab_Kam_Jum_Sab'.split('_'),
+        weekdaysMin: 'Mg_Sn_Sl_Rb_Km_Jm_Sb'.split('_'),
+        longDateFormat: {
+            LT: 'HH.mm',
+            LTS: 'HH.mm.ss',
+            L: 'DD/MM/YYYY',
+            LL: 'D MMMM YYYY',
+            LLL: 'D MMMM YYYY [pukul] HH.mm',
+            LLLL: 'dddd, D MMMM YYYY [pukul] HH.mm',
         },
         meridiemParse: /pagi|siang|sore|malam/,
-        meridiemHour : function (hour, meridiem) {
+        meridiemHour: function (hour, meridiem) {
             if (hour === 12) {
                 hour = 0;
             }
@@ -52,7 +325,7 @@ window.oc.langMessages['id'] = $.extend(
                 return hour + 12;
             }
         },
-        meridiem : function (hours, minutes, isLower) {
+        meridiem: function (hours, minutes, isLower) {
             if (hours < 11) {
                 return 'pagi';
             } else if (hours < 15) {
@@ -63,34 +336,34 @@ window.oc.langMessages['id'] = $.extend(
                 return 'malam';
             }
         },
-        calendar : {
-            sameDay : '[Hari ini pukul] LT',
-            nextDay : '[Besok pukul] LT',
-            nextWeek : 'dddd [pukul] LT',
-            lastDay : '[Kemarin pukul] LT',
-            lastWeek : 'dddd [lalu pukul] LT',
-            sameElse : 'L'
+        calendar: {
+            sameDay: '[Hari ini pukul] LT',
+            nextDay: '[Besok pukul] LT',
+            nextWeek: 'dddd [pukul] LT',
+            lastDay: '[Kemarin pukul] LT',
+            lastWeek: 'dddd [lalu pukul] LT',
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'dalam %s',
-            past : '%s yang lalu',
-            s : 'beberapa detik',
-            ss : '%d detik',
-            m : 'semenit',
-            mm : '%d menit',
-            h : 'sejam',
-            hh : '%d jam',
-            d : 'sehari',
-            dd : '%d hari',
-            M : 'sebulan',
-            MM : '%d bulan',
-            y : 'setahun',
-            yy : '%d tahun'
+        relativeTime: {
+            future: 'dalam %s',
+            past: '%s yang lalu',
+            s: 'beberapa detik',
+            ss: '%d detik',
+            m: 'semenit',
+            mm: '%d menit',
+            h: 'sejam',
+            hh: '%d jam',
+            d: 'sehari',
+            dd: '%d hari',
+            M: 'sebulan',
+            MM: '%d bulan',
+            y: 'setahun',
+            yy: '%d tahun',
         },
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 7  // The week that contains Jan 1st is the first week of the year.
-        }
+        week: {
+            dow: 0, // Sunday is the first day of the week.
+            doy: 6, // The week that contains Jan 6th is the first week of the year.
+        },
     });
 
     return id;

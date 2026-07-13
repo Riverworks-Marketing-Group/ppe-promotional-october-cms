@@ -106,48 +106,65 @@ trait OctoberUtilCommands
         $this->comment('Compiling client-side language files...');
 
         $locales = array_keys($locales);
-        $stub = base_path() . '/modules/system/assets/js/lang/lang.stub';
+        $stub = base_path('modules/system/assets/js/lang/lang.stub');
+
+        $messages = [];
 
         foreach ($locales as $locale) {
             // Generate messages
-            $fallbackPath = base_path() . '/modules/system/lang/en/client.php';
-            $srcPath = base_path() . '/modules/system/lang/'.$locale.'/client.php';
+            foreach (System::listModules() as $module) {
+                $module = strtolower($module);
 
-            $messages = require $fallbackPath;
-            if (File::isFile($srcPath) && $fallbackPath != $srcPath) {
-                $messages = array_replace_recursive($messages, require $srcPath);
-            }
+                // Process code-based client translations (client.php)
+                $fallbackPath = base_path("modules/{$module}/lang/en/client.php");
+                $srcPath = base_path("modules/{$module}/lang/{$locale}/client.php");
+                if (file_exists($fallbackPath)) {
+                    $messages = array_replace_recursive($messages, require $fallbackPath);
+                    if (file_exists($srcPath) && $fallbackPath != $srcPath) {
+                        $messages = array_replace_recursive($messages, require $srcPath);
+                    }
+                }
 
-            // Load possible replacements from /lang
-            $overridePath = base_path() . '/lang/'.$locale.'/system/client.php';
-            if (File::isFile($overridePath)) {
-                $messages = array_replace_recursive($messages, require $overridePath);
+                // Process English-based client exports (client-export.php)
+                $exportPath = base_path("modules/{$module}/lang/en/client-export.php");
+                if (file_exists($exportPath)) {
+                    $exportStrings = require $exportPath;
+                    $jsonPath = base_path("modules/{$module}/lang/{$locale}.json");
+                    $jsonTranslations = [];
+                    if (file_exists($jsonPath)) {
+                        $jsonTranslations = json_decode(file_get_contents($jsonPath), true) ?: [];
+                    }
+
+                    foreach ($exportStrings as $englishString) {
+                        $messages[$englishString] = $jsonTranslations[$englishString] ?? $englishString;
+                    }
+                }
             }
 
             // Compile from stub and save file
-            $destPath = base_path() . '/modules/system/assets/js/lang/lang.'.$locale.'.js';
+            $destPath = base_path('modules/system/assets/js/lang/lang.'.$locale.'.js');
 
             $contents = str_replace(
                 ['{{locale}}', '{{messages}}'],
-                [$locale, json_encode($messages)],
+                [$locale, json_encode($messages, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT)],
                 File::get($stub)
             ).PHP_EOL;
 
             // Include the moment localization data
-            $momentPath = base_path() . '/modules/backend/assets/vendor/moment/locale/'.$locale.'.js';
-            if (File::exists($momentPath)) {
+            $momentPath = base_path('modules/system/assets/vendor/moment/locale/'.$locale.'.js');
+            if (file_exists($momentPath)) {
                 $contents .= PHP_EOL.File::get($momentPath).PHP_EOL;
             }
 
             // Include the select localization data
-            $selectPath = base_path() . '/modules/backend/assets/vendor/select2/js/i18n/'.$locale.'.js';
-            if (File::exists($selectPath)) {
+            $selectPath = base_path('modules/system/assets/vendor/select2/js/i18n/'.$locale.'.js');
+            if (file_exists($selectPath)) {
                 $contents .= PHP_EOL.File::get($selectPath).PHP_EOL;
             }
 
             // Include the froala localization data
-            $froalaPath = base_path() . '/modules/backend/assets/vendor/froala/languages/'.str_replace('-', '_', strtolower($locale)).'.js';
-            if (File::exists($froalaPath)) {
+            $froalaPath = base_path('modules/system/assets/vendor/froala/languages/'.str_replace('-', '_', strtolower($locale)).'.js');
+            if (file_exists($froalaPath)) {
                 $contents .= PHP_EOL.File::get($froalaPath).PHP_EOL;
             }
 
@@ -156,7 +173,7 @@ trait OctoberUtilCommands
             // Output notes
             $publicDest = File::localToPublic(realpath(dirname($destPath))) . '/' . basename($destPath);
 
-            $this->comment($locale.'/'.basename($srcPath));
+            $this->comment($locale.'/'.basename($destPath));
             $this->comment(sprintf(' -> %s', $publicDest));
         }
     }
@@ -186,9 +203,14 @@ trait OctoberUtilCommands
             return;
         }
 
+        $uploadsDisk = Config::get('filesystems.disks.uploads.driver', 'local');
+        if ($uploadsDisk !== 'local') {
+            $this->error('Purging uploads is only supported on the local disk');
+            return;
+        }
+
         $totalCount = 0;
-        $uploadsPath = Config::get('filesystems.disks.local.root', storage_path('app'));
-        $uploadsPath .= '/uploads';
+        $uploadsPath = Config::get('filesystems.disks.uploads.root', storage_path('app/uploads'));
 
         /*
          * Recursive function to scan the directory for files beginning

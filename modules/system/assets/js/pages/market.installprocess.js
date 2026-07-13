@@ -145,13 +145,13 @@
             var result = data;
 
             $loaderEl.hide();
-            $el.empty();
             $el.show();
 
-            if (!$.isArray(result.products)) {
+            if (!Array.isArray(result.products) || !result.products.length) {
                 return;
             }
 
+            $el.empty();
             self.renderBrowse(el, result.products);
         });
     }
@@ -170,7 +170,7 @@
         }).done(function(data) {
             var result = data.result;
 
-            if (!$.isArray(result.data)) {
+            if (!Array.isArray(result.data)) {
                 return;
             }
 
@@ -212,7 +212,7 @@
     InstallProcess.prototype.renderPartial = function($el, name, data, options) {
         var container = $el,
             template = $('[data-partial="' + name + '"]'),
-            contents = Mustache.to_html(template.html(), data);
+            contents = Mustache.render(template.html(), data);
 
         options = $.extend(true, {
             append: false

@@ -6,6 +6,7 @@
  * JavaScript API:
  * oc.alert()
  * oc.confirm()
+ * oc.confirmReload()
  *
  * Dependencies:
  * - Translations (october.lang.js)
@@ -18,12 +19,12 @@
     oc.alert = function(message, title) {
         var messageTitle = typeof title !== 'string' ?  $.oc.lang.get('alert.error') : title;
 
-        if (!$.oc.vueComponentHelpers || !$.oc.vueComponentHelpers.modalUtils) {
+        if (!oc.vueComponentHelpers || !oc.vueComponentHelpers.modalUtils) {
             alert(message);
             return;
         }
 
-        $.oc.vueComponentHelpers.modalUtils.showAlert(messageTitle, message, {
+        oc.vueComponentHelpers.modalUtils.showAlert(messageTitle, message, {
             buttonText: $.oc.lang.get('alert.dismiss')
         });
     };
@@ -41,7 +42,17 @@
             ? $.oc.lang.get('alert.confirm')
             : title;
 
-        return $.oc.vueComponentHelpers.modalUtils.showConfirm(messageTitle, message, {});
+        return oc.vueComponentHelpers.modalUtils.showConfirm(messageTitle, message, {});
+    }
+
+    oc.confirmReload = function(message) {
+        return oc.vueComponentHelpers.modalUtils.showConfirm(
+            $.oc.lang.get('alert.confirm'),
+            message,
+            { buttonText: $.oc.lang.get('alert.reload') }
+        ).then(function() {
+            location.reload();
+        });
     }
 
     // @deprecated
@@ -67,6 +78,19 @@ $(window).on('ajaxErrorMessage', function(event, message) {
     // Prevent the default alert() message
     event.preventDefault();
 })
+
+addEventListener('backend:token-mismatch', function(event) {
+    event.preventDefault();
+
+    if (window.jaxTokenMismatch) {
+        return;
+    }
+
+    window.jaxTokenMismatch = true;
+    oc.confirmReload(event.detail.message).then(null, function() {
+        window.jaxTokenMismatch = false;
+    });
+});
 
 $(window).on('ajaxConfirmMessage', function(event, message, promise) {
     if (!message) {

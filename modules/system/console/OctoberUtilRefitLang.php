@@ -44,7 +44,10 @@ trait OctoberUtilRefitLang
                 $destination = base_path("modules/{$module}/lang/{$lang}.json");
                 if (file_exists($destination)) {
                     $modules .= $module.' ';
-                    File::copy($source, $destination);
+                    $existingArr = json_decode(File::get($destination), true) ?: [];
+                    $crowdinArr = json_decode(File::get($source), true) ?: [];
+                    $mergedArr = array_merge($existingArr, $crowdinArr);
+                    File::put($destination, $this->refitLangJsonEncode($mergedArr));
                 }
             }
 
@@ -161,7 +164,7 @@ trait OctoberUtilRefitLang
     /**
      * refitLangKeyRewrite will add the php lang to the json lang
      */
-    protected function refitLangKeyRewrite(string $basePath, string $lang, string $key, string $fileName = null)
+    protected function refitLangKeyRewrite(string $basePath, string $lang, string $key, ?string $fileName = null)
     {
         if (!$fileName) {
             $fileName = 'lang.php';
@@ -223,7 +226,7 @@ trait OctoberUtilRefitLang
     /**
      * refitLangPhpDelete will delete the php lang key and rewrite the file
      */
-    protected function refitLangPhpDelete(string $basePath, string $lang, string $key, string $fileName = null)
+    protected function refitLangPhpDelete(string $basePath, string $lang, string $key, ?string $fileName = null)
     {
         if (!$fileName) {
             $fileName = 'lang.php';

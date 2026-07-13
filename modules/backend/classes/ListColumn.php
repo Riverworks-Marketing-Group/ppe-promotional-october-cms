@@ -21,7 +21,7 @@ use October\Rain\Element\Lists\ColumnDefinition;
  * @method ListColumn path(string $path) Specifies a path for partial-type fields.
  * @method ListColumn sortableDefault(string $sortableDefault) sortableDefault makes the field sorted by default, either as asc or desc.
  * @method ListColumn valueTrans(bool $valueTrans) valueTrans determines if display values (model attributes) should be translated
- * @method ListColumn tooltip(array|string $tooltip) tooltip title to display next to the column value, as an array can contain title, placement, icon.
+ * @method ListColumn tooltip(array|string $tooltip) tooltip to display next to the column header, as an array supports: title, placement, icon, isHtml
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -187,6 +187,12 @@ class ListColumn extends ColumnDefinition
             else {
                 if (is_array($result) && array_key_exists($key, $result)) {
                     $result = $result[$key];
+                }
+                elseif ($result instanceof Model) {
+                    $result = $result->getAttribute($key);
+                    if ($result === null) {
+                        return $default;
+                    }
                 }
                 elseif (!isset($result->{$key})) {
                     return $default;

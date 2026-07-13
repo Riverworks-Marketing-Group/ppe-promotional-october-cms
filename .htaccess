@@ -30,7 +30,26 @@ RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
     # RewriteRule (.*) https://%{SERVER_NAME}/$1 [L,R=301]
 
     ##
-    ## Black listed folders
+    ## Uncomment to redirect trailing slashes in URLs.
+    ##
+    # RewriteCond %{REQUEST_FILENAME} !-d
+    # RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    ##
+    ## Uncomment to redirect /index.php/path to /path
+    ##
+    # RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/index\.php\s
+    # RewriteRule ^index\.php$ / [R=301,L]
+    # RewriteRule ^index\.php/(.*)$ /$1 [L,R=301]
+
+    ##
+    ## Handle Authorization Header
+    ##
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    ##
+    ## Blocked folders
     ##
     RewriteRule ^bootstrap/.* index.php [L,NC]
     RewriteRule ^config/.* index.php [L,NC]
@@ -42,7 +61,7 @@ RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
     RewriteRule ^storage/app/uploads/protected/.* index.php [L,NC]
 
     ##
-    ## White listed folders
+    ## Allowed folders
     ##
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteCond %{REQUEST_FILENAME} !/.well-known/*

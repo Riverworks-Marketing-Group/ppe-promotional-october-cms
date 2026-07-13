@@ -31,7 +31,7 @@ class ModelTest extends PluginTestCase
         Post::create(['title' => 'Hi!', 'slug' => 'authenticity']);
     }
 
-    public function testAddDynamicPoperty()
+    public function testAddDynamicProperty()
     {
         $post = new Post;
 
@@ -41,7 +41,7 @@ class ModelTest extends PluginTestCase
         $this->assertArrayNotHasKey('myDynamicProperty', $post->attributes);
 
         // Should be a real property
-        $this->assertTrue(property_exists($post, 'myDynamicProperty'));
+        $this->assertTrue($post->propertyExists('myDynamicProperty'));
         $this->assertEquals('myDynamicPropertyValue', $post->myDynamicProperty);
     }
 }

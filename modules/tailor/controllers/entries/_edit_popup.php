@@ -1,9 +1,6 @@
 <?php
-    $model = $relationManageFormWidget->getModel();
-    if (!$relationManageId) {
-        $model->setDefaultContentGroup($model->exists ? post('EntryRecord[content_group]') : null);
-    }
-    $initialState = $this->makeInitialState($model);
+    $formModel = $relationManageFormWidget->getModel();
+    $initialState = $this->makeInitialState($formModel);
     $langState = $this->makeLangState();
 ?>
 <div
@@ -22,14 +19,14 @@
             <input type="hidden" name="_relation_field" value="<?= $relationField ?>" />
             <input type="hidden" name="_relation_extra_config" value="<?= e(json_encode($relationExtraConfig)) ?>" />
             <input type="hidden" name="_form_session_key" value="<?= $formSessionKey ?>" />
-            <input type="hidden" name="EntryRecord[content_group]" value="<?= e($formModel->content_group) ?>"/>
+            <input type="hidden" name="_content_group_value" value="<?= e($formModel->content_group) ?>"/>
 
             <div class="modal-header">
                 <div class="flex-grow-1">
                     <h4 class="modal-title"><?= e($relationManageTitle) ?></h4>
                 </div>
                 <div class="me-3">
-                    <?= $this->makePartial('edit_header_controls', ['initialState' => $initialState]) ?>
+                    <?= $this->makePartial('edit_header_controls', ['initialState' => $initialState, 'formModel' => $formModel]) ?>
                 </div>
                 <button type="button" class="btn-close" data-dismiss="popup"></button>
             </div>
@@ -76,14 +73,14 @@
             <input type="hidden" name="_relation_field" value="<?= $relationField ?>" />
             <input type="hidden" name="_relation_extra_config" value="<?= e(json_encode($relationExtraConfig)) ?>" />
             <input type="hidden" name="_form_session_key" value="<?= $formSessionKey ?>" />
-            <input type="hidden" name="EntryRecord[content_group]" value="<?= e($formModel->content_group) ?>"/>
+            <input type="hidden" name="_content_group_value" value="<?= e($formModel->content_group) ?>"/>
 
             <div class="modal-header">
                 <div class="flex-grow-1">
                     <h4 class="modal-title"><?= e($relationManageTitle) ?></h4>
                 </div>
                 <div class="me-3">
-                    <?= $this->makePartial('edit_header_controls', ['initialState' => $initialState]) ?>
+                    <?= $this->makePartial('edit_header_controls', ['initialState' => $initialState, 'formModel' => $formModel]) ?>
                 </div>
                 <button type="button" class="btn-close" data-dismiss="popup"></button>
             </div>

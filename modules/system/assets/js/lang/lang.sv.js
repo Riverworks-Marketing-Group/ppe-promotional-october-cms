@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['sv'] = $.extend(
+window.oc.langMessages['sv'] = Object.assign(
     window.oc.langMessages['sv'] || {},
-    {"markdowneditor":{"formatting":"Formatering","quote":"Citat","code":"Kod","header1":"Rubrik 1","header2":"Rubrik 2","header3":"Rubrik 3","header4":"Rubrik 4","header5":"Rubrik 5","header6":"Rubrik 6","bold":"Fet","italic":"Kursiv","unorderedlist":"Oordnad lista","orderedlist":"Ordnad lista","snippet":"Snippet","video":"Video","image":"Bild","link":"L\u00e4nk","horizontalrule":"Infoga horisontiell linje","fullscreen":"Fullsk\u00e4rm","preview":"F\u00f6rhandsgranska","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Infoga medial\u00e4nk","insert_image":"Infoga bild","insert_video":"Infoga video","insert_audio":"Infoga ljud","invalid_file_empty_insert":"V\u00e4nligen v\u00e4lj en fil att infoga till l\u00e4nken.","invalid_file_single_insert":"V\u00e4nligen v\u00e4lj en enskild fil.","invalid_image_empty_insert":"V\u00e4nligen v\u00e4lj bild(er) att infoga.","invalid_video_empty_insert":"V\u00e4nligen v\u00e4lj en video att infoga.","invalid_audio_empty_insert":"V\u00e4nligen v\u00e4lj en ljudfil att infoga."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Avbryt","widget_remove_confirm":"Remove this widget?"},"datepicker":{"previousMonth":"Previous Month","nextMonth":"Next Month","months":["January","February","March","April","May","June","July","August","September","October","November","December"],"weekdays":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"weekdaysShort":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"all"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","date_placeholder":"Date","after_placeholder":"After","before_placeholder":"Before"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Show the stacktrace","hide_stacktrace":"Hide the stacktrace","tabs":{"formatted":"Formatted","raw":"Raw"},"editor":{"title":"Source Code Editor","description":"Your operating system should be configured to listen to one of these URL schemes.","openWith":"Open with","remember_choice":"Remember selected option for this session","open":"Open","cancel":"Cancel"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Formatering",
+        "quote": "Citat",
+        "code": "Kod",
+        "header1": "Rubrik 1",
+        "header2": "Rubrik 2",
+        "header3": "Rubrik 3",
+        "header4": "Rubrik 4",
+        "header5": "Rubrik 5",
+        "header6": "Rubrik 6",
+        "bold": "Fet",
+        "italic": "Kursiv",
+        "unorderedlist": "Oordnad lista",
+        "orderedlist": "Ordnad lista",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Bild",
+        "link": "L\u00e4nk",
+        "horizontalrule": "Infoga horisontiell linje",
+        "fullscreen": "Fullsk\u00e4rm",
+        "preview": "F\u00f6rhandsgranska",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Infoga medial\u00e4nk",
+        "insert_image": "Infoga bild",
+        "insert_video": "Infoga video",
+        "insert_audio": "Infoga ljud",
+        "invalid_file_empty_insert": "V\u00e4nligen v\u00e4lj en fil att infoga till l\u00e4nken.",
+        "invalid_file_single_insert": "V\u00e4nligen v\u00e4lj en enskild fil.",
+        "invalid_image_empty_insert": "V\u00e4nligen v\u00e4lj bild(er) att infoga.",
+        "invalid_video_empty_insert": "V\u00e4nligen v\u00e4lj en video att infoga.",
+        "invalid_audio_empty_insert": "V\u00e4nligen v\u00e4lj en ljudfil att infoga."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Avbryt",
+        "widget_remove_confirm": "Remove this widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Previous Month",
+        "nextMonth": "Next Month",
+        "months": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "weekdays": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+        ],
+        "weekdaysShort": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "all"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "date_placeholder": "Date",
+            "after_placeholder": "After",
+            "before_placeholder": "Before"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Show the stacktrace",
+        "hide_stacktrace": "Hide the stacktrace",
+        "tabs": {
+            "formatted": "Formatted",
+            "raw": "Raw"
+        },
+        "editor": {
+            "title": "Source Code Editor",
+            "description": "Your operating system should be configured to listen to one of these URL schemes.",
+            "openWith": "Open with",
+            "remember_choice": "Remember selected option for this session",
+            "open": "Open",
+            "cancel": "Cancel",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[ej inst\u00e4lld]",
+    "1 day (today) if not set": "1 dag (idag) om inte angivet",
+    "Apply": "Till\u00e4mpas",
+    "Ascending": "Stigande",
+    "Attribute": "Attribut",
+    "Bar": "Bar",
+    "Cancel": "Avbryt",
+    "Chart": "Diagram",
+    "Chart type": "Diagramtyp",
+    "Color": "F\u00e4rg",
+    "Compare Totals": "J\u00e4mf\u00f6r summor",
+    "Configure": "Konfigurera",
+    "Custom": "Best\u00e4llnings",
+    "Custom Range": "Anpassat intervall",
+    "Dashboard interval": "Intervall f\u00f6r instrumentpanelen",
+    "Data source": "Datak\u00e4lla",
+    "Date interval": "Datumintervall",
+    "Day": "Dag",
+    "Delete": "Radera",
+    "Delete Dashboard": "Ta bort instrumentpanelen",
+    "Delete row": "Ta bort rad",
+    "Descending": "Fallande",
+    "Dimension": "Dimensionera",
+    "Direction": "Riktning",
+    "Disabled": "Funktionshindrad",
+    "Display": "Visa",
+    "Display [not set]": "Visa [ej inst\u00e4lld]",
+    "Display all records": "Visa alla poster",
+    "Display relative bars": "Visa relativa staplar",
+    "Display totals": "Visa totalsummor",
+    "Edit Dashboard": "Redigera instrumentpanel",
+    "Empty values": "Tomma v\u00e4rden",
+    "Enter a positive number": "Ange ett positivt tal",
+    "Enter a positive number or leave empty to display all records.": "Ange ett positivt tal eller l\u00e4mna tomt f\u00f6r att visa alla poster.",
+    "Equal to": "Lika med",
+    "Export Dashboard": "Exportera instrumentpanelen",
+    "Extra table fields": "Extra tabellf\u00e4lt",
+    "Filters": "Filter",
+    "General": "Allm\u00e4n",
+    "Greater or equal to": "St\u00f6rre \u00e4n eller lika med",
+    "Greater than": "St\u00f6rre \u00e4n",
+    "Hide": "D\u00f6lja",
+    "Horizontal": "Horisontell",
+    "Icon": "Ikon",
+    "Icon Status": "Ikonstatus",
+    "Important": "Viktig",
+    "Includes": "Inkluderar",
+    "Indicator": "Indikator",
+    "Information": "Information",
+    "Last 30 days": "Senaste 30 dagarna",
+    "Last 7 days": "Senaste 7 dagarna",
+    "Last month": "F\u00f6rra m\u00e5naden",
+    "Leave empty to disable pagination": "L\u00e4mna tomt f\u00f6r att inaktivera paginering",
+    "Leave empty to hide the title": "L\u00e4mna tomt f\u00f6r att d\u00f6lja titeln",
+    "Less or equal to": "Mindre eller lika med",
+    "Less than": "Mindre \u00e4n",
+    "Limit": "Begr\u00e4nsa",
+    "Line": "Linje",
+    "Link Text": "L\u00e4nktext",
+    "Link URL": "L\u00e4nk-URL",
+    "Make Default": "G\u00f6r till standard",
+    "Manage Dashboards": "Hantera instrumentpaneler",
+    "Metric": "Metrisk",
+    "Metrics": "Metrik",
+    "Month": "M\u00e5nad",
+    "My Custom Widget": "Min anpassade widget",
+    "No Value": "Inget v\u00e4rde",
+    "Notice text": "Meddelandetext",
+    "Number of days": "Antal dagar",
+    "One of": "En av",
+    "One value per line": "Ett v\u00e4rde per rad",
+    "Operation": "Drift",
+    "Order": "Best\u00e4lla",
+    "Past hour": "Senaste timmen",
+    "Past X days": "Senaste X dagar",
+    "Please provide the widget title": "Ange widgetens titel",
+    "Please select a data source": "V\u00e4lj en datak\u00e4lla",
+    "Please select a dimension": "V\u00e4nligen v\u00e4lj en dimension",
+    "Please select an icon": "V\u00e4lj en ikon",
+    "Please select metric(s).": "V\u00e4lj m\u00e4tv\u00e4rde/m\u00e5tt.",
+    "Prev period": "F\u00f6reg\u00e5ende period",
+    "Quarter": "Kvartal",
+    "Records per page": "Poster per sida",
+    "Refresh every minute": "Uppdatera varje minut",
+    "Rename Dashboard": "Byt namn p\u00e5 instrumentpanelen",
+    "Reset Layout": "\u00c5terst\u00e4ll layout",
+    "Reset layout back to default?": "\u00c5terst\u00e4lla layouten till standard?",
+    "Same period last year": "Samma period f\u00f6rra \u00e5ret",
+    "Section": "Avsnitt",
+    "Section Title": "Avsnittstitel",
+    "Select a dimension and metrics": "V\u00e4lj en dimension och m\u00e4tv\u00e4rden",
+    "Select an attribute": "V\u00e4lj ett attribut",
+    "Select an operation": "V\u00e4lj en operation",
+    "Select sorting metric or dimension": "V\u00e4lj sorteringsm\u00e5tt eller dimension",
+    "Select the metric color": "V\u00e4lj metrikf\u00e4rg",
+    "Set the current layout as the default?": "Ange den aktuella layouten som standard?",
+    "Show Date Interval": "Visa datumintervall",
+    "Sort by": "Sortera efter",
+    "Sorting": "Sortering",
+    "Sorting & Filtering": "Sortering och filtrering",
+    "Stacked Bar": "Staplad bar",
+    "Starts with": "B\u00f6rjar med",
+    "Success": "Framg\u00e5ng",
+    "Table": "Tabell",
+    "Text Notice": "Textmeddelande",
+    "The dashboard layout has been reset to default.": "Instrumentpanelens layout har \u00e5terst\u00e4llts till standard.",
+    "The dashboard was successfully updated.": "Instrumentpanelen har uppdaterats.",
+    "The limit value must be at least 1": "Gr\u00e4nsv\u00e4rdet m\u00e5ste vara minst 1",
+    "This dashboard is now the default layout.": "Den h\u00e4r instrumentpanelen \u00e4r nu standardlayouten.",
+    "This is a text notice widget.": "Detta \u00e4r en widget f\u00f6r textmeddelanden.",
+    "This month": "Denna m\u00e5nad",
+    "This quarter": "Detta kvartal",
+    "This week": "Denna vecka",
+    "This year": "I \u00e5r",
+    "Title": "Titel",
+    "Today": "I dag",
+    "Value": "V\u00e4rde",
+    "Values": "V\u00e4rden",
+    "Vertical": "Vertikal",
+    "Warning": "Varning",
+    "Week": "Vecka",
+    "Year": "\u00c5r",
+    "Yesterday": "I g\u00e5r"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Swedish [sv]
+//! author : Jens Alm : https://github.com/ulmus
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,60 +293,69 @@ window.oc.langMessages['sv'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     var sv = moment.defineLocale('sv', {
-        months : 'januari_februari_mars_april_maj_juni_juli_augusti_september_oktober_november_december'.split('_'),
-        monthsShort : 'jan_feb_mar_apr_maj_jun_jul_aug_sep_okt_nov_dec'.split('_'),
-        weekdays : 'söndag_måndag_tisdag_onsdag_torsdag_fredag_lördag'.split('_'),
-        weekdaysShort : 'sön_mån_tis_ons_tor_fre_lör'.split('_'),
-        weekdaysMin : 'sö_må_ti_on_to_fr_lö'.split('_'),
-        longDateFormat : {
-            LT : 'HH:mm',
-            LTS : 'HH:mm:ss',
-            L : 'YYYY-MM-DD',
-            LL : 'D MMMM YYYY',
-            LLL : 'D MMMM YYYY [kl.] HH:mm',
-            LLLL : 'dddd D MMMM YYYY [kl.] HH:mm',
-            lll : 'D MMM YYYY HH:mm',
-            llll : 'ddd D MMM YYYY HH:mm'
+        months: 'januari_februari_mars_april_maj_juni_juli_augusti_september_oktober_november_december'.split(
+            '_'
+        ),
+        monthsShort: 'jan_feb_mar_apr_maj_jun_jul_aug_sep_okt_nov_dec'.split('_'),
+        weekdays: 'söndag_måndag_tisdag_onsdag_torsdag_fredag_lördag'.split('_'),
+        weekdaysShort: 'sön_mån_tis_ons_tor_fre_lör'.split('_'),
+        weekdaysMin: 'sö_må_ti_on_to_fr_lö'.split('_'),
+        longDateFormat: {
+            LT: 'HH:mm',
+            LTS: 'HH:mm:ss',
+            L: 'YYYY-MM-DD',
+            LL: 'D MMMM YYYY',
+            LLL: 'D MMMM YYYY [kl.] HH:mm',
+            LLLL: 'dddd D MMMM YYYY [kl.] HH:mm',
+            lll: 'D MMM YYYY HH:mm',
+            llll: 'ddd D MMM YYYY HH:mm',
         },
-        calendar : {
+        calendar: {
             sameDay: '[Idag] LT',
             nextDay: '[Imorgon] LT',
             lastDay: '[Igår] LT',
             nextWeek: '[På] dddd LT',
             lastWeek: '[I] dddd[s] LT',
-            sameElse: 'L'
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'om %s',
-            past : 'för %s sedan',
-            s : 'några sekunder',
-            ss : '%d sekunder',
-            m : 'en minut',
-            mm : '%d minuter',
-            h : 'en timme',
-            hh : '%d timmar',
-            d : 'en dag',
-            dd : '%d dagar',
-            M : 'en månad',
-            MM : '%d månader',
-            y : 'ett år',
-            yy : '%d år'
+        relativeTime: {
+            future: 'om %s',
+            past: 'för %s sedan',
+            s: 'några sekunder',
+            ss: '%d sekunder',
+            m: 'en minut',
+            mm: '%d minuter',
+            h: 'en timme',
+            hh: '%d timmar',
+            d: 'en dag',
+            dd: '%d dagar',
+            M: 'en månad',
+            MM: '%d månader',
+            y: 'ett år',
+            yy: '%d år',
         },
-        dayOfMonthOrdinalParse: /\d{1,2}(e|a)/,
-        ordinal : function (number) {
+        dayOfMonthOrdinalParse: /\d{1,2}(\:e|\:a)/,
+        ordinal: function (number) {
             var b = number % 10,
-                output = (~~(number % 100 / 10) === 1) ? 'e' :
-                (b === 1) ? 'a' :
-                (b === 2) ? 'a' :
-                (b === 3) ? 'e' : 'e';
+                output =
+                    ~~((number % 100) / 10) === 1
+                        ? ':e'
+                        : b === 1
+                          ? ':a'
+                          : b === 2
+                            ? ':a'
+                            : b === 3
+                              ? ':e'
+                              : ':e';
             return number + output;
         },
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 4  // The week that contains Jan 4th is the first week of the year.
-        }
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 4, // The week that contains Jan 4th is the first week of the year.
+        },
     });
 
     return sv;

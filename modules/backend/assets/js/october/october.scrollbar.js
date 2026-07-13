@@ -7,420 +7,340 @@
  * Data attributes:
  * - data-control="scrollbar" - enables the scrollbar plugin
  *
- * JavaScript API:
+ * jQuery API:
  * $('#area').scrollbar()
- *
- * Dependencies:
- * - Mouse Wheel plugin (mousewheel.js)
  */
-+function ($) { "use strict";
-    var Base = $.oc.foundation.base,
-        BaseProto = Base.prototype
 
-    var Scrollbar = function (element, options) {
+'use strict';
 
-        var
-            $el = this.$el  = $(element),
-            el = $el.get(0),
-            self = this,
-            options = this.options = options || {},
-            sizeName = this.sizeName = options.vertical ? 'height' : 'width',
-            isNative = $('html').hasClass('mobile'),
-            isTouch = this.isTouch = Modernizr.touchevents,
-            isScrollable = this.isScrollable = false,
-            isLocked = this.isLocked = false,
-            eventElementName = options.vertical ? 'pageY' : 'pageX',
-            dragStart = 0,
-            startOffset = 0;
+oc.registerControl('scrollbar', class extends oc.ControlBase {
+    init() {
+        this.el = this.element;
+        this.options = Object.assign({
+            vertical: true,
+            scrollSpeed: 2,
+            animation: true
+        }, this.config);
 
-        $.oc.foundation.controlUtils.markDisposable(element);
+        this.isNative = document.documentElement.classList.contains('mobile');
+        this.isTouch = 'ontouchstart' in window;
+        this.isScrollable = false;
+        this.isLocked = false;
+        this.dragStart = 0;
+        this.startOffset = 0;
+        this.eventElementName = this.options.vertical ? 'pageY' : 'pageX';
 
-        Base.call(this);
+        // @deprecated backwards compatibility
+        $(this.el).data('oc.scrollbar', this);
 
-        this.$el.one('dispose-control', this.proxy(this.dispose));
-
-        /*
-         * Native (mobile) environments use overflow auto in CSS
-         */
-         if (isNative) {
+        // Use native scrolling on mobile
+        if (this.isNative) {
             return;
-         }
+        }
 
-        /*
-         * Create Scrollbar
-         */
-        this.$scrollbar = $('<div />').addClass('scrollbar-scrollbar');
-        this.$track = $('<div />').addClass('scrollbar-track').appendTo(this.$scrollbar);
-        this.$thumb = $('<div />').addClass('scrollbar-thumb').appendTo(this.$track);
+        this.createScrollbar();
+    }
 
-        $el
-            .addClass('drag-scrollbar')
-            .addClass(options.vertical ? 'vertical' : 'horizontal')
-            .prepend(this.$scrollbar);
+    connect() {
+        if (this.isNative) {
+            return;
+        }
 
-        /*
-         * Bind events
-         */
-         if (isTouch) {
-            this.$el.on('touchstart', function (event){
-                var touchEvent = event.originalEvent;
-                if (touchEvent.touches.length == 1) {
-                    startDrag(touchEvent.touches[0]);
-                    event.stopPropagation();
-                }
-            })
-         }
-         else {
-            this.$thumb.on('mousedown', function (event){
-                startDrag(event);
-            });
-            this.$track.on('mouseup', function (event){
-                moveDrag(event);
-            });
-         }
+        this.attachEventHandlers();
+        this.update();
 
-        $el.mousewheel(function (event){
-            var offset = self.options.vertical
-                ? ((event.deltaFactor * event.deltaY) * -1)
-                : (event.deltaFactor * event.deltaX);
+        // Dispatch a ready event
+        setTimeout(() => {
+            oc.Events.dispatch('scrollbar:ready', { target: this.el });
+        }, 1);
+    }
 
-            return !scrollWheel(offset * self.options.scrollSpeed);
-        })
+    disconnect() {
+        if (this.isNative) {
+            return;
+        }
 
-        $el.on('oc.scrollbar.gotoStart', function(event){
-            self.options.vertical
-                ? $el.scrollTop(0)
-                : $el.scrollLeft(0);
+        window.removeEventListener('resize', this.proxy(this.update));
+        this.el.removeEventListener('wheel', this.proxy(this.onScrollWheel));
+        this.el.removeEventListener('scrollbar:goto-start', this.proxy(this.gotoStart));
+    }
 
-            self.update();
+    createScrollbar() {
+        this.scrollbar = document.createElement('div');
+        this.scrollbar.className = 'scrollbar-scrollbar';
+
+        this.track = document.createElement('div');
+        this.track.className = 'scrollbar-track';
+
+        this.thumb = document.createElement('div');
+        this.thumb.className = 'scrollbar-thumb';
+
+        this.track.appendChild(this.thumb);
+        this.scrollbar.appendChild(this.track);
+        this.el.classList.add('drag-scrollbar', this.options.vertical ? 'vertical' : 'horizontal');
+        this.el.prepend(this.scrollbar);
+    }
+
+    attachEventHandlers() {
+        if (this.isTouch) {
+            this.el.addEventListener('touchstart', this.proxy(this.onTouchStart));
+        } else {
+            this.thumb.addEventListener('mousedown', this.proxy(this.onDragStart));
+            this.track.addEventListener('mouseup', this.proxy(this.onTrackClick));
+        }
+
+        this.el.addEventListener('wheel', this.proxy(this.onScrollWheel));
+        this.el.addEventListener('scrollbar:goto-start', this.proxy(this.gotoStart));
+        window.addEventListener('resize', this.proxy(this.update));
+    }
+
+    onTouchStart(event) {
+        if (event.touches.length === 1) {
+            this.startDrag(event.touches[0]);
             event.stopPropagation();
-        })
-
-        $(window).on('resize', $.proxy(this.update, this));
-        $(window).on('oc.updateUi', $.proxy(this.update, this));
-
-         /*
-          * Internal event, drag has started
-          */
-        function startDrag(event) {
-            $('body').addClass('drag-noselect');
-            $el.trigger('oc.scrollStart');
-
-            dragStart = event[eventElementName];
-            startOffset = self.options.vertical ? $el.scrollTop() : $el.scrollLeft();
-
-            if (isTouch) {
-                $(window).on('touchmove.scrollbar', function(event) {
-                    var touchEvent = event.originalEvent
-                    if (moveDrag(touchEvent.touches[0]))
-                        event.preventDefault();
-                });
-
-                $el.on('touchend.scrollbar', stopDrag);
-            }
-            else {
-                $(window).on('mousemove.scrollbar', function(event){
-                    moveDrag(event);
-                    return false;
-                })
-
-                $(window).on('mouseup.scrollbar', function(){
-                    stopDrag();
-                    return false;
-                })
-            }
         }
-
-        /*
-         * Internal event, drag is active
-         */
-        function moveDrag(event) {
-            self.isLocked = true;
-
-            var
-                offset,
-                dragTo = event[eventElementName];
-
-            // Touch devices use an inverse scrolling interface
-            // with a 1:1 ratio
-            if (self.isTouch) {
-                offset = dragStart - dragTo;
-            }
-            // Mouse devices use a natural scrolling interface
-            // with a track:canvas ratio
-            else {
-                var ratio = self.getCanvasSize() / self.getViewportSize();
-                offset = (dragTo - dragStart) * ratio;
-            }
-
-            self.options.vertical
-                ? $el.scrollTop(startOffset + offset)
-                : $el.scrollLeft(startOffset + offset);
-
-            self.setThumbPosition();
-
-            return self.options.vertical
-                ? el.scrollTop != startOffset
-                : el.scrollLeft != startOffset;
-        }
-
-        /*
-         * Internal event, drag has ended
-         */
-        function stopDrag() {
-            $('body').removeClass('drag-noselect');
-            $el.trigger('oc.scrollEnd');
-
-            $(window).off('.scrollbar');
-        }
-
-        /*
-         * Scroll wheel has moved by supplied offset
-         */
-
-        var isWebkit = $(document.documentElement).hasClass('webkit');
-
-        function scrollWheel(offset) {
-            startOffset = self.options.vertical ? el.scrollTop : el.scrollLeft;
-            $el.trigger('oc.scrollStart');
-
-            self.options.vertical
-                ? $el.scrollTop(startOffset + offset)
-                : $el.scrollLeft(startOffset + offset);
-
-            var scrolled = self.options.vertical
-                ? el.scrollTop != startOffset
-                : el.scrollLeft != startOffset;
-
-            self.setThumbPosition();
-            if (!isWebkit) {
-                if (self.endScrollTimeout !== undefined) {
-                    clearTimeout(self.endScrollTimeout);
-                    self.endScrollTimeout = undefined;
-                }
-
-                self.endScrollTimeout = setTimeout(function() {
-                    $el.trigger('oc.scrollEnd');
-                    self.endScrollTimeout = undefined;
-                }, 50);
-            }
-            else {
-                $el.trigger('oc.scrollEnd');
-            }
-
-            return scrolled;
-        }
-
-        /*
-         * Give the DOM a second, then set the track and thumb size
-         */
-        setTimeout(function() { self.update() }, 1);
     }
 
-    Scrollbar.prototype = Object.create(BaseProto);
-    Scrollbar.prototype.constructor = Scrollbar;
-
-    Scrollbar.prototype.dispose = function() {
-        this.unregisterHandlers();
-
-        BaseProto.dispose.call(this);
+    onDragStart(event) {
+        this.startDrag(event);
     }
 
-    Scrollbar.prototype.unregisterHandlers = function() {
-
+    onTrackClick(event) {
+        this.moveDrag(event);
     }
 
-    Scrollbar.DEFAULTS = {
-        vertical: true,
-        scrollSpeed: 2,
-        animation: true,
-        start: function() {},
-        drag: function() {},
-        stop: function() {}
-    }
-
-    Scrollbar.prototype.update = function() {
-        if (!this.$scrollbar) {
+    onScrollWheel(event) {
+        if (!this.isScrollable) {
             return;
         }
 
-        this.$scrollbar.hide();
+        let offset = this.options.vertical
+            ? (event.deltaY || 0)
+            : (event.deltaX || 0);
+
+        this.scrollWheel(offset * this.options.scrollSpeed);
+        event.preventDefault();
+    }
+
+    startDrag(event) {
+        document.body.classList.add('drag-noselect');
+        oc.Events.dispatch('scrollbar:scroll-start', { target: this.el });
+
+        this.dragStart = event[this.eventElementName];
+        this.startOffset = this.options.vertical ? this.el.scrollTop : this.el.scrollLeft;
+
+        if (this.isTouch) {
+            window.addEventListener('touchmove', this.proxy(this.moveDrag));
+            this.el.addEventListener('touchend', this.proxy(this.stopDrag));
+        } else {
+            window.addEventListener('mousemove', this.proxy(this.moveDrag));
+            window.addEventListener('mouseup', this.proxy(this.stopDrag));
+        }
+    }
+
+    moveDrag(event) {
+        this.isLocked = true;
+
+        let offset,
+            dragTo = event[this.eventElementName];
+
+        if (this.isTouch) {
+            offset = this.dragStart - dragTo;
+        } else {
+            let ratio = this.getCanvasSize() / this.getViewportSize();
+            offset = (dragTo - this.dragStart) * ratio;
+        }
+
+        if (this.options.vertical) {
+            this.el.scrollTop = this.startOffset + offset;
+        } else {
+            this.el.scrollLeft = this.startOffset + offset;
+        }
+
+        this.setThumbPosition();
+        return true;
+    }
+
+    stopDrag() {
+        document.body.classList.remove('drag-noselect');
+        oc.Events.dispatch('scrollbar:scroll-end', { target: this.el });
+
+        window.removeEventListener('mousemove', this.proxy(this.moveDrag));
+        window.removeEventListener('mouseup', this.proxy(this.stopDrag));
+    }
+
+    scrollWheel(offset) {
+        this.startOffset = this.options.vertical ? this.el.scrollTop : this.el.scrollLeft;
+        oc.Events.dispatch('scrollbar:scroll-start', { target: this.el });
+
+        if (this.options.vertical) {
+            this.el.scrollTop += offset;
+        } else {
+            this.el.scrollLeft += offset;
+        }
+
+        this.setThumbPosition();
+        oc.Events.dispatch('scrollbar:scroll-end', { target: this.el });
+
+        return true;
+    }
+
+    update() {
+        if (!this.scrollbar) {
+            return;
+        }
+
+        this.scrollbar.style.display = 'none';
         this.setThumbSize();
         this.setThumbPosition();
-        this.$scrollbar.show();
+        this.scrollbar.style.display = 'block';
     }
 
-    Scrollbar.prototype.setThumbSize = function() {
-        var properties = this.calculateProperties()
+    setThumbSize() {
+        let properties = this.calculateProperties();
 
-        this.isScrollable = !(properties.thumbSizeRatio >= 1);
-        this.$scrollbar.toggleClass('disabled', !this.isScrollable);
+        this.isScrollable = properties.thumbSizeRatio < 1;
+        this.scrollbar.classList.toggle('disabled', !this.isScrollable);
 
         if (this.options.vertical) {
-            this.$track.height(properties.canvasSize);
-            this.$thumb.height(properties.thumbSize);
-        }
-        else {
-            this.$track.width(properties.canvasSize);
-            this.$thumb.width(properties.thumbSize);
+            this.track.style.height = `${properties.canvasSize}px`;
+            this.thumb.style.height = `${properties.thumbSize}px`;
+        } else {
+            this.track.style.width = `${properties.canvasSize}px`;
+            this.thumb.style.width = `${properties.thumbSize}px`;
         }
     }
 
-    Scrollbar.prototype.setThumbPosition = function() {
-        var properties = this.calculateProperties();
+    setThumbPosition() {
+        let properties = this.calculateProperties();
 
         if (this.options.vertical) {
-            this.$thumb.css({top: properties.thumbPosition});
+            this.thumb.style.top = `${properties.thumbPosition}px`;
+        } else {
+            this.thumb.style.left = `${properties.thumbPosition}px`;
         }
-        else {
-            this.$thumb.css({left: properties.thumbPosition});
+    }
+
+    calculateProperties() {
+        let viewportSize = this.getViewportSize();
+        let canvasSize = this.getCanvasSize();
+        let scrollAmount = this.options.vertical ? this.el.scrollTop : this.el.scrollLeft;
+
+        let offset = 1;
+        let thumbSizeRatio = viewportSize / (canvasSize - offset);
+        let thumbSize = viewportSize * thumbSizeRatio;
+
+        let maxScroll = Math.max(0, canvasSize - viewportSize);
+        let thumbPositionRatio = maxScroll > 0 ? scrollAmount / maxScroll : 0;
+        let thumbPosition = ((viewportSize - thumbSize) * thumbPositionRatio) + scrollAmount;
+
+        let maxThumbPosition = Math.max(0, canvasSize - thumbSize);
+        thumbPosition = Math.max(0, Math.min(thumbPosition, maxThumbPosition));
+
+        return { viewportSize, canvasSize, scrollAmount, thumbSizeRatio, thumbSize, thumbPosition };
+    }
+
+    getViewportSize() {
+        return this.options.vertical ? this.el.clientHeight : this.el.clientWidth;
+    }
+
+    getCanvasSize() {
+        return this.options.vertical ? this.el.scrollHeight : this.el.scrollWidth;
+    }
+
+    gotoStart() {
+        if (this.options.vertical) {
+            this.el.scrollTop = 0;
+        } else {
+            this.el.scrollLeft = 0;
         }
+        this.update();
     }
 
-    Scrollbar.prototype.calculateProperties = function() {
-
-        var $el = this.$el,
-            properties = {};
-
-        properties.viewportSize = this.getViewportSize();
-        properties.canvasSize = this.getCanvasSize();
-        properties.scrollAmount = (this.options.vertical) ? $el.scrollTop() : $el.scrollLeft();
-
-        // Fudge factor for retina displays
-        var offset = 1;
-
-        properties.thumbSizeRatio = properties.viewportSize / (properties.canvasSize - offset);
-        properties.thumbSize = properties.viewportSize * properties.thumbSizeRatio;
-
-        properties.thumbPositionRatio = properties.scrollAmount / (properties.canvasSize - properties.viewportSize);
-        properties.thumbPosition = ((properties.viewportSize - properties.thumbSize) * properties.thumbPositionRatio) + properties.scrollAmount;
-
-        if (isNaN(properties.thumbPosition)) {
-            properties.thumbPosition = 0
+    gotoElement(element, callback) {
+        // @deprecated jQuery
+        if (element && element.jquery) {
+            element = element.get(0);
         }
 
-        return properties;
-    }
-
-    Scrollbar.prototype.getViewportSize = function() {
-        return (this.options.vertical)
-            ? this.$el.height()
-            : this.$el.width();
-    }
-
-    Scrollbar.prototype.getCanvasSize = function() {
-        return (this.options.vertical)
-            ? this.$el.get(0).scrollHeight
-            : this.$el.get(0).scrollWidth;
-    }
-
-    Scrollbar.prototype.gotoElement = function(element, callback) {
-        var $el = $(element);
-        if (!$el.length) {
+        const target = typeof element === 'string' ? document.querySelector(element) : element;
+        if (!target) {
             return;
         }
 
-        var self = this,
-            offset = 0,
-            animated = false,
-            params = {
+        const isVertical = this.options.vertical;
+        const scrollProp = isVertical ? 'scrollTop' : 'scrollLeft';
+        const offsetProp = isVertical ? 'offsetTop' : 'offsetLeft';
+        const sizeProp = isVertical ? 'offsetHeight' : 'offsetWidth';
+        const containerSizeProp = isVertical ? 'clientHeight' : 'clientWidth';
+        const containerScrollProp = isVertical ? 'scrollHeight' : 'scrollWidth';
+
+        let targetPosition = target[offsetProp];
+        let maxScroll = targetPosition;
+
+        // Ensure we do not scroll beyond container limits
+        maxScroll = Math.max(0, Math.min(maxScroll, this.el[containerScrollProp] - this.el[containerSizeProp]));
+
+        if (this.options.animation) {
+            this.smoothScrollTo(scrollProp, maxScroll, {
                 duration: 300,
-                queue: false,
-                complete: function(){
-                    if (callback !== undefined) {
+                complete: () => {
+                    this.setThumbPosition();
+                    if (callback) {
                         callback();
                     }
                 }
-            }
-
-        if (!this.options.vertical) {
-            offset = $el.get(0).offsetLeft - this.$el.scrollLeft();
-
-            if (offset < 0) {
-                this.$el.animate({'scrollLeft': $el.get(0).offsetLeft}, params);
-                animated = true;
-            }
-            else {
-                offset = $el.get(0).offsetLeft + $el.outerWidth() - (this.$el.scrollLeft() + this.$el.outerWidth());
-                if (offset > 0) {
-                    this.$el.animate({'scrollLeft': $el.get(0).offsetLeft + $el.outerWidth() - this.$el.outerWidth()}, params);
-                    animated = true;
-                }
-            }
-        }
-        else {
-            offset = $el.get(0).offsetTop - this.$el.scrollTop();
-
-            if (this.options.animation) {
-                if (offset < 0) {
-                    this.$el.animate({'scrollTop': $el.get(0).offsetTop}, params);
-                    animated = true;
-                }
-                else {
-                    offset = $el.get(0).offsetTop - (this.$el.scrollTop() + this.$el.outerHeight());
-                    if (offset > 0) {
-                        this.$el.animate({'scrollTop': $el.get(0).offsetTop + $el.outerHeight() - this.$el.outerHeight()}, params);
-                        animated = true;
-                    }
-                }
-            }
-            else {
-                if (offset < 0) {
-                    this.$el.scrollTop($el.get(0).offsetTop);
-                }
-                else {
-                    offset = $el.get(0).offsetTop - (this.$el.scrollTop() + this.$el.outerHeight())
-                    if (offset > 0) {
-                        this.$el.scrollTop($el.get(0).offsetTop + $el.outerHeight() - this.$el.outerHeight());
-                    }
-                }
+            });
+        } else {
+            this.el[scrollProp] = maxScroll;
+            this.setThumbPosition();
+            if (callback) {
+                callback();
             }
         }
 
-        if (!animated && callback !== undefined) {
-            callback();
-        }
-
-        return this
-    }
-
-    Scrollbar.prototype.dispose = function() {
-        this.$el = null;
-        this.$scrollbar = null;
-        this.$track = null;
-        this.$thumb = null;
-    }
-
-    // SCROLLBAR PLUGIN DEFINITION
-    // ============================
-
-    var old = $.fn.scrollbar
-
-    $.fn.scrollbar = function (option) {
-        return this.each(function () {
-            var $this = $(this);
-            var data  = $this.data('oc.scrollbar');
-            var options = $.extend({}, Scrollbar.DEFAULTS, $this.data(), typeof option == 'object' && option);
-
-            if (!data) $this.data('oc.scrollbar', (data = new Scrollbar(this, options)));
-            if (typeof option == 'string') data[option].call($this);
-        });
-    }
-
-    $.fn.scrollbar.Constructor = Scrollbar;
-
-    // SCROLLBAR NO CONFLICT
-    // =================
-
-    $.fn.scrollbar.noConflict = function () {
-        $.fn.scrollbar = old;
         return this;
     }
 
-    // SCROLLBAR DATA-API
-    // ===============
-    $(document).render(function(){
-        $('[data-control=scrollbar]').scrollbar();
-    });
+    // Helper function for smooth scrolling
+    smoothScrollTo(property, value, params) {
+        const start = this.el[property];
+        const change = value - start;
+        const startTime = performance.now();
+        const duration = params.duration || 300;
 
-}(window.jQuery);
+        const animateScroll = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            this.el[property] = start + change * progress;
+
+            if (elapsed < duration) {
+                requestAnimationFrame(animateScroll);
+            } else if (params.complete) {
+                params.complete();
+            }
+        };
+
+        requestAnimationFrame(animateScroll);
+    }
+
+
+    // @deprecated this control disposes itself
+    dispose() {}
+});
+
+// jQuery Plugin Definition (For Backwards Compatibility)
+$.fn.scrollbar = function (config) {
+    this.each((index, element) => {
+        config = config || {};
+        for (const key in config) {
+            if (key.startsWith('scroll')) {
+                element.dataset[key] = config[key];
+            }
+        }
+
+        if (!element.matches('[data-control~="scrollbar"]')) {
+            element.dataset.control = ((element.dataset.control || '') + ' scrollbar').trim();
+        }
+    });
+};

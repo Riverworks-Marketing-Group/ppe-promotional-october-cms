@@ -93,6 +93,10 @@ class DateTime
      */
     public static function momentFormat($format)
     {
+        if (!$format) {
+            return '';
+        }
+
         $replacements = [
             'd' => 'DD',
             'D' => 'ddd',

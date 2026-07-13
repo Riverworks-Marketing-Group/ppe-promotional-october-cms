@@ -1,28 +1,10 @@
 <?php namespace Backend\Classes;
 
+use Backend\Classes\DashReport;
+
 /**
- * Report Widget base class
- * Report widgets are used inside the ReportContainer.
- *
- * @package october\backend
- * @author Alexey Bobkov, Samuel Georges
+ * @deprecated use Dashboard\Classes\ReportWidgetBase
  */
-class ReportWidgetBase extends WidgetBase
+abstract class ReportWidgetBase extends \Dashboard\Classes\ReportWidgetBase
 {
-    use \System\Traits\PropertyContainer;
-
-    public function __construct($controller, $properties = [])
-    {
-        $this->properties = $this->validateProperties($properties);
-
-        /*
-         * Ensure the provided alias (if present) takes effect as the widget configuration is
-         * not passed to the WidgetBase constructor which would normally take care of that
-         */
-        if (!isset($this->alias)) {
-            $this->alias = $properties['alias'] ?? $this->defaultAlias;
-        }
-
-        parent::__construct($controller);
-    }
 }

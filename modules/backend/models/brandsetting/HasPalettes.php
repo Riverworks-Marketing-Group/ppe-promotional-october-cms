@@ -217,7 +217,7 @@ trait HasPalettes
     /**
      * getPaletteColors
      */
-    public function getPaletteColors(string $preset = null): array
+    public function getPaletteColors(?string $preset = null): array
     {
         if ($preset === null) {
             $preset = 'default';

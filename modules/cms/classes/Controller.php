@@ -21,6 +21,7 @@ use Cms\Models\MaintenanceSetting;
 use System\Models\RequestLog;
 use System\Twig\Extension as SystemTwigExtension;
 use System\Twig\SecurityPolicy as TwigSecurityPolicy;
+use Larajax\Contracts\AjaxControllerInterface;
 
 /**
  * Controller finds and serves requested CMS pages.
@@ -28,7 +29,7 @@ use System\Twig\SecurityPolicy as TwigSecurityPolicy;
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
-class Controller
+class Controller implements AjaxControllerInterface
 {
     use \Cms\Classes\Controller\HasRenderers;
     use \Cms\Classes\Controller\HasAjaxRequests;
@@ -256,9 +257,9 @@ class Controller
             $result = $event;
         }
 
-        // Log the pageview
-        if ($originalPageFound && !App::runningUnitTests()) {
-            TrafficLogger::logPageview();
+        // Log the pageview with dashboard module
+        if ($originalPageFound && !App::runningUnitTests() && System::hasModule('Dashboard')) {
+            \Dashboard\Classes\TrafficLogger::instance()->logPageview();
         }
 
         // Prepare and return response
@@ -869,13 +870,13 @@ class Controller
     /**
      * inComponentContext runs a callback in component context
      */
-    public function inComponentContext(ComponentBase $component = null, callable $callback)
+    public function inComponentContext(?ComponentBase $component = null, ?callable $callback = null)
     {
         $previousContext = $this->componentContext;
 
         $this->componentContext = $component;
 
-        $result = $callback();
+        $result = $callback ? $callback() : $callback;
 
         $this->componentContext = $previousContext;
 
@@ -885,7 +886,7 @@ class Controller
     /**
      * @deprecated
      */
-    public function setComponentContext(ComponentBase $component = null)
+    public function setComponentContext(?ComponentBase $component = null)
     {
         $this->componentContext = $component;
     }

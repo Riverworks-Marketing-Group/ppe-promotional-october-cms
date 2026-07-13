@@ -10,6 +10,7 @@ use October\Contracts\Element\FormElement;
 use October\Rain\Database\Model;
 use October\Rain\Html\Helper as HtmlHelper;
 use SystemException;
+use BackedEnum;
 use UnitEnum;
 
 /**
@@ -23,6 +24,7 @@ class Form extends WidgetBase implements FormElement
     use \Backend\Widgets\Form\IsFormElement;
     use \Backend\Widgets\Form\FieldProcessor;
     use \Backend\Widgets\Form\HasFormWidgets;
+    use \Backend\Widgets\Form\HasTranslatable;
     use \Backend\Traits\FormModelSaver;
 
     //
@@ -138,6 +140,16 @@ class Form extends WidgetBase implements FormElement
     public $horizontalMode = false;
 
     /**
+     * @var bool|null useTranslatable fields, null inherits from parent
+     */
+    public $useTranslatable = null;
+
+    /**
+     * @var bool useFilterFields enables the model filterFields method and events
+     */
+    public $useFilterFields = true;
+
+    /**
      * @inheritDoc
      */
     public function init()
@@ -157,6 +169,8 @@ class Form extends WidgetBase implements FormElement
             'previewMode',
             'surveyMode',
             'horizontalMode',
+            'useTranslatable',
+            'useFilterFields',
         ]);
 
         $this->initFormWidgetsConcern();
@@ -372,6 +386,11 @@ class Form extends WidgetBase implements FormElement
             ? (object) $this->data
             : $this->model;
 
+        // Non-existent models cannot use translatable features
+        if (!$this->model->exists) {
+            $this->useTranslatable = false;
+        }
+
         return $this->model;
     }
 
@@ -422,7 +441,7 @@ class Form extends WidgetBase implements FormElement
 
         // Data set differs from model
         if ($this->data !== $this->model) {
-            $this->data = (object) array_merge((array) $this->data, (array) $data);
+            $this->data = (object) array_replace((array) $this->data, (array) $data);
         }
 
         // Set field values from data source
@@ -616,23 +635,9 @@ class Form extends WidgetBase implements FormElement
             $this->fields = [];
         }
 
-        if ($this->fields) {
-            $this->addFields($this->fields);
-        }
-        else {
-            $this->addFieldsFromModel();
-        }
-
         // Primary Tabs + Fields
         if (!isset($this->tabs['fields']) || !is_array($this->tabs['fields'])) {
             $this->tabs['fields'] = [];
-        }
-
-        if ($this->tabs['fields']) {
-            $this->addFields($this->tabs['fields'], FormTabs::SECTION_PRIMARY);
-        }
-        else {
-            $this->addFieldsFromModel(FormTabs::SECTION_PRIMARY);
         }
 
         // Secondary Tabs + Fields
@@ -640,10 +645,28 @@ class Form extends WidgetBase implements FormElement
             $this->secondaryTabs['fields'] = [];
         }
 
+        // When form fields are manually defined, only use what was defined
+        // and do not load fields from the model for undefined sections
+        $hasDefinedFields = $this->fields || $this->tabs['fields'] || $this->secondaryTabs['fields'];
+
+        if ($this->fields) {
+            $this->addFields($this->fields);
+        }
+        elseif (!$hasDefinedFields) {
+            $this->addFieldsFromModel();
+        }
+
+        if ($this->tabs['fields']) {
+            $this->addFields($this->tabs['fields'], FormTabs::SECTION_PRIMARY);
+        }
+        elseif (!$hasDefinedFields) {
+            $this->addFieldsFromModel(FormTabs::SECTION_PRIMARY);
+        }
+
         if ($this->secondaryTabs['fields']) {
             $this->addFields($this->secondaryTabs['fields'], FormTabs::SECTION_SECONDARY);
         }
-        else {
+        elseif (!$hasDefinedFields) {
             $this->addFieldsFromModel(FormTabs::SECTION_SECONDARY);
         }
 
@@ -704,7 +727,7 @@ class Form extends WidgetBase implements FormElement
          *     });
          *
          */
-        $this->fireSystemEvent('backend.form.extendFields', [$this->allFields]);
+        $this->fireSystemEvent('backend.form.extendFields', [new ElementHolder($this->allFields)]);
 
         // Apply post processing
         $this->processPermissionCheck($this->allFields);
@@ -714,14 +737,11 @@ class Form extends WidgetBase implements FormElement
 
         // Model based processing
         if ($this->model && $this->model instanceof \October\Rain\Database\Model) {
-            if ($this->model->isClassInstanceOf(\October\Contracts\Database\ValidationInterface::class)) {
-                $this->processRequiredAttributes($this->allFields);
-            }
-
-            if ($this->model->isClassInstanceOf(\October\Contracts\Database\MultisiteInterface::class)) {
-                $this->processTranslatableAttributes($this->allFields);
-            }
+            $this->processRequiredAttributes($this->allFields);
+            $this->processTranslatableAttributes($this->allFields);
         }
+
+        $this->processUntranslatableWidgets($this->allFields);
 
         // Set field values from data source, if not from the outside
         foreach ($this->allFields as $field) {
@@ -765,7 +785,7 @@ class Form extends WidgetBase implements FormElement
      * @param array $fields
      * @param string $inSection
      */
-    public function addFields(array $fields, $inSection = null): ElementHolder
+    public function addFields(array $fields, ?string $inSection = null): ElementHolder
     {
         $built = [];
         foreach ($fields as $name => $config) {
@@ -781,7 +801,7 @@ class Form extends WidgetBase implements FormElement
 
             $this->allFields[$fieldName] = $fieldObj;
 
-            switch (strtolower($inSection)) {
+            switch (strtolower((string) $inSection)) {
                 case FormTabs::SECTION_PRIMARY:
                     $this->allTabs->primary->addField($fieldName, $fieldObj);
                     break;
@@ -1025,8 +1045,11 @@ class Form extends WidgetBase implements FormElement
         $value = $field->getValueFromData($data, $defaultValue);
 
         // Cast enums to scalar
-        if ($value instanceof UnitEnum) {
+        if ($value instanceof BackedEnum) {
             $value = $value->value;
+        }
+        elseif ($value instanceof UnitEnum) {
+            $value = $value->name;
         }
 
         return $value;
@@ -1065,7 +1088,7 @@ class Form extends WidgetBase implements FormElement
      */
     protected function showFieldLabels(FormField $field): bool
     {
-        if (in_array($field->type, ['checkbox', 'switch', 'section', 'hint'])) {
+        if (in_array($field->type, ['checkbox', 'switch', 'section', 'hint', 'ruler'])) {
             return false;
         }
 
@@ -1074,6 +1097,16 @@ class Form extends WidgetBase implements FormElement
         }
 
         return true;
+    }
+
+    /**
+     * getFieldTooltipValue looks up the field tooltip value
+     * @param \Backend\Classes\FormField $field
+     * @return string
+     */
+    public function getFieldTooltipValue($field)
+    {
+        return Lang::get($field->tooltip['title'] ?? $field->tooltip);
     }
 
     /**
@@ -1173,6 +1206,10 @@ class Form extends WidgetBase implements FormElement
      */
     protected function applyFiltersFromModel($applyData = null)
     {
+        if (!$this->useFilterFields) {
+            return;
+        }
+
         $targetModel = clone $this->model;
 
         // Apply specified data before filtering

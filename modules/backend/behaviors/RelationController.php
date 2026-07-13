@@ -26,7 +26,7 @@ use ApplicationException;
  * values as either a YAML file, located in the controller view directory,
  * or directly as a PHP array.
  *
- * @see https://docs.octobercms.com/3.x/extend/forms/relation-controller.html Relation Controller Documentation
+ * @see https://docs.octobercms.com/4.x/extend/forms/relation-controller.html Relation Controller Documentation
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
@@ -51,12 +51,12 @@ class RelationController extends ControllerBehavior
     const PARAM_EXTRA_CONFIG = '_relation_extra_config';
 
     /**
-     * @var Backend\Widgets\Search searchWidget
+     * @var \Backend\Widgets\Search searchWidget
      */
     protected $searchWidget;
 
     /**
-     * @var Backend\Widgets\Toolbar toolbarWidget
+     * @var \Backend\Widgets\Toolbar toolbarWidget
      */
     protected $toolbarWidget;
 
@@ -166,12 +166,10 @@ class RelationController extends ControllerBehavior
     public $popupSize = 'huge';
 
     /**
-     * @var string externalToolbarAppState defines a mount point for the editor toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: stateElementName
+     * @var string externalToolbarBus defines a mount point for the editor toolbar.
      * Only works in Vue applications and form document layouts.
      */
-    public $externalToolbarAppState;
+    public $externalToolbarBus;
 
     /**
      * @var array customMessages contains default messages that you can override
@@ -212,7 +210,7 @@ class RelationController extends ControllerBehavior
 
     /**
      * __construct the behavior
-     * @param Backend\Classes\Controller $controller
+     * @param \Backend\Classes\Controller $controller
      */
     public function __construct($controller)
     {
@@ -289,7 +287,7 @@ class RelationController extends ControllerBehavior
         $this->vars['relationPivotWidget'] = $this->pivotWidget;
 
         // Misc
-        $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
+        $this->vars['externalToolbarBus'] = $this->externalToolbarBus;
         $this->vars['formSessionKey'] = post('_form_session_key', post('_session_key', FormHelper::getSessionKey()));
 
         // @deprecated
@@ -404,7 +402,7 @@ class RelationController extends ControllerBehavior
 
         $this->readOnly = $this->getConfig('readOnly');
         $this->popupSize = $this->getConfig('popupSize', 950);
-        $this->externalToolbarAppState = $this->getConfig('externalToolbarAppState');
+        $this->externalToolbarBus = $this->getConfig('externalToolbarBus');
         $this->eventTarget = $this->evalEventTarget();
         $this->deferredBinding = $this->evalDeferredBinding();
         $this->viewMode = $this->evalViewMode();
@@ -492,6 +490,27 @@ class RelationController extends ControllerBehavior
     }
 
     /**
+     * relationApplyConfigDefaults merges default values into a relation's config,
+     * without overwriting values already set in YAML or via relationRegisterField.
+     */
+    public function relationApplyConfigDefaults(string $relationName, array $defaults)
+    {
+        if ($this->originalConfig === null) {
+            $this->config = $this->originalConfig = $this->controller->relationGetConfig();
+        }
+
+        $config = (array) ($this->originalConfig->{$relationName} ?? []);
+
+        foreach ($defaults as $key => $value) {
+            if (!array_key_exists($key, $config)) {
+                $config[$key] = $value;
+            }
+        }
+
+        $this->originalConfig->{$relationName} = $config;
+    }
+
+    /**
      * relationRender renders the relationship manager.
      * @param string $field The relationship field.
      * @param array $options
@@ -523,17 +542,12 @@ class RelationController extends ControllerBehavior
         $this->prepareVars();
 
         // Determine the partial to use based on the supplied section option
-        $section = $options['section'] ?? null;
-        switch (strtolower($section)) {
-            case 'toolbar':
-                return $this->toolbarWidget ? $this->toolbarWidget->render() : null;
-
-            case 'view':
-                return $this->relationMakePartial('view');
-
-            default:
-                return $this->relationMakePartial('container');
-        }
+        $section = strtolower($options['section'] ?? '');
+        return match ($section) {
+            'toolbar' => $this->toolbarWidget?->render(),
+            'view' => $this->relationMakePartial('view'),
+            default => $this->relationMakePartial('container'),
+        };
     }
 
     /**
@@ -799,6 +813,8 @@ class RelationController extends ControllerBehavior
             case 'hasManyThrough':
                 return [];
         }
+
+        return [];
     }
 
     /**
@@ -863,7 +879,7 @@ class RelationController extends ControllerBehavior
     /**
      * getCustomLang parses custom messages provided by the config
      */
-    protected function getCustomLang(string $name, string $default = null, array $extras = []): string
+    protected function getCustomLang(string $name, ?string $default = null, array $extras = []): string
     {
         $foundKey = $this->getConfig("customMessages[{$name}]");
 

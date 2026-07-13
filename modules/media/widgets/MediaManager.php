@@ -4,6 +4,7 @@ use Url;
 use Str;
 use Lang;
 use File;
+use Html;
 use Input;
 use Config;
 use System;
@@ -16,6 +17,7 @@ use ApplicationException;
 use Backend\Classes\WidgetBase;
 use Media\Classes\MediaLibrary;
 use Media\Classes\MediaLibraryItem;
+use System\Models\File as FileModel;
 use October\Rain\Resize\Resizer;
 use October\Rain\Filesystem\Definitions as FileDefinitions;
 use Form as FormHelper;
@@ -96,10 +98,9 @@ class MediaManager extends WidgetBase
      */
     protected function loadAssets()
     {
-        $this->addCssBundle('css/mediamanager.css', 'global');
-        $this->addJsBundle('js/mediamanager.js', 'global');
-        $this->addJsBundle('js/mediamanager.imagecroppopup.js', 'global');
-        $this->addJsBundle('js/mediamanager.popup.js', 'global');
+        $this->addCss('css/mediamanager.css');
+        $this->addJs('js/mediamanager.js', ['type' => 'module']);
+        $this->addJs('js/mediamanager.popup.js', ['type' => 'module']);
     }
 
     /**
@@ -425,8 +426,7 @@ class MediaManager extends WidgetBase
                 throw new ApplicationException(Lang::get('backend::lang.media.type_blocked'));
             }
 
-            // @deprecated media.clean_vectors set default to true in v4
-            if (Config::get('media.clean_vectors', false) && $this->isVector($newName)) {
+            if (Config::get('media.clean_vectors', true) && $this->isVector($newName)) {
                 throw new ApplicationException(Lang::get('backend::lang.media.type_blocked'));
             }
 
@@ -570,7 +570,7 @@ class MediaManager extends WidgetBase
             }
             else {
                 $segments = explode('/', $folder);
-                $name = str_repeat('&nbsp;', (count($segments)-1)*4).basename($folder);
+                $name = str_repeat("\xC2\xA0", (count($segments)-1)*4).basename($folder);
             }
 
             $folderList[$path] = $name;
@@ -827,6 +827,27 @@ class MediaManager extends WidgetBase
         return $this->getCropEditImageUrlAndSize($path, $cropSessionKey, $params);
     }
 
+    /**
+     * onCheckFilesExist checks which files already exist in the target folder
+     * @return array
+     */
+    public function onCheckFilesExist()
+    {
+        $fileNames = post('file_names', []);
+        $path = post('path', '/');
+        $path = MediaLibrary::validatePath($path);
+
+        $existingFiles = [];
+        foreach ($fileNames as $fileName) {
+            $filePath = rtrim($path, '/') . '/' . $fileName;
+            if (MediaLibrary::instance()->has($filePath)) {
+                $existingFiles[] = $fileName;
+            }
+        }
+
+        return ['existing' => $existingFiles];
+    }
+
     //
     // Methods for internal use
     //
@@ -864,6 +885,7 @@ class MediaManager extends WidgetBase
         $this->vars['searchMode'] = $searchMode;
         $this->vars['searchTerm'] = $searchTerm;
         $this->vars['sidebarVisible'] = $this->getSidebarVisible();
+        $this->vars['maxFilesize'] = $this->getUploadMaxFilesize();
     }
 
     /**
@@ -1187,7 +1209,7 @@ class MediaManager extends WidgetBase
     protected function getThumbnailParams($viewMode = null)
     {
         $result = [
-            'mode' => 'crop'
+            'mode' => 'cover'
         ];
 
         if ($viewMode) {
@@ -1434,7 +1456,7 @@ class MediaManager extends WidgetBase
 
         Resizer::open($tempFilePath)
             ->resize($targetWidth, $targetHeight, [
-                'mode'   => $thumbnailParams['mode'],
+                'mode' => $thumbnailParams['mode'],
                 'offset' => [0, 0]
             ])
             ->save($fullThumbnailPath)
@@ -1534,6 +1556,10 @@ class MediaManager extends WidgetBase
             return;
         }
 
+        // Set locale early since this runs in the widget constructor,
+        // before the controller applies the user's locale preference
+        \Backend\Models\Preference::setAppLocale();
+
         if (!$this->checkHasPermission('mediaCreate')) {
             throw new ForbiddenException;
         }
@@ -1595,18 +1621,17 @@ class MediaManager extends WidgetBase
                 ? $uploadedFile->getPath() . DIRECTORY_SEPARATOR . $uploadedFile->getFileName()
                 : $uploadedFile->getRealPath();
 
-            // Cannot overwrite files
-            if (!$this->checkHasPermission('mediaDelete') && MediaLibrary::instance()->has($filePath)) {
-                throw new ApplicationException(__('A media file already exists at this location, please upload using a different filename.'));
-            }
-
             // Check and clean vector files
             // @todo use streaming like file objects
             $contents = File::get($realPath);
-            // @deprecated media.clean_vectors set default to true in v4
-            if ($extension === 'svg' && Config::get('media.clean_vectors', false)) {
+            if ($extension === 'svg' && Config::get('media.clean_vectors', true)) {
                 // @todo File::cleanVector() helper might be helpful here to clean temporary file in place
-                $contents = \Html::cleanVector($contents);
+                $contents = Html::cleanVector($contents);
+            }
+
+            // Handle duplicate files
+            if ($this->checkDuplicateFile($realPath, $filePath, $quickMode)) {
+                return;
             }
 
             // Write file to disk
@@ -1645,6 +1670,44 @@ class MediaManager extends WidgetBase
 
         // Override the controller response
         $this->controller->setResponse($response);
+    }
+
+    /**
+     * checkDuplicateFile checks if a file already exists and handles accordingly.
+     * Returns true if the upload should be halted (response already set).
+     */
+    protected function checkDuplicateFile(string $realPath, string $filePath, bool $quickMode): bool
+    {
+        if (!MediaLibrary::instance()->has($filePath)) {
+            return false;
+        }
+
+        // Specific mode for checking if the upload is happening via an editor
+        if ($quickMode) {
+            // Compare size: same name and size is close enough to consider identical
+            if (filesize($realPath) === MediaLibrary::instance()->size($filePath)) {
+                $this->controller->setResponse(Response::make([
+                    'link' => MediaLibrary::url($filePath),
+                    'result' => 'success'
+                ]));
+                return true;
+            }
+
+            // Different content with same filename: return error as HTTP 200 JSON so Froala's
+            // image.uploaded event can intercept and show a meaningful message to the user
+            $this->controller->setResponse(Response::make([
+                'error' => Lang::get('backend::lang.media.folder_or_file_exist')
+            ]));
+            return true;
+        }
+
+        $forceOverwrite = (bool) post('force_overwrite', false);
+        $canOverwrite = $this->checkHasPermission('mediaDelete');
+        if (!$canOverwrite || !$forceOverwrite) {
+            throw new ApplicationException(__('A media file already exists at this location, please upload using a different filename.'));
+        }
+
+        return false;
     }
 
     /**
@@ -1892,14 +1955,13 @@ class MediaManager extends WidgetBase
         }
         else {
             Resizer::open($imagePath)
-                ->crop(
-                    $selectionData['x'],
-                    $selectionData['y'],
-                    $selectionData['w'],
-                    $selectionData['h'],
-                    $selectionData['w'],
-                    $selectionData['h']
-                )
+                ->resize($selectionData['w'], $selectionData['h'], [
+                    'mode' => 'crop',
+                    'offset' => [
+                        $selectionData['x'],
+                        $selectionData['y']
+                    ]
+                ])
                 ->save($targetTmpPath)
             ;
         }
@@ -1930,6 +1992,14 @@ class MediaManager extends WidgetBase
     protected function isVector($path)
     {
         return strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'svg';
+    }
+
+    /**
+     * getUploadMaxFilesize returns max upload filesize in MB
+     */
+    protected function getUploadMaxFilesize(): float
+    {
+        return FileModel::getMaxFilesize() / 1024;
     }
 
     /**

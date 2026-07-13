@@ -9,29 +9,33 @@
     </div>
 <?php Block::endPut() ?>
 
-<div
-    class="sidenav-tree"
-    data-control="sidenav-tree"
-    data-search-input="#settings-search-input">
+<div class="control-settings-nav-container">
+    <div
+        class="control-settings-nav"
+        data-control="settings-nav"
+        data-search-input="#settings-search-input">
+        <div class="d-flex flex-column h-100 settings-nav-content">
+            <div>
+                <?= $this->makePartial('~/modules/system/partials/_settings_menu_toolbar.php') ?>
+            </div>
 
-    <div class="d-flex flex-column sidenav-tree-content h-100">
-        <div>
-            <a class="system-home-link" href="<?= Backend::url('system/settings') ?>">
-                <i class="icon-home"></i><?= __('Show All Settings') ?>
-            </a>
-        </div>
-        <div>
-            <?= $this->makePartial('~/modules/system/partials/_settings_menu_toolbar.php') ?>
-        </div>
-
-        <div class="flex-grow-1">
-            <div class="position-relative h-100">
-                <div class="sidenav-tree-scroll-canvas">
-                    <div class="control-scrollbar" data-control="scrollbar">
-                        <?= $this->makePartial('~/modules/system/partials/_settings_menu.php') ?>
+            <div class="flex-grow-1">
+                <div class="position-relative h-100">
+                    <div class="settings-nav-scroll-canvas">
+                        <div class="control-scrollbar" data-control="scrollbar" data-animation="false">
+                            <?= $this->makePartial('~/modules/system/partials/_settings_menu.php') ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+    function sideNavSettingsHomeClick() {
+        $('body').addClass('settings-nav-expanded');
+        $('#settings-search-input').focus()
+        return false;
+    }
+    </script>
 </div>

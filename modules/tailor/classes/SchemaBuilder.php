@@ -1,5 +1,6 @@
 <?php namespace Tailor\Classes;
 
+use Db;
 use Schema;
 use SystemException;
 use Tailor\Classes\Fieldset;
@@ -211,7 +212,10 @@ class SchemaBuilder
      */
     protected function makeDatabaseBlueprint($fieldset)
     {
-        $table = new DbBlueprint($this->tableName);
+        // Lazy load the grammar
+        Db::connection()->getSchemaBuilder();
+
+        $table = new DbBlueprint(Db::connection(), $this->tableName);
 
         foreach ($fieldset->getAllFields() as $name => $fieldObj) {
             if (!str_starts_with($name, '_')) {

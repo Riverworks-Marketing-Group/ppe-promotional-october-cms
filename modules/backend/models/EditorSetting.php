@@ -172,24 +172,12 @@ class EditorSetting extends SettingModel
     }
 
     /**
-     * afterFetch
-     */
-    public function afterFetch()
-    {
-        // @deprecated remove if year >= 2024
-        if (!isset($this->value['html_paragraph_formats'])) {
-            $this->html_paragraph_formats = $this->makeFormatsForTable($this->defaultHtmlParagraphFormats);
-            $this->save();
-        }
-    }
-
-    /**
      * beforeSave
      */
     public function beforeSave()
     {
         if ($this->isDirty('html_custom_styles')) {
-            $this->html_custom_styles = Html::clean($this->html_custom_styles);
+            $this->html_custom_styles = Html::cleanCss($this->html_custom_styles);
 
             if (System::checkSafeMode()) {
                 $this->html_custom_styles = str_ireplace('@import', 'import', $this->html_custom_styles);
@@ -359,7 +347,7 @@ class EditorSetting extends SettingModel
     {
         $cacheKey = self::instance()->cacheKey;
 
-        if ($cache = Cache::get($cacheKey)) {
+        if ($cache = Cache::memo()->get($cacheKey)) {
             return $cache;
         }
 
@@ -368,7 +356,7 @@ class EditorSetting extends SettingModel
             Cache::forever($cacheKey, $customCss);
         }
         catch (Exception $ex) {
-            $customCss = '/* ' . $ex->getMessage() . ' */';
+            $customCss = '/* ' . e($ex->getMessage()) . ' */';
         }
 
         return $customCss;

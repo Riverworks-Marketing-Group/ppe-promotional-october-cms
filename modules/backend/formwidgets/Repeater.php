@@ -85,12 +85,10 @@ class Repeater extends FormWidgetBase
     public $useTabs = false;
 
     /**
-     * @var string Defines a mount point for the editor toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: stateElementName
+     * @var string externalToolbarBus defines a mount point for the editor toolbar.
      * Only works in Vue applications and form document layouts.
      */
-    public $externalToolbarAppState = null;
+    public $externalToolbarBus = null;
 
     //
     // Object Properties
@@ -159,7 +157,7 @@ class Repeater extends FormWidgetBase
             'minItems',
             'maxItems',
             'useTabs',
-            'externalToolbarAppState'
+            'externalToolbarBus'
         ]);
 
         if ($this->formField->disabled) {
@@ -211,7 +209,7 @@ class Repeater extends FormWidgetBase
         $this->vars['groupDefinitions'] = $this->groupDefinitions;
         $this->vars['showReorder'] = $this->showReorder;
         $this->vars['showDuplicate'] = $this->showDuplicate;
-        $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
+        $this->vars['externalToolbarBus'] = $this->externalToolbarBus;
     }
 
     /**
@@ -220,7 +218,8 @@ class Repeater extends FormWidgetBase
     protected function loadAssets()
     {
         $this->addCss('css/repeater.css');
-        $this->addJs('js/repeater-min.js');
+        $this->addJs('js/repeater.accordion.js', ['type' => 'module']);
+        $this->addJs('js/repeater.builder.js', ['type' => 'module']);
     }
 
     /**
@@ -243,6 +242,9 @@ class Repeater extends FormWidgetBase
         // Reprocess widgets
         $this->formWidgets = [];
         $this->processItems();
+
+        // Reprocess related items
+        $this->relatedRecords = null;
     }
 
     /**
@@ -307,9 +309,9 @@ class Repeater extends FormWidgetBase
 
     /**
      * makeItemFormWidget creates a form widget based on a field index and optional group code
-     * @param int $index
+     * @param int|string $index
      * @param string $groupCode
-     * @param int $fromIndex
+     * @param int|string $fromIndex
      * @return \Backend\Widgets\Form
      */
     protected function makeItemFormWidget($index = 0, $groupCode = null, $fromIndex = null)
@@ -340,6 +342,7 @@ class Repeater extends FormWidgetBase
         $config->sessionKey = $this->sessionKey;
         $config->sessionKeySuffix = $this->sessionKeySuffix . "-{$index}";
         $config->parentFieldName = $this->formField->fieldName . "[{$indexName}]";
+        $config->useTranslatable = $this->getParentForm()->useTranslatable;
 
         $widget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
         $widget->previewMode = $this->previewMode;
@@ -377,6 +380,7 @@ class Repeater extends FormWidgetBase
 
     /**
      * getValueFromIndex returns the data at a given index
+     * @param int|string $index
      */
     protected function getValueFromIndex($index)
     {
@@ -409,10 +413,12 @@ class Repeater extends FormWidgetBase
         $this->prepareParentModelData();
 
         $groupCode = post('_repeater_group');
-        $index = $this->getNextIndex();
 
         if ($this->useRelation) {
-            $this->createRelationAtIndex($index, $groupCode);
+            $index = $this->createRelationAtIndex($groupCode)->getKey();
+        }
+        else {
+            $index = $this->getNextIndex();
         }
 
         $this->prepareVars();
@@ -433,14 +439,16 @@ class Repeater extends FormWidgetBase
     {
         $fromIndex = post('_repeater_index');
         $groupCode = post('_repeater_group');
-        $toIndex = $this->getNextIndex();
 
         if ($this->useRelation) {
             // Relation must be saved to replicate
             $this->processSaveForRelation([$fromIndex => $this->getValueFromIndex($fromIndex)]);
 
             // Duplicate the model with replication
-            $this->duplicateRelationAtIndex($fromIndex, $toIndex, $groupCode);
+            $toIndex = $this->duplicateRelationAtIndex($fromIndex, $groupCode)->getKey();
+        }
+        else {
+            $toIndex = $this->getNextIndex();
         }
 
         $this->prepareVars();
@@ -495,23 +503,13 @@ class Repeater extends FormWidgetBase
      */
     protected function getNextIndex(): int
     {
-        // Use post() over getLoadValue() to retain the _index value
-        $data = post($this->formField->getName());
-        if (!is_array($data) || !count($data)) {
-            return 1;
+        $data = $this->getLoadedValueFromPost();
+
+        if (is_array($data) && count($data)) {
+            return max(array_keys($data)) + 1;
         }
 
-        // Locate the indexes from the payload or fallback to max
-        // of array keys which can cause collisions with deleted
-        // items so its not ideal but we need to use something
-        $nextIndex = 0;
-        $indexes = array_column($data, '_index');
-
-        $nextIndex = $indexes
-            ? max($indexes)
-            : max(array_keys($data));
-
-        return $nextIndex + 1;
+        return 0;
     }
 
     /**
@@ -590,7 +588,7 @@ class Repeater extends FormWidgetBase
 
     /**
      * getGroupCodeFromIndex returns a field group code from its index
-     * @param $index int
+     * @param int|string $index
      */
     public function getGroupCodeFromIndex($index): string
     {
@@ -599,8 +597,10 @@ class Repeater extends FormWidgetBase
 
     /**
      * getGroupItemConfig returns the group config from its unique code
+     * @param string $groupCode
+     * @param ?string $name
      */
-    public function getGroupItemConfig(string $groupCode, string $name = null, $default = null)
+    public function getGroupItemConfig($groupCode, $name = null, $default = null)
     {
         return array_get($this->groupDefinitions, $groupCode.'.'.$name, $default);
     }

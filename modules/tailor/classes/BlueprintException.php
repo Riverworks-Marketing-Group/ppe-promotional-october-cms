@@ -16,7 +16,7 @@ class BlueprintException extends Exception
      * @param int $code Error code.
      * @param Exception $previous Previous exception.
      */
-    public function __construct(Blueprint $blueprint, $message = "", $lineNo = 0, Exception $previous = null)
+    public function __construct(Blueprint $blueprint, $message = "", $lineNo = 0, ?Exception $previous = null)
     {
         parent::__construct($message, 0, $previous);
 

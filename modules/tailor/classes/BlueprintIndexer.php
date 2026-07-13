@@ -94,6 +94,9 @@ class BlueprintIndexer
 
         $allBlueprints = Blueprint::listInProject();
 
+        // Clear validation cache before validating all blueprints
+        BlueprintVerifier::instance()->clearCache();
+
         // Validate blueprints
         foreach ($allBlueprints as $blueprint) {
             $blueprint->validate();
@@ -102,6 +105,12 @@ class BlueprintIndexer
             if (!$blueprint->uuid) {
                 $blueprint->forceSave();
             }
+        }
+
+        // Output any duplicate handle/UUID warnings
+        $warnings = BlueprintVerifier::instance()->getWarnings();
+        foreach ($warnings as $warning) {
+            $this->note('- <comment>Warning</comment>: ' . $warning['message']);
         }
 
         // Migrate blueprints
@@ -267,5 +276,20 @@ class BlueprintIndexer
     public static function clearCache()
     {
         CacheHelper::instance()->clearBlueprintCache();
+    }
+
+    /**
+     * getActiveThemeDatasource returns the dirname for the active theme, used
+     * to filter blueprint lookups when multiple themes define the same handle.
+     */
+    protected function getActiveThemeDatasource(): ?string
+    {
+        if (!System::hasModule('Cms')) {
+            return null;
+        }
+
+        $theme = Theme::getEditTheme() ?: Theme::getActiveTheme();
+
+        return $theme ? $theme->getDirName() : null;
     }
 }

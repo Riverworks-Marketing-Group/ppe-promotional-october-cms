@@ -15,7 +15,7 @@ trait IsFilterElement
     /**
      * defineScope adds a scope to the filter element
      */
-    public function defineScope(string $scopeName = null, string $label = null): ScopeDefinition
+    public function defineScope(?string $scopeName = null, ?string $label = null): ScopeDefinition
     {
         $scopeObj = new FilterScope([
             'scopeName' => $scopeName,

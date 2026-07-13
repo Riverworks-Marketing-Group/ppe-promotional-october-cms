@@ -11,7 +11,7 @@
                 name="dest"
                 data-placeholder="<?= e(trans('cms::lang.asset.move_please_select')) ?>">
                 <option></option>
-                <?php foreach ($folders as $path=>$folder):?>
+                <?php foreach ($folders as $path => $folder):?>
                     <option value="<?= e($path) ?>"><?= e($folder) ?></option>
                 <?php endforeach ?>
             </select>
@@ -27,7 +27,7 @@
         </button>
         <button
             type="button"
-            class="btn btn-default"
+            class="btn btn-secondary"
             data-dismiss="popup">
             <?= e(trans('backend::lang.form.cancel')) ?>
         </button>

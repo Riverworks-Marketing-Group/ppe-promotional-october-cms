@@ -29,9 +29,9 @@ trait WidgetMaker
 
     /**
      * makeWidget object with the supplied configuration file.
-     * @param string $class Widget class name
-     * @param array $widgetConfig An array of config.
-     * @return \Backend\Classes\WidgetBase The widget object
+     * @param string $class
+     * @param array $widgetConfig
+     * @return \Backend\Classes\WidgetBase
      */
     public function makeWidget($class, $widgetConfig = [])
     {
@@ -50,10 +50,11 @@ trait WidgetMaker
 
     /**
      * makeFormWidget object with the supplied form field and widget configuration.
-     * @param string $class Widget class name
-     * @param mixed $fieldConfig A field name, an array of config or a FormField object.
-     * @param array $widgetConfig An array of config.
-     * @return \Backend\Classes\FormWidgetBase The widget object
+     * The fieldConfig is a field name, an array of config or a FormField object.
+     * @param string $class
+     * @param mixed $fieldConfig
+     * @param array $widgetConfig
+     * @return \Backend\Classes\FormWidgetBase
      */
     public function makeFormWidget($class, $fieldConfig = [], $widgetConfig = [])
     {

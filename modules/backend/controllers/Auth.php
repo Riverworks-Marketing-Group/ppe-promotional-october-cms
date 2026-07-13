@@ -13,6 +13,7 @@ use BackendAuth;
 use Backend\Models\AccessLog;
 use Backend\Classes\Controller;
 use Backend\Models\User as UserModel;
+use System\Classes\RateLimiter;
 use System\Classes\UpdateManager;
 use ApplicationException;
 use ValidationException;
@@ -54,13 +55,6 @@ class Auth extends Controller
         parent::__construct();
 
         $this->layout = 'auth';
-    }
-
-    /**
-     * registerDefaultVueComponents
-     */
-    public function registerDefaultVueComponents()
-    {
     }
 
     /**
@@ -186,6 +180,17 @@ class Auth extends Controller
         if ($validation->fails()) {
             throw new ValidationException($validation);
         }
+
+        // Throttle reset requests by IP to limit email flooding and slow
+        // username enumeration via timing analysis.
+        $limiter = new RateLimiter('backend.auth.restore');
+        if ($limiter->tooManyAttempts(5)) {
+            throw new ApplicationException(__("Too many password reset attempts, please try again in :seconds seconds.", [
+                'seconds' => $limiter->availableIn()
+            ]));
+        }
+
+        $limiter->increment(600);
 
         $user = BackendAuth::findUserByLogin(post('login'));
 
@@ -348,8 +353,11 @@ class Auth extends Controller
         $user = UserModel::createDefaultAdmin(post());
         BackendAuth::login($user);
 
+        // Fresh setup should not resume a stale guest URL (e.g. https://localhost/admin).
+        session()->forget('url.intended');
+
         // Redirect
-        Flash::success(__('Welcome to your Administration Area, :name', ['name' => post('first_name')]));
+        Flash::success(__('Welcome to your Administration Area, :name', ['name' => e(post('first_name'))]));
         return Backend::redirectIntended('backend');
     }
 

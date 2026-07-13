@@ -167,7 +167,7 @@ class Group extends FilterWidgetBase
      * model relation or from a supplied array. Optionally apply a search constraint
      * to the options
      */
-    protected function getAvailableOptions(string $searchQuery = null): array
+    protected function getAvailableOptions(?string $searchQuery = null): array
     {
         $available = [];
         $scope = $this->filterScope;

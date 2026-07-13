@@ -5,7 +5,7 @@ use System;
 use System as SystemHelper;
 use Cms\Models\ThemeSeed;
 use Cms\Classes\Theme as CmsTheme;
-use October\Rain\Composer\Manager as ComposerManager;
+use October\Rain\Composer\ComposerManager;
 use October\Rain\Filesystem\Zip;
 use ApplicationException;
 
@@ -136,20 +136,13 @@ trait ManagesThemes
     public function seedTheme(string $name)
     {
         $themeName = str_replace('.', '-', strtolower($name));
-        if (!CmsTheme::exists($themeName)) {
+        $theme = CmsTheme::load($themeName);
+
+        if (!$theme->isValid()) {
             throw new ApplicationException("Theme [$name] not found");
         }
-
-        $theme = CmsTheme::load($themeName);
         $model = new ThemeSeed;
 
-        // Seed everything
-        $allFolders = [
-            'blueprints' => true,
-            'data' => true,
-            'lang' => true,
-        ];
-
-        $model->seed($theme, ['folders' => $allFolders]);
+        $model->seed($theme);
     }
 }

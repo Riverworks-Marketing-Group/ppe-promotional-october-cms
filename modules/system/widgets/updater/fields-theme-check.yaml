@@ -13,7 +13,7 @@ fields:
 
     seed_theme_data:
         label: Seed Theme Data
-        comment: Import the blueprints files, language files and database contents for this theme, if applicable. You can skip this and do it later via the Frontend Theme settings.
+        comment: Import the blueprints files, language files and database contents for this theme, if applicable. You can skip this and do it later via the Site Theme settings.
         type: checkbox
         default: true
 
@@ -24,7 +24,7 @@ fields:
 
     install_requirements:
         label: Theme Dependencies
-        commentAbove: Install the plugins used by this theme first. You can skip this and do it later via the System Updates settings.
+        commentAbove: Install the plugins used by this theme first. You can skip this and do it later via the Software Updates settings.
         type: checkboxlist
         hidden: true
         defaults: true

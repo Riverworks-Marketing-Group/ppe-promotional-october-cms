@@ -15,6 +15,8 @@ use SystemException;
 class Relation extends FormWidgetBase
 {
     use \Backend\Traits\FormModelWidget;
+    use \Backend\Traits\FormModelSaver;
+    use \Backend\FormWidgets\Relation\HasQuickCreate;
 
     //
     // Configurable Properties
@@ -95,8 +97,9 @@ class Relation extends FormWidgetBase
             'emptyOption',
             'defaultSort',
             'excludeFrom',
-            'scope',
+            'modelScope',
             'conditions',
+            'quickCreate',
         ]);
 
         if (isset($this->config->select)) {
@@ -110,6 +113,8 @@ class Relation extends FormWidgetBase
         $this->useControllerConfig = (array) ($this->config->controller ?? []);
 
         $this->useController = $this->evalUseController($this->config->useController ?? true);
+
+        $this->initQuickCreate();
     }
 
     /**
@@ -119,6 +124,14 @@ class Relation extends FormWidgetBase
     {
         $this->defineRelationControllerConfig();
         parent::bindToController();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function loadAssets()
+    {
+        $this->loadQuickCreateAssets();
     }
 
     /**
@@ -199,6 +212,11 @@ class Relation extends FormWidgetBase
             // reference the pivot table that isn't included in this query
             if (in_array($relationType, ['belongsToMany', 'morphedByMany', 'morphToMany'])) {
                 $query->getQuery()->reorder();
+
+                // Re-apply defaultSort since it references valid columns
+                if ($this->defaultSort) {
+                    $this->applyDefaultSortToQuery($query);
+                }
             }
         }
 
@@ -215,8 +233,16 @@ class Relation extends FormWidgetBase
             $result = $query->select($selectColumn, DbDongle::raw($selectSql . ' as ' . $nameFrom));
         }
         else {
+            // If the attribute is a getter, load all the models in to memory so it
+            // can be retrieved. This impacts performance so we try to avoid it.
+            // Otherwise, assume the name is taken from a database column.
             $nameFrom = $this->nameFrom;
-            $result = $query->get();
+            if ($relationModel->hasGetMutator($nameFrom) || $relationModel->hasAttributeMutator($nameFrom)) {
+                $result = $query->get();
+            }
+            else {
+                $result = $query;
+            }
         }
 
         // Relations can specify a custom local or foreign "other" key,
@@ -243,6 +269,11 @@ class Relation extends FormWidgetBase
             $field->options = $result->pluck($nameFrom, $primaryKeyName)->all();
         }
 
+        // Add quick create option to dropdown
+        if ($this->hasQuickCreate()) {
+            $field->options = $this->addQuickCreateOption($field->options);
+        }
+
         return $this->renderFormField = $field;
     }
 
@@ -251,11 +282,15 @@ class Relation extends FormWidgetBase
      */
     protected function makeFieldOptionsForTree($items, $nameFrom, $primaryKeyName)
     {
+        // When conditions or scopes filter the query, parent nodes may be excluded
+        // from results. Preserve these orphaned children instead of discarding them.
+        $removeOrphans = !$this->conditions && !$this->modelScope;
+
         if ($items instanceof \October\Rain\Database\TreeCollection) {
-            $items = $items->toNested();
+            $items = $items->toNested($removeOrphans);
         }
         elseif (!$items instanceof \Illuminate\Database\Eloquent\Collection) {
-            $items = $items->getNested();
+            $items = $items->get()->toNested($removeOrphans);
         }
 
         $options = [];
@@ -324,7 +359,7 @@ class Relation extends FormWidgetBase
      */
     protected function defineRelationControllerConfig()
     {
-        if (!$this->useController || !$this->useControllerConfig) {
+        if (!$this->useController) {
             return;
         }
 
@@ -333,17 +368,29 @@ class Relation extends FormWidgetBase
             $this->controller->asExtension('RelationController')->beforeDisplay();
         }
 
-        $controllerConfig = $this->useControllerConfig;
+        if ($this->useControllerConfig) {
+            $controllerConfig = $this->useControllerConfig;
 
-        if (!isset($controllerConfig['readOnly']) && $this->readOnly === true) {
-            $controllerConfig['readOnly'] = $this->readOnly;
+            if (!isset($controllerConfig['readOnly']) && $this->readOnly === true) {
+                $controllerConfig['readOnly'] = $this->readOnly;
+            }
+
+            if (!isset($controllerConfig['externalToolbarBus']) && isset($this->config->externalToolbarBus)) {
+                $controllerConfig['externalToolbarBus'] = $this->config->externalToolbarBus;
+            }
+
+            if (!isset($controllerConfig['sessionKey'])) {
+                $controllerConfig['sessionKey'] = $this->getParentForm()?->getSessionKeyWithSuffix();
+            }
+
+            $this->controller->relationRegisterField($this->getRelationControllerFieldName(), $controllerConfig);
         }
 
-        if (!isset($controllerConfig['sessionKey'])) {
-            $controllerConfig['sessionKey'] = $this->getParentForm()?->getSessionKeyWithSuffix();
+        if ($this->formField->span === 'adaptive') {
+            $this->controller->relationApplyConfigDefaults($this->getRelationControllerFieldName(), [
+                'externalToolbarBus' => 'document',
+            ]);
         }
-
-        $this->controller->relationRegisterField($this->getRelationControllerFieldName(), $controllerConfig);
     }
 
     /**

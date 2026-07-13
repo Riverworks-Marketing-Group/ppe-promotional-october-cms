@@ -28,7 +28,7 @@ trait ParsableController
     /**
      * parseRouteParamsOnComponent where property values should be defined as {{ :param }}.
      */
-    protected function parseRouteParamsOnComponent(ComponentBase $component, array $params = [], array $properties = null, string $propPrefix = '')
+    protected function parseRouteParamsOnComponent(ComponentBase $component, array $params = [], ?array $properties = null, string $propPrefix = '')
     {
         $properties = $properties !== null ? $properties : $component->getProperties();
 
@@ -49,7 +49,7 @@ trait ParsableController
     /**
      * parseEnvironmentVarsOnComponent where property values should be defined as {{ param }}.
      */
-    protected function parseEnvironmentVarsOnComponent(ComponentBase $component, array $vars = [], array $properties = null, string $propPrefix = '')
+    protected function parseEnvironmentVarsOnComponent(ComponentBase $component, array $vars = [], ?array $properties = null, string $propPrefix = '')
     {
         $properties = $properties !== null ? $properties : $component->getProperties();
 
@@ -70,7 +70,7 @@ trait ParsableController
     /**
      * parseEnvironmentVarsOnTemplate where property values should be defined as {{ param }}.
      */
-    protected function parseEnvironmentVarsOnTemplate(CmsObject $template, array $vars = [], array $attributes = null, string $attrPrefix = '')
+    protected function parseEnvironmentVarsOnTemplate(CmsObject $template, array $vars = [], ?array $attributes = null, string $attrPrefix = '')
     {
         $attributes = $attributes !== null ? $attributes : $template->getParsableAttributeValues();
 
@@ -129,7 +129,7 @@ trait ParsableController
 
             foreach ($matches[1] as $key => $paramName) {
                 $paramName = $lastParamName = trim($paramName);
-                $replaceWith = array_get($parameters, $paramName);
+                $replaceWith = (string) array_get($parameters, $paramName);
                 $toReplace = $matches[0][$key];
                 $newAttrValue = str_replace($toReplace, $replaceWith, $newAttrValue);
             }

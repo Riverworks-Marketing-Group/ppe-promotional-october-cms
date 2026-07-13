@@ -3,7 +3,7 @@
     $navbarMode = BrandSetting::get('menu_mode', BrandSetting::MENU_INLINE);
 ?>
 <!DOCTYPE html>
-<html lang="<?= App::getLocale() ?>" class="no-js <?= $this->makeLayoutPartial('browser_detector') ?> <?= $this->makeLayoutPartial('touch_detector') ?>" data-bs-theme="<?= e(Backend\Models\BrandSetting::getColorMode()) ?>">
+<html lang="<?= App::getLocale() ?>" class="no-js <?= Backend\Models\BrandSetting::isColorModeAuto() ? 'color-mode-auto' : '' ?>" data-bs-theme="<?= e(Backend\Models\BrandSetting::getColorMode()) ?>">
     <head>
         <?= $this->makeLayoutPartial('head') ?>
         <?= $this->fireViewEvent('backend.layout.extendHead', ['default']) ?>
@@ -55,7 +55,7 @@
                                 <!-- Side Navigation -->
                                 <?= $this->makeLayoutPartial('sidenav') ?>
 
-                                <!-- Side panel -->
+                                <!-- Side Panel -->
                                 <?php if ($sidePanelContent = Block::placeholder('sidepanel')): ?>
                                     <div class="w-350 hide-on-small" id="layout-side-panel" data-control="layout-sidepanel">
                                         <?= $sidePanelContent ?>

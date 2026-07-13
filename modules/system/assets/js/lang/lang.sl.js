@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['sl'] = $.extend(
+window.oc.langMessages['sl'] = Object.assign(
     window.oc.langMessages['sl'] || {},
-    {"markdowneditor":{"formatting":"Oblikovanje","quote":"Citat","code":"Koda","header1":"Naslov 1","header2":"Naslov 2","header3":"Naslov 3","header4":"Naslov 4","header5":"Naslov 5","header6":"Naslov 6","bold":"Krepko","italic":"Le\u017ee\u010de","unorderedlist":"Neo\u0161tevil\u010deni seznam","orderedlist":"\u0160tevil\u010dni seznam","snippet":"Snippet","video":"Video","image":"Slika","link":"Povezava","horizontalrule":"Vstavi vodoravno \u010drto","fullscreen":"Celozaslonski na\u010din","preview":"Predogled","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Vstavi povezavo","insert_image":"Vstavi sliko","insert_video":"Vstavi video posnetek","insert_audio":"Vstavi zvo\u010dni posnetek","invalid_file_empty_insert":"Izberite datoteko, do katere \u017eelite vstaviti povezavo.","invalid_file_single_insert":"Izberite eno samo datoteko.","invalid_image_empty_insert":"Izberite slike za vstavljanje.","invalid_video_empty_insert":"Izberite video posnetek za vstavljanje.","invalid_audio_empty_insert":"Izberite zvo\u010dni posnetek za vstavljanje."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"V redu","cancel_button_text":"Prekli\u010di","widget_remove_confirm":"Odstrani ta vti\u010dnik?"},"datepicker":{"previousMonth":"Prej\u0161nji mesec","nextMonth":"Naslednji mesec","months":["Januar","Februar","Marec","April","Maj","Junij","Julij","Avgust","September","Oktober","November","December"],"weekdays":["Nedelja","Ponedeljek","Torek","Sreda","\u010cetrtek","Petek","Sobota"],"weekdaysShort":["Ned","Pon","Tor","Sre","\u010cet","Pet","Sob"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"vsi"},"scopes":{"apply_button_text":"Uporabi","clear_button_text":"Po\u010disti"},"dates":{"all":"vsi","filter_button_text":"Filtriraj","reset_button_text":"Ponastavi","date_placeholder":"Datum","after_placeholder":"Po","before_placeholder":"Pred"},"numbers":{"all":"vsi","filter_button_text":"Filtriraj","reset_button_text":"Ponastavi","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Prika\u017ei sled dogodkov","hide_stacktrace":"Skrij sled dogodkov","tabs":{"formatted":"Oblikovano","raw":"Brez oblikovanja"},"editor":{"title":"Urejevalnik izvorne kode","description":"Va\u0161 operacijski sistem mora biti nastavljen tako, da upo\u0161teva eno od teh URL shem.","openWith":"Za odpiranje uporabi","remember_choice":"Zapomni si izbrane nastavitve za to sejo","open":"Odpri","cancel":"Prekli\u010di"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Oblikovanje",
+        "quote": "Citat",
+        "code": "Koda",
+        "header1": "Naslov 1",
+        "header2": "Naslov 2",
+        "header3": "Naslov 3",
+        "header4": "Naslov 4",
+        "header5": "Naslov 5",
+        "header6": "Naslov 6",
+        "bold": "Krepko",
+        "italic": "Le\u017ee\u010de",
+        "unorderedlist": "Neo\u0161tevil\u010deni seznam",
+        "orderedlist": "\u0160tevil\u010dni seznam",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Slika",
+        "link": "Povezava",
+        "horizontalrule": "Vstavi vodoravno \u010drto",
+        "fullscreen": "Celozaslonski na\u010din",
+        "preview": "Predogled",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Vstavi povezavo",
+        "insert_image": "Vstavi sliko",
+        "insert_video": "Vstavi video posnetek",
+        "insert_audio": "Vstavi zvo\u010dni posnetek",
+        "invalid_file_empty_insert": "Izberite datoteko, do katere \u017eelite vstaviti povezavo.",
+        "invalid_file_single_insert": "Izberite eno samo datoteko.",
+        "invalid_image_empty_insert": "Izberite slike za vstavljanje.",
+        "invalid_video_empty_insert": "Izberite video posnetek za vstavljanje.",
+        "invalid_audio_empty_insert": "Izberite zvo\u010dni posnetek za vstavljanje."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "V redu",
+        "cancel_button_text": "Prekli\u010di",
+        "widget_remove_confirm": "Odstrani ta vti\u010dnik?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Prej\u0161nji mesec",
+        "nextMonth": "Naslednji mesec",
+        "months": [
+            "Januar",
+            "Februar",
+            "Marec",
+            "April",
+            "Maj",
+            "Junij",
+            "Julij",
+            "Avgust",
+            "September",
+            "Oktober",
+            "November",
+            "December"
+        ],
+        "weekdays": [
+            "Nedelja",
+            "Ponedeljek",
+            "Torek",
+            "Sreda",
+            "\u010cetrtek",
+            "Petek",
+            "Sobota"
+        ],
+        "weekdaysShort": [
+            "Ned",
+            "Pon",
+            "Tor",
+            "Sre",
+            "\u010cet",
+            "Pet",
+            "Sob"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "vsi"
+        },
+        "scopes": {
+            "apply_button_text": "Uporabi",
+            "clear_button_text": "Po\u010disti"
+        },
+        "dates": {
+            "all": "vsi",
+            "filter_button_text": "Filtriraj",
+            "reset_button_text": "Ponastavi",
+            "date_placeholder": "Datum",
+            "after_placeholder": "Po",
+            "before_placeholder": "Pred"
+        },
+        "numbers": {
+            "all": "vsi",
+            "filter_button_text": "Filtriraj",
+            "reset_button_text": "Ponastavi",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Prika\u017ei sled dogodkov",
+        "hide_stacktrace": "Skrij sled dogodkov",
+        "tabs": {
+            "formatted": "Oblikovano",
+            "raw": "Brez oblikovanja"
+        },
+        "editor": {
+            "title": "Urejevalnik izvorne kode",
+            "description": "Va\u0161 operacijski sistem mora biti nastavljen tako, da upo\u0161teva eno od teh URL shem.",
+            "openWith": "Za odpiranje uporabi",
+            "remember_choice": "Zapomni si izbrane nastavitve za to sejo",
+            "open": "Odpri",
+            "cancel": "Prekli\u010di",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[ni nastavljeno]",
+    "1 day (today) if not set": "1 dan (danes), \u010de ni nastavljeno",
+    "Apply": "Uporabi",
+    "Ascending": "Nara\u0161\u010dajo\u010de",
+    "Attribute": "Atribut",
+    "Bar": "Bar",
+    "Cancel": "Prekli\u010di",
+    "Chart": "Grafikon",
+    "Chart type": "Vrsta grafikona",
+    "Color": "Barva",
+    "Compare Totals": "Primerjaj skupne zneske",
+    "Configure": "Konfiguriraj",
+    "Custom": "Po meri",
+    "Custom Range": "Razpon po meri",
+    "Dashboard interval": "Interval nadzorne plo\u0161\u010de",
+    "Data source": "Vir podatkov",
+    "Date interval": "Datumski interval",
+    "Day": "Dan",
+    "Delete": "Izbri\u0161i",
+    "Delete Dashboard": "Izbri\u0161i nadzorno plo\u0161\u010do",
+    "Delete row": "Izbri\u0161i vrstico",
+    "Descending": "Padajo\u010de",
+    "Dimension": "Dimenzija",
+    "Direction": "Smer",
+    "Disabled": "Onemogo\u010deno",
+    "Display": "Prikaz",
+    "Display [not set]": "Prikaz [ni nastavljeno]",
+    "Display all records": "Prika\u017ei vse zapise",
+    "Display relative bars": "Prikaz relativnih stolpcev",
+    "Display totals": "Prika\u017ei skupne zneske",
+    "Edit Dashboard": "Uredi nadzorno plo\u0161\u010do",
+    "Empty values": "Prazne vrednosti",
+    "Enter a positive number": "Vnesite pozitivno \u0161tevilo",
+    "Enter a positive number or leave empty to display all records.": "Vnesite pozitivno \u0161tevilo ali pustite prazno, da prika\u017eete vse zapise.",
+    "Equal to": "Enako kot",
+    "Export Dashboard": "Izvozi nadzorno plo\u0161\u010do",
+    "Extra table fields": "Dodatna polja tabele",
+    "Filters": "Filtri",
+    "General": "Splo\u0161no",
+    "Greater or equal to": "Ve\u010dje ali enako kot",
+    "Greater than": "Ve\u010dje kot",
+    "Hide": "Skrij",
+    "Horizontal": "Vodoravno",
+    "Icon": "Ikona",
+    "Icon Status": "Ikona Stanje",
+    "Important": "Pomembno",
+    "Includes": "Vklju\u010duje",
+    "Indicator": "Kazalnik",
+    "Information": "Informacije",
+    "Last 30 days": "Zadnjih 30 dni",
+    "Last 7 days": "Zadnjih 7 dni",
+    "Last month": "Prej\u0161nji mesec",
+    "Leave empty to disable pagination": "Pustite prazno, \u010de \u017eelite onemogo\u010diti o\u0161tevil\u010denje strani.",
+    "Leave empty to hide the title": "Pustite prazno, \u010de \u017eelite skriti naslov",
+    "Less or equal to": "Manj\u0161e ali enako",
+    "Less than": "Manj kot",
+    "Limit": "Omejitev",
+    "Line": "\u010crta",
+    "Link Text": "Besedilo povezave",
+    "Link URL": "URL povezave",
+    "Make Default": "Nastavi kot privzeto",
+    "Manage Dashboards": "Upravljanje nadzornih plo\u0161\u010d",
+    "Metric": "Metrika",
+    "Metrics": "Metrike",
+    "Month": "Mesec",
+    "My Custom Widget": "Moj pripomo\u010dek po meri",
+    "No Value": "Brez vrednosti",
+    "Notice text": "Besedilo obvestila",
+    "Number of days": "\u0160tevilo dni",
+    "One of": "Eden od",
+    "One value per line": "Ena vrednost na vrstico",
+    "Operation": "Operacija",
+    "Order": "Naro\u010dilo",
+    "Past hour": "Pretekla ura",
+    "Past X days": "Preteklih X dni",
+    "Please provide the widget title": "Prosimo, navedite naslov gradnika",
+    "Please select a data source": "Izberite vir podatkov",
+    "Please select a dimension": "Izberite dimenzijo",
+    "Please select an icon": "Izberite ikono",
+    "Please select metric(s).": "Izberite metriko(-e).",
+    "Prev period": "Prej\u0161nje obdobje",
+    "Quarter": "\u010cetrt",
+    "Records per page": "Zapisov na stran",
+    "Refresh every minute": "Osve\u017ei vsako minuto",
+    "Rename Dashboard": "Preimenuj nadzorno plo\u0161\u010do",
+    "Reset Layout": "Ponastavi postavitev",
+    "Reset layout back to default?": "Ponastavitev postavitve nazaj na privzeto?",
+    "Same period last year": "Enako obdobje lani",
+    "Section": "Oddelek",
+    "Section Title": "Naslov razdelka",
+    "Select a dimension and metrics": "Izberite dimenzijo in meritve",
+    "Select an attribute": "Izberite atribut",
+    "Select an operation": "Izberite operacijo",
+    "Select sorting metric or dimension": "Izberite metriko ali dimenzijo razvr\u0161\u010danja",
+    "Select the metric color": "Izberite barvo metrike",
+    "Set the current layout as the default?": "Naj trenutno postavitev nastavim kot privzeto?",
+    "Show Date Interval": "Prika\u017ei datumski interval",
+    "Sort by": "Razvrsti po",
+    "Sorting": "Razvr\u0161\u010danje",
+    "Sorting & Filtering": "Razvr\u0161\u010danje in filtriranje",
+    "Stacked Bar": "Zlo\u017eena \u010drtna grafika",
+    "Starts with": "Za\u010dne se z",
+    "Success": "Uspeh",
+    "Table": "Tabela",
+    "Text Notice": "Besedilno obvestilo",
+    "The dashboard layout has been reset to default.": "Postavitev nadzorne plo\u0161\u010de je bila ponastavljena na privzete nastavitve.",
+    "The dashboard was successfully updated.": "Nadzorna plo\u0161\u010da je bila uspe\u0161no posodobljena.",
+    "The limit value must be at least 1": "Mejna vrednost mora biti vsaj 1",
+    "This dashboard is now the default layout.": "Ta nadzorna plo\u0161\u010da je zdaj privzeta postavitev.",
+    "This is a text notice widget.": "To je pripomo\u010dek za besedilna obvestila.",
+    "This month": "Ta mesec",
+    "This quarter": "To \u010detrtletje",
+    "This week": "Ta teden",
+    "This year": "Letos",
+    "Title": "Naslov",
+    "Today": "Danes",
+    "Value": "Vrednost",
+    "Values": "Vrednote",
+    "Vertical": "Navpi\u010dno",
+    "Warning": "Opozorilo",
+    "Week": "Teden",
+    "Year": "Leto",
+    "Yesterday": "V\u010deraj"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Slovenian [sl]
+//! author : Robert Sedovšek : https://github.com/sedovsek
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,12 +293,15 @@ window.oc.langMessages['sl'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     function processRelativeTime(number, withoutSuffix, key, isFuture) {
         var result = number + ' ';
         switch (key) {
             case 's':
-                return withoutSuffix || isFuture ? 'nekaj sekund' : 'nekaj sekundami';
+                return withoutSuffix || isFuture
+                    ? 'nekaj sekund'
+                    : 'nekaj sekundami';
             case 'ss':
                 if (number === 1) {
                     result += withoutSuffix ? 'sekundo' : 'sekundi';
@@ -38,7 +310,7 @@ window.oc.langMessages['sl'] = $.extend(
                 } else if (number < 5) {
                     result += withoutSuffix || isFuture ? 'sekunde' : 'sekundah';
                 } else {
-                    result += withoutSuffix || isFuture ? 'sekund' : 'sekund';
+                    result += 'sekund';
                 }
                 return result;
             case 'm':
@@ -108,26 +380,31 @@ window.oc.langMessages['sl'] = $.extend(
     }
 
     var sl = moment.defineLocale('sl', {
-        months : 'januar_februar_marec_april_maj_junij_julij_avgust_september_oktober_november_december'.split('_'),
-        monthsShort : 'jan._feb._mar._apr._maj._jun._jul._avg._sep._okt._nov._dec.'.split('_'),
+        months: 'januar_februar_marec_april_maj_junij_julij_avgust_september_oktober_november_december'.split(
+            '_'
+        ),
+        monthsShort:
+            'jan._feb._mar._apr._maj._jun._jul._avg._sep._okt._nov._dec.'.split(
+                '_'
+            ),
         monthsParseExact: true,
-        weekdays : 'nedelja_ponedeljek_torek_sreda_četrtek_petek_sobota'.split('_'),
-        weekdaysShort : 'ned._pon._tor._sre._čet._pet._sob.'.split('_'),
-        weekdaysMin : 'ne_po_to_sr_če_pe_so'.split('_'),
-        weekdaysParseExact : true,
-        longDateFormat : {
-            LT : 'H:mm',
-            LTS : 'H:mm:ss',
-            L : 'DD.MM.YYYY',
-            LL : 'D. MMMM YYYY',
-            LLL : 'D. MMMM YYYY H:mm',
-            LLLL : 'dddd, D. MMMM YYYY H:mm'
+        weekdays: 'nedelja_ponedeljek_torek_sreda_četrtek_petek_sobota'.split('_'),
+        weekdaysShort: 'ned._pon._tor._sre._čet._pet._sob.'.split('_'),
+        weekdaysMin: 'ne_po_to_sr_če_pe_so'.split('_'),
+        weekdaysParseExact: true,
+        longDateFormat: {
+            LT: 'H:mm',
+            LTS: 'H:mm:ss',
+            L: 'DD. MM. YYYY',
+            LL: 'D. MMMM YYYY',
+            LLL: 'D. MMMM YYYY H:mm',
+            LLLL: 'dddd, D. MMMM YYYY H:mm',
         },
-        calendar : {
-            sameDay  : '[danes ob] LT',
-            nextDay  : '[jutri ob] LT',
+        calendar: {
+            sameDay: '[danes ob] LT',
+            nextDay: '[jutri ob] LT',
 
-            nextWeek : function () {
+            nextWeek: function () {
                 switch (this.day()) {
                     case 0:
                         return '[v] [nedeljo] [ob] LT';
@@ -142,8 +419,8 @@ window.oc.langMessages['sl'] = $.extend(
                         return '[v] dddd [ob] LT';
                 }
             },
-            lastDay  : '[včeraj ob] LT',
-            lastWeek : function () {
+            lastDay: '[včeraj ob] LT',
+            lastWeek: function () {
                 switch (this.day()) {
                     case 0:
                         return '[prejšnjo] [nedeljo] [ob] LT';
@@ -158,30 +435,30 @@ window.oc.langMessages['sl'] = $.extend(
                         return '[prejšnji] dddd [ob] LT';
                 }
             },
-            sameElse : 'L'
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'čez %s',
-            past   : 'pred %s',
-            s      : processRelativeTime,
-            ss     : processRelativeTime,
-            m      : processRelativeTime,
-            mm     : processRelativeTime,
-            h      : processRelativeTime,
-            hh     : processRelativeTime,
-            d      : processRelativeTime,
-            dd     : processRelativeTime,
-            M      : processRelativeTime,
-            MM     : processRelativeTime,
-            y      : processRelativeTime,
-            yy     : processRelativeTime
+        relativeTime: {
+            future: 'čez %s',
+            past: 'pred %s',
+            s: processRelativeTime,
+            ss: processRelativeTime,
+            m: processRelativeTime,
+            mm: processRelativeTime,
+            h: processRelativeTime,
+            hh: processRelativeTime,
+            d: processRelativeTime,
+            dd: processRelativeTime,
+            M: processRelativeTime,
+            MM: processRelativeTime,
+            y: processRelativeTime,
+            yy: processRelativeTime,
         },
         dayOfMonthOrdinalParse: /\d{1,2}\./,
-        ordinal : '%d.',
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 7  // The week that contains Jan 1st is the first week of the year.
-        }
+        ordinal: '%d.',
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 7, // The week that contains Jan 7th is the first week of the year.
+        },
     });
 
     return sl;

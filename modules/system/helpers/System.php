@@ -104,7 +104,7 @@ class System
         }
 
         $loadedValue = App::hasDatabase() &&
-            Schema::hasTable(Config::get('database.migrations', 'migrations'));
+            Schema::hasTable(Config::get('database.migrations.table', 'migrations'));
 
         Manifest::put(self::MANIFEST_DB_CHECK, (bool) $loadedValue);
 

@@ -6,6 +6,21 @@ use Tailor\Classes\BlueprintCollection;
 /**
  * EntryBlueprint
  *
+ * @property string handle
+ * @property string type
+ * @property string name
+ * @property array fields
+ * @property array groups
+ * @property array structure
+ * @property bool drafts
+ * @property bool softDeletes
+ * @property mixed multisite
+ * @property string pagefinder
+ * @property string defaultSort
+ * @property array customMessages
+ * @property bool showExport
+ * @property bool showImport
+ *
  * @package october\tailor
  * @author Alexey Bobkov, Samuel Georges
  */
@@ -15,6 +30,14 @@ class EntryBlueprint extends Blueprint
      * @var string typeName of the blueprint
      */
     protected $typeName = 'entry';
+
+    /**
+     * getModelClassName
+     */
+    public function getModelClassName()
+    {
+        return \Tailor\Models\EntryRecord::class;
+    }
 
     /**
      * listInProject is a modified version to find any blueprints that inherit this one
@@ -181,7 +204,7 @@ class EntryBlueprint extends Blueprint
         $options = [];
 
         foreach ($this->groups as $handle => $entry) {
-            $options[$handle] = $entry['name'] ?? $handle;
+            $options[$handle] = trans($entry['name'] ?? $handle);
         }
 
         return $options;

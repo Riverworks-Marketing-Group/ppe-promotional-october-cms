@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['de'] = $.extend(
+window.oc.langMessages['de'] = Object.assign(
     window.oc.langMessages['de'] || {},
-    {"markdowneditor":{"formatting":"Formatierung","quote":"Zitat","code":"Code","header1":"\u00dcberschrift 1","header2":"\u00dcberschrift 2","header3":"\u00dcberschrift 3","header4":"\u00dcberschrift 4","header5":"\u00dcberschrift 5","header6":"\u00dcberschrift 6","bold":"Fett","italic":"Kursiv","unorderedlist":"Normale Liste","orderedlist":"Nummerierte Liste","snippet":"Snippet","video":"Video","image":"Bild","link":"Link","horizontalrule":"Horizontale Linie","fullscreen":"Vollbild","preview":"Vorschau","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Link aus Medienbibliothek","insert_image":"Bild aus Medienbibliothek","insert_video":"Video aus Medienbibliothek","insert_audio":"Audio aus Medienbibliothek","invalid_file_empty_insert":"Bitte Datei ausw\u00e4hlen.","invalid_file_single_insert":"Bitte nur eine Datei w\u00e4hlen.","invalid_image_empty_insert":"Bitte ein Bild ausw\u00e4hlen.","invalid_video_empty_insert":"Bitte ein Video ausw\u00e4hlen.","invalid_audio_empty_insert":"Bitte eine Audiodatei ausw\u00e4hlen."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Abbrechen","widget_remove_confirm":"Remove this widget?"},"datepicker":{"previousMonth":"Vorheriger Monat","nextMonth":"N\u00e4chsten Monat","months":["Januar","Februar","M\u00e4rz","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],"weekdays":["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"],"weekdaysShort":["So","Mo","Di","Mi","Do","Fr","Sa"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"all"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","date_placeholder":"Date","after_placeholder":"After","before_placeholder":"Before"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Show the stacktrace","hide_stacktrace":"Hide the stacktrace","tabs":{"formatted":"Formatted","raw":"Raw"},"editor":{"title":"Source Code Editor","description":"Your operating system should be configured to listen to one of these URL schemes.","openWith":"Open with","remember_choice":"Remember selected option for this session","open":"Open","cancel":"Cancel"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Formatierung",
+        "quote": "Zitat",
+        "code": "Code",
+        "header1": "\u00dcberschrift 1",
+        "header2": "\u00dcberschrift 2",
+        "header3": "\u00dcberschrift 3",
+        "header4": "\u00dcberschrift 4",
+        "header5": "\u00dcberschrift 5",
+        "header6": "\u00dcberschrift 6",
+        "bold": "Fett",
+        "italic": "Kursiv",
+        "unorderedlist": "Normale Liste",
+        "orderedlist": "Nummerierte Liste",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Bild",
+        "link": "Link",
+        "horizontalrule": "Horizontale Linie",
+        "fullscreen": "Vollbild",
+        "preview": "Vorschau",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Link aus Medienbibliothek",
+        "insert_image": "Bild aus Medienbibliothek",
+        "insert_video": "Video aus Medienbibliothek",
+        "insert_audio": "Audio aus Medienbibliothek",
+        "invalid_file_empty_insert": "Bitte Datei ausw\u00e4hlen.",
+        "invalid_file_single_insert": "Bitte nur eine Datei w\u00e4hlen.",
+        "invalid_image_empty_insert": "Bitte ein Bild ausw\u00e4hlen.",
+        "invalid_video_empty_insert": "Bitte ein Video ausw\u00e4hlen.",
+        "invalid_audio_empty_insert": "Bitte eine Audiodatei ausw\u00e4hlen."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Abbrechen",
+        "widget_remove_confirm": "Remove this widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Vorheriger Monat",
+        "nextMonth": "N\u00e4chsten Monat",
+        "months": [
+            "Januar",
+            "Februar",
+            "M\u00e4rz",
+            "April",
+            "Mai",
+            "Juni",
+            "Juli",
+            "August",
+            "September",
+            "Oktober",
+            "November",
+            "Dezember"
+        ],
+        "weekdays": [
+            "Sonntag",
+            "Montag",
+            "Dienstag",
+            "Mittwoch",
+            "Donnerstag",
+            "Freitag",
+            "Samstag"
+        ],
+        "weekdaysShort": [
+            "So",
+            "Mo",
+            "Di",
+            "Mi",
+            "Do",
+            "Fr",
+            "Sa"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "all"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "date_placeholder": "Date",
+            "after_placeholder": "After",
+            "before_placeholder": "Before"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Show the stacktrace",
+        "hide_stacktrace": "Hide the stacktrace",
+        "tabs": {
+            "formatted": "Formatted",
+            "raw": "Raw"
+        },
+        "editor": {
+            "title": "Source Code Editor",
+            "description": "Your operating system should be configured to listen to one of these URL schemes.",
+            "openWith": "Open with",
+            "remember_choice": "Remember selected option for this session",
+            "open": "Open",
+            "cancel": "Cancel"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[nicht festgelegt]",
+    "1 day (today) if not set": "1 Tag (heute), falls nicht anders eingestellt",
+    "Apply": "Anwenden",
+    "Ascending": "Aufsteigend",
+    "Attribute": "Attribut",
+    "Bar": "Balken",
+    "Cancel": "Abbrechen",
+    "Chart": "Diagramm",
+    "Chart type": "Diagrammtyp",
+    "Color": "Farbe",
+    "Compare Totals": "Summen vergleichen",
+    "Configure": "Konfigurieren",
+    "Custom": "Benutzerdefiniert",
+    "Custom Range": "Benutzerdefinierter Bereich",
+    "Dashboard interval": "Dashboard-Intervall",
+    "Data source": "Datenquelle",
+    "Date interval": "Datumsintervall",
+    "Day": "Tag",
+    "Delete": "L\u00f6schen",
+    "Delete Dashboard": "Dashboard l\u00f6schen",
+    "Delete row": "Zeile l\u00f6schen",
+    "Descending": "Absteigend",
+    "Dimension": "Dimension",
+    "Direction": "Richtung",
+    "Disabled": "Deaktiviert",
+    "Display": "Anzeige",
+    "Display [not set]": "Anzeige [nicht festgelegt]",
+    "Display all records": "Alle Datens\u00e4tze anzeigen",
+    "Display relative bars": "Relative Balken anzeigen",
+    "Display totals": "Summen anzeigen",
+    "Edit Dashboard": "Dashboard bearbeiten",
+    "Empty values": "Leere Werte",
+    "Enter a positive number": "Geben Sie eine positive Zahl ein",
+    "Enter a positive number or leave empty to display all records.": "Geben Sie eine positive Zahl ein oder lassen Sie das Feld leer, um alle Datens\u00e4tze anzuzeigen.",
+    "Equal to": "Gleich",
+    "Export Dashboard": "Dashboard exportieren",
+    "Extra table fields": "Zus\u00e4tzliche Tabellenfelder",
+    "Filters": "Filter",
+    "General": "Allgemein",
+    "Greater or equal to": "Gr\u00f6\u00dfer oder gleich",
+    "Greater than": "Gr\u00f6\u00dfer als",
+    "Hide": "Verstecken",
+    "Horizontal": "Horizontal",
+    "Icon": "Symbol",
+    "Icon Status": "Symbolstatus",
+    "Important": "Wichtig",
+    "Includes": "Beinhaltet",
+    "Indicator": "Indikator",
+    "Information": "Information",
+    "Last 30 days": "Letzte 30 Tage",
+    "Last 7 days": "Letzte 7 Tage",
+    "Last month": "Letzten Monat",
+    "Leave empty to disable pagination": "Lassen Sie das Feld leer, um die Paginierung zu deaktivieren.",
+    "Leave empty to hide the title": "Lassen Sie das Feld leer, um den Titel auszublenden.",
+    "Less or equal to": "Kleiner oder gleich",
+    "Less than": "Kleiner als",
+    "Limit": "Limit",
+    "Line": "Linie",
+    "Link Text": "Linktext",
+    "Link URL": "Link-URL",
+    "Make Default": "Als Standard festlegen",
+    "Manage Dashboards": "Dashboards verwalten",
+    "Metric": "Kennzahl",
+    "Metrics": "Kennzahlen",
+    "Month": "Monat",
+    "My Custom Widget": "Mein benutzerdefiniertes Widget",
+    "No Value": "Kein Wert",
+    "Notice text": "Hinweistext",
+    "Number of days": "Anzahl der Tage",
+    "One of": "Einer von",
+    "One value per line": "Ein Wert pro Zeile",
+    "Operation": "Operation",
+    "Order": "Sortierung",
+    "Past hour": "Letzte Stunde",
+    "Past X days": "Letzte X Tage",
+    "Please provide the widget title": "Bitte geben Sie den Widget-Titel an.",
+    "Please select a data source": "Bitte w\u00e4hlen Sie eine Datenquelle aus.",
+    "Please select a dimension": "Bitte w\u00e4hlen Sie eine Dimension aus.",
+    "Please select an icon": "Bitte w\u00e4hlen Sie ein Symbol aus.",
+    "Please select metric(s).": "Bitte w\u00e4hlen Sie die Kennzahl(en) aus.",
+    "Prev period": "Vorheriger Zeitraum",
+    "Quarter": "Quartal",
+    "Records per page": "Datens\u00e4tze pro Seite",
+    "Refresh every minute": "Jede Minute aktualisieren",
+    "Rename Dashboard": "Dashboard umbenennen",
+    "Reset Layout": "Layout zur\u00fccksetzen",
+    "Reset layout back to default?": "Layout auf Standard zur\u00fccksetzen?",
+    "Same period last year": "Gleicher Zeitraum im Vorjahr",
+    "Section": "Abschnitt",
+    "Section Title": "Abschnittstitel",
+    "Select a dimension and metrics": "W\u00e4hlen Sie eine Dimension und Kennzahlen aus.",
+    "Select an attribute": "W\u00e4hlen Sie ein Attribut aus",
+    "Select an operation": "W\u00e4hlen Sie eine Operation aus",
+    "Select sorting metric or dimension": "W\u00e4hlen Sie eine Metrik oder Dimension zum Sortieren aus.",
+    "Select the metric color": "W\u00e4hlen Sie die Farbe der Kennzahl aus",
+    "Set the current layout as the default?": "Das aktuelle Layout als Standard festlegen?",
+    "Show Date Interval": "Datumsintervall anzeigen",
+    "Sort by": "Sortieren nach",
+    "Sorting": "Sortierung",
+    "Sorting & Filtering": "Sortieren & Filtern",
+    "Stacked Bar": "Gestapelter Balken",
+    "Starts with": "Beginnt mit",
+    "Success": "Erfolg",
+    "Table": "Tabelle",
+    "Text Notice": "Textbenachrichtigung",
+    "The dashboard layout has been reset to default.": "Das Dashboard-Layout wurde auf die Standardeinstellungen zur\u00fcckgesetzt.",
+    "The dashboard was successfully updated.": "Das Dashboard wurde erfolgreich aktualisiert.",
+    "The limit value must be at least 1": "Der Grenzwert muss mindestens 1 betragen.",
+    "This dashboard is now the default layout.": "Dieses Dashboard ist nun das Standardlayout.",
+    "This is a text notice widget.": "Dies ist ein Textbenachrichtigungs-Widget.",
+    "This month": "Diesen Monat",
+    "This quarter": "Dieses Quartal",
+    "This week": "Diese Woche",
+    "This year": "Dieses Jahr",
+    "Title": "Titel",
+    "Today": "Heute",
+    "Value": "Wert",
+    "Values": "Werte",
+    "Vertical": "Vertikal",
+    "Warning": "Warnung",
+    "Week": "Woche",
+    "Year": "Jahr",
+    "Yesterday": "Gestern"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : German [de]
+//! author : lluchs : https://github.com/lluchs
+//! author: Menelion Elensúle: https://github.com/Oire
+//! author : Mikolaj Dadela : https://github.com/mik01aj
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,67 +293,77 @@ window.oc.langMessages['de'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     function processRelativeTime(number, withoutSuffix, key, isFuture) {
         var format = {
-            'm': ['eine Minute', 'einer Minute'],
-            'h': ['eine Stunde', 'einer Stunde'],
-            'd': ['ein Tag', 'einem Tag'],
-            'dd': [number + ' Tage', number + ' Tagen'],
-            'M': ['ein Monat', 'einem Monat'],
-            'MM': [number + ' Monate', number + ' Monaten'],
-            'y': ['ein Jahr', 'einem Jahr'],
-            'yy': [number + ' Jahre', number + ' Jahren']
+            m: ['eine Minute', 'einer Minute'],
+            h: ['eine Stunde', 'einer Stunde'],
+            d: ['ein Tag', 'einem Tag'],
+            dd: [number + ' Tage', number + ' Tagen'],
+            w: ['eine Woche', 'einer Woche'],
+            M: ['ein Monat', 'einem Monat'],
+            MM: [number + ' Monate', number + ' Monaten'],
+            y: ['ein Jahr', 'einem Jahr'],
+            yy: [number + ' Jahre', number + ' Jahren'],
         };
         return withoutSuffix ? format[key][0] : format[key][1];
     }
 
     var de = moment.defineLocale('de', {
-        months : 'Januar_Februar_März_April_Mai_Juni_Juli_August_September_Oktober_November_Dezember'.split('_'),
-        monthsShort : 'Jan._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split('_'),
-        monthsParseExact : true,
-        weekdays : 'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split('_'),
-        weekdaysShort : 'So._Mo._Di._Mi._Do._Fr._Sa.'.split('_'),
-        weekdaysMin : 'So_Mo_Di_Mi_Do_Fr_Sa'.split('_'),
-        weekdaysParseExact : true,
-        longDateFormat : {
+        months: 'Januar_Februar_März_April_Mai_Juni_Juli_August_September_Oktober_November_Dezember'.split(
+            '_'
+        ),
+        monthsShort:
+            'Jan._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split('_'),
+        monthsParseExact: true,
+        weekdays:
+            'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
+                '_'
+            ),
+        weekdaysShort: 'So._Mo._Di._Mi._Do._Fr._Sa.'.split('_'),
+        weekdaysMin: 'So_Mo_Di_Mi_Do_Fr_Sa'.split('_'),
+        weekdaysParseExact: true,
+        longDateFormat: {
             LT: 'HH:mm',
             LTS: 'HH:mm:ss',
-            L : 'DD.MM.YYYY',
-            LL : 'D. MMMM YYYY',
-            LLL : 'D. MMMM YYYY HH:mm',
-            LLLL : 'dddd, D. MMMM YYYY HH:mm'
+            L: 'DD.MM.YYYY',
+            LL: 'D. MMMM YYYY',
+            LLL: 'D. MMMM YYYY HH:mm',
+            LLLL: 'dddd, D. MMMM YYYY HH:mm',
         },
-        calendar : {
+        calendar: {
             sameDay: '[heute um] LT [Uhr]',
             sameElse: 'L',
             nextDay: '[morgen um] LT [Uhr]',
             nextWeek: 'dddd [um] LT [Uhr]',
             lastDay: '[gestern um] LT [Uhr]',
-            lastWeek: '[letzten] dddd [um] LT [Uhr]'
+            lastWeek: '[letzten] dddd [um] LT [Uhr]',
         },
-        relativeTime : {
-            future : 'in %s',
-            past : 'vor %s',
-            s : 'ein paar Sekunden',
-            ss : '%d Sekunden',
-            m : processRelativeTime,
-            mm : '%d Minuten',
-            h : processRelativeTime,
-            hh : '%d Stunden',
-            d : processRelativeTime,
-            dd : processRelativeTime,
-            M : processRelativeTime,
-            MM : processRelativeTime,
-            y : processRelativeTime,
-            yy : processRelativeTime
+        relativeTime: {
+            future: 'in %s',
+            past: 'vor %s',
+            s: 'ein paar Sekunden',
+            ss: '%d Sekunden',
+            m: processRelativeTime,
+            mm: '%d Minuten',
+            h: processRelativeTime,
+            hh: '%d Stunden',
+            d: processRelativeTime,
+            dd: processRelativeTime,
+            w: processRelativeTime,
+            ww: '%d Wochen',
+            M: processRelativeTime,
+            MM: processRelativeTime,
+            y: processRelativeTime,
+            yy: processRelativeTime,
         },
         dayOfMonthOrdinalParse: /\d{1,2}\./,
-        ordinal : '%d.',
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 4  // The week that contains Jan 4th is the first week of the year.
-        }
+        ordinal: '%d.',
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 4, // The week that contains Jan 4th is the first week of the year.
+        },
     });
 
     return de;

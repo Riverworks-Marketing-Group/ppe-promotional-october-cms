@@ -106,16 +106,14 @@ trait HasNavigationContext
      */
     public function isDashboardItemActive()
     {
-        return $this->contextOwner === 'October.Backend' && $this->contextMainMenuItemCode === 'dashboard';
+        return $this->contextOwner === 'October.Dashboard' && $this->contextMainMenuItemCode === 'dashboard';
     }
 
     /**
      * isSideMenuItemActive determines if a side menu item is active.
-     * Returns true if the side item is active.
-     * @param \Backend\Classes\SideMenuItem $item
-     * @return bool
+     * @param SideMenuItem $item
      */
-    public function isSideMenuItemActive($item)
+    public function isSideMenuItemActive($item): bool
     {
         if ($this->contextSideMenuItemCode === true) {
             $this->contextSideMenuItemCode = null;
@@ -123,6 +121,24 @@ trait HasNavigationContext
         }
 
         return $this->contextOwner === $item->owner && $this->contextSideMenuItemCode === $item->code;
+    }
+
+
+    /**
+     * isSideMenuItemActive determines if a side menu item is active.
+     * @param SideMenuItem $item
+     */
+    public function isSideMenuItemVisible($item): bool
+    {
+        if (!$item->visibleOn) {
+            return true;
+        }
+
+        if ($this->contextOwner === $item->owner && in_array($this->contextSideMenuItemCode, (array) $item->visibleOn)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

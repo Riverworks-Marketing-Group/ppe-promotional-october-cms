@@ -12,34 +12,28 @@
         <meta name="turbo-visit-control" content="disable">
         <?php
             $coreBuild = Backend::assetVersion();
-
-            $styles = [
-                Backend::skinAsset('assets/vendor/bootstrap/bootstrap.css'),
-                Backend::skinAsset('assets/css/october.css'),
-            ];
-
-            $scripts = [
-                Url::asset('modules/system/assets/js/vendor/jquery.min.js'),
-                Url::asset('modules/system/assets/js/framework-bundle.min.js'),
-                Backend::skinAsset('assets/vendor/bootstrap/bootstrap.min.js'),
-                Backend::skinAsset('assets/js/vendor-min.js'),
-                Backend::skinAsset('assets/js/october-min.js'),
-                Url::asset('modules/system/assets/js/vue.bundle-min.js'),
-                Url::to('modules/backend/assets/js/auth/auth.js'),
-                Url::asset('modules/system/assets/js/lang/lang.'.App::getLocale().'.js'),
-            ];
+            $vendorPath = Url::asset('modules/system/assets/vendor');
         ?>
-        <?php foreach ($styles as $style): ?>
-            <link href="<?= $style . '?v=' . $coreBuild ?>" rel="stylesheet" importance="high" />
-        <?php endforeach ?>
+        <script type="importmap">
+        {
+            "imports": {
+                "larajax": "<?= Url::asset('modules/system/assets/js/framework.esm.js') ?>",
+                "bootstrap": "<?= $vendorPath ?>/bootstrap/bootstrap.esm.js",
+                "vue": "<?= $vendorPath ?>/vue/vue.esm<?= Config::get('app.debug') ? '' : '.prod' ?>.js"
+            }
+        }
+        </script>
+        <script src="<?= Url::asset('modules/system/assets/js/vendor.js') ?>?v<?= $coreBuild ?>"></script>
+        <script src="<?= Url::asset('modules/system/assets/js/framework-bundle.min.js') ?>?v<?= $coreBuild ?>"></script>
+        <script src="<?= Url::asset('modules/system/assets/js/foundation.js') ?>?v<?= $coreBuild ?>"></script>
+        <script src="<?= Url::asset('modules/system/assets/js/lang/lang.'.App::getLocale().'.js') ?>?v<?= $coreBuild ?>"></script>
+        <script type="module" src="<?= Url::asset('modules/system/assets/js/main.js') ?>?v<?= $coreBuild ?>"></script>
+        <script type="module" src="<?= Url::asset('modules/backend/assets/js/main.js') ?>?v<?= $coreBuild ?>"></script>
+        <script src="<?= Url::asset('modules/backend/assets/js/auth/auth.js') ?>?v<?= $coreBuild ?>"></script>
+        <link href="<?= Url::asset('modules/system/assets/css/main.css') ?>?v<?= $coreBuild ?>" rel="stylesheet" />
+        <link href="<?= Url::asset('modules/backend/assets/css/main.css') ?>?v<?= $coreBuild ?>" rel="stylesheet" />
 
-        <?php foreach ($scripts as $script): ?>
-            <script src="<?= $script . '?v=' . $coreBuild ?>" importance="high"></script>
-        <?php endforeach ?>
-
-        <?php if (!Config::get('backend.enable_service_workers', false)): ?>
-            <script> unregisterServiceWorkers() </script>
-        <?php endif ?>
+        <?= $this->makeLayoutPartial('service_worker', ['forceUnregister' => true]) ?>
 
         <?= $this->makeAssets() ?>
         <?= Block::placeholder('head') ?>
@@ -53,7 +47,7 @@
             $defaultImage1x = $customizationVars->defaultImage1x;
             $defaultImage2x = $customizationVars->defaultImage2x;
 
-            if ($loginBackgroundType === 'october_ai_images') {
+            if ($loginBackgroundType === 'ai_images') {
                 $aiImageIndex = rand(0, 8);
                 $generatedImageData = Backend\Classes\LoginCustomization::getGeneratedImageData();
             }
@@ -74,30 +68,39 @@
                     </div>
                 </div>
 
-                <div class="outer-theme-cell flex-grow-1" <?php if ($loginBackgroundType === 'october_ai_images'): ?>style="<?= e($generatedImageData->background)  ?>"<?php endif?>>
+                <div
+                    class="outer-theme-cell flex-grow-1"
+                    <?php if ($loginBackgroundType === 'ai_images'): ?>style="<?= e($generatedImageData->background) ?>"<?php endif ?>
+                >
                     <div class="d-flex h-100 flex-column align-items-center justify-content-center">
-                    <?php if ($loginBackgroundType === 'october_ai_images'): ?>
-                        <img
-                            width="512"
-                            height="512"
-                            src="<?= Url::asset('/modules/backend/assets/images/october-login-ai-generated/'.$generatedImageData->img) ?>"
-                            alt=""
-                        />
-                    <?php else: ?>
-                        <?php if ($loginCustomization->loginImageType == 'autumn_images'): ?>
+                        <?php if ($loginBackgroundType === 'gradient'): ?>
+                            <link href="<?= Backend::skinAsset('assets/images/october-login-gradients/1.css') . '?v=' . $coreBuild ?>" rel="stylesheet" />
+                            <div class="gradient-background">
+                                <div class="blob blob1"></div>
+                                <div class="blob blob2"></div>
+                            </div>
+                        <?php elseif ($loginBackgroundType === 'ai_images'): ?>
                             <img
-                                src="<?= Url::asset('/modules/backend/assets/images/october-login-theme/'.$defaultImage1x) ?>"
-                                srcset="<?= Url::asset('/modules/backend/assets/images/october-login-theme/'.$defaultImage1x) ?>,
-                                <?= Url::asset('/modules/backend/assets/images/october-login-theme/'.$defaultImage2x) ?> 2x"
+                                width="512"
+                                height="512"
+                                src="<?= Url::asset('/modules/backend/assets/images/october-login-ai-generated/'.$generatedImageData->img) ?>"
                                 alt=""
                             />
-                        <?php elseif ($loginCustomization->loginCustomImage): ?>
-                            <img
-                                src="<?= e($loginCustomization->loginCustomImage) ?>"
-                                alt=""
-                            />
+                        <?php else: ?>
+                            <?php if ($loginCustomization->loginImageType == 'autumn_images'): ?>
+                                <img
+                                    src="<?= Url::asset('/modules/backend/assets/images/october-login-theme/'.$defaultImage1x) ?>"
+                                    srcset="<?= Url::asset('/modules/backend/assets/images/october-login-theme/'.$defaultImage1x) ?>,
+                                    <?= Url::asset('/modules/backend/assets/images/october-login-theme/'.$defaultImage2x) ?> 2x"
+                                    alt=""
+                                />
+                            <?php elseif ($loginCustomization->loginCustomImage): ?>
+                                <img
+                                    src="<?= e($loginCustomization->loginCustomImage) ?>"
+                                    alt=""
+                                />
+                            <?php endif ?>
                         <?php endif ?>
-                    <?php endif ?>
                     </div>
                 </div>
             </div>

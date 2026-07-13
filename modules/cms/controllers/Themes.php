@@ -43,7 +43,7 @@ class Themes extends Controller
 
         $this->addCss('/modules/cms/assets/css/themes.css');
 
-        $this->pageTitle = 'Frontend Theme';
+        $this->pageTitle = 'Site Theme';
         BackendMenu::setContext('October.System', 'system', 'settings');
         SettingsManager::setContext('October.Cms', 'theme');
 
@@ -475,7 +475,9 @@ class Themes extends Controller
             $name = post('theme');
         }
 
-        if (!$name || (!$theme = CmsTheme::load($name))) {
+        $theme = $name ? CmsTheme::load($name) : null;
+
+        if (!$theme || !$theme->isValid()) {
             throw new ApplicationException(__("The theme ':name' is not found.", ['name' => $name]));
         }
 

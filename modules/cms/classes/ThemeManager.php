@@ -7,7 +7,7 @@ use Yaml;
 use File;
 use System;
 use Cms\Classes\Theme as CmsTheme;
-use October\Rain\Composer\Manager as ComposerManager;
+use October\Rain\Composer\ComposerManager;
 use ApplicationException;
 use Exception;
 
@@ -35,51 +35,58 @@ class ThemeManager
     protected $installedThemeDirs;
 
     /**
+     * @var array bootedThemes is for storing themes that have been booted
+     */
+    protected $bootedThemes = [];
+
+    /**
      * instance creates a new instance of this singleton
      */
     public static function instance(): static
     {
-        return App::make('cms.themes');
-    }
-
-    /**
-     * bootAllFrontend
-     */
-    public function bootAllFrontend()
-    {
-        $theme = $this->getActiveTheme();
-        $langPath = $theme->getPath() . '/lang';
-        if (is_dir($langPath)) {
-            Lang::addJsonPath($langPath);
+        try {
+            return App::make('cms.themes');
         }
-
-        if ($parent = $theme->getParentTheme()) {
-            $langPath = $parent->getPath() . '/lang';
-            if (is_dir($langPath)) {
-                Lang::addJsonPath($langPath);
-            }
+        catch (Exception $ex) {
+            return new static;
         }
     }
 
     /**
-     * bootAllBackend will boot language messages for the active theme as `theme.acme::lang.*`
+     * bootAll will boot language messages for the active theme as `theme.acme::lang.*`
+     * if it is in the backend
      */
-    public function bootAllBackend()
+    public function bootAll()
     {
         $theme = $this->getActiveTheme();
+        $this->bootTheme($theme, App::runningInBackend());
+
+        if ($parent = $theme->getParentTheme()) {
+            $this->bootTheme($parent, App::runningInBackend());
+        }
+    }
+
+    /**
+     * bootTheme boots a theme if it hasn't been booted already
+     */
+    protected function bootTheme(CmsTheme $theme, bool $isBackend = false): void
+    {
+        $themeId = $theme->getId();
+
+        if (in_array($themeId, $this->bootedThemes)) {
+            return;
+        }
+
         $langPath = $theme->getPath() . '/lang';
         if (is_dir($langPath)) {
             Lang::addJsonPath($langPath);
-            Lang::addNamespace("theme.{$theme->getId()}", $langPath);
-        }
 
-        if ($parent = $theme->getParentTheme()) {
-            $langPath = $parent->getPath() . '/lang';
-            if (is_dir($langPath)) {
-                Lang::addJsonPath($langPath);
-                Lang::addNamespace("theme.{$parent->getId()}", $langPath);
+            if ($isBackend) {
+                Lang::addNamespace("theme.{$themeId}", $langPath);
             }
         }
+
+        $this->bootedThemes[] = $themeId;
     }
 
     /**
@@ -201,11 +208,13 @@ class ThemeManager
      */
     public function findByIdentifier(string $dirName): ?CmsTheme
     {
-        if (!CmsTheme::exists($dirName)) {
+        $theme = CmsTheme::load($dirName);
+
+        if (!$theme->isValid()) {
             return null;
         }
 
-        return CmsTheme::load($dirName);
+        return $theme;
     }
 
     /**
@@ -273,7 +282,7 @@ class ThemeManager
     {
         $versionHistory = $this->getVersionHistory($dirName);
 
-        $latestVersion = array_key_last($versionHistory);
+        $latestVersion = array_key_first($versionHistory);
 
         if ($latestVersion === null) {
             return '0.0.0';
@@ -310,17 +319,17 @@ class ThemeManager
     /**
      * duplicateTheme duplicates a theme
      */
-    public function duplicateTheme(string $dirName, string $newDirName = null): bool
+    public function duplicateTheme(string $dirName, ?string $newDirName = null): bool
     {
-        if (!$dirName) {
-            return false;
-        }
-
         if (!$newDirName) {
             $newDirName = $dirName . '-copy';
         }
 
         $theme = CmsTheme::load($dirName);
+
+        if (!$theme->isValid()) {
+            return false;
+        }
 
         $sourcePath = $theme->getPath();
         $destinationPath = themes_path().'/'.$newDirName;
@@ -345,7 +354,7 @@ class ThemeManager
     /**
      * createChildTheme will create a child theme
      */
-    public function createChildTheme(string $dirName, string $newDirName = null): bool
+    public function createChildTheme(string $dirName, ?string $newDirName = null): bool
     {
         if (!$newDirName) {
             $newDirName = $dirName . '-child';
@@ -374,7 +383,7 @@ class ThemeManager
     /**
      * importDatabaseTemplates
      */
-    public function importDatabaseTemplates(string $dirName, string $srcDirName = null)
+    public function importDatabaseTemplates(string $dirName, ?string $srcDirName = null)
     {
         if (!$srcDirName) {
             $srcDirName = $dirName;
@@ -412,11 +421,12 @@ class ThemeManager
      */
     public function deleteTheme(string $theme)
     {
-        if (!$theme) {
+        $theme = CmsTheme::load($theme);
+
+        if (!$theme->isValid()) {
             return false;
         }
 
-        $theme = CmsTheme::load($theme);
         if ($theme->isActiveTheme()) {
             throw new ApplicationException(__('Cannot delete the active theme, try making another theme active first.'));
         }

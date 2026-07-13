@@ -23,7 +23,7 @@ trait IsFormElement
     /**
      * addFormField adds a field to the fieldset
      */
-    public function addFormField(string $fieldName = null, string $label = null): FieldDefinition
+    public function addFormField(string $fieldName, ?string $label = null): FieldDefinition
     {
         if ($this->activeTabSection === null) {
             throw new SystemException("The addFormField method should be called when defining fields inside a model. Try using addField, addTabField or addSecondaryTabField instead.");
@@ -84,13 +84,13 @@ trait IsFormElement
     /**
      * addFieldsFromModel from the model
      */
-    protected function addFieldsFromModel(string $inSection = null)
+    protected function addFieldsFromModel(?string $inSection = null)
     {
         if ($this->isNested || !$this->model) {
             return;
         }
 
-        switch (strtolower($inSection)) {
+        switch (strtolower((string) $inSection)) {
             case FormTabs::SECTION_PRIMARY:
                 $this->activeTabSection = $this->allTabs->primary;
                 $modelMethod = 'definePrimaryFormFields';

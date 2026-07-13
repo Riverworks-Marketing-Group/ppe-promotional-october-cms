@@ -3,6 +3,7 @@
 use App;
 use Cms;
 use Flash;
+use Cache;
 use Block;
 use Event;
 use Request;
@@ -17,6 +18,7 @@ use Twig\Extension\AbstractExtension as TwigExtension;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Closure;
 
 /**
  * Extension implements the basic CMS Twig functions and filters.
@@ -39,7 +41,7 @@ class Extension extends TwigExtension
     /**
      * __construct the extension instance.
      */
-    public function __construct(Controller $controller = null)
+    public function __construct(?Controller $controller = null)
     {
         $this->controller = $controller;
     }
@@ -48,7 +50,7 @@ class Extension extends TwigExtension
      * addExtensionToTwig adds this extension to the Twig environment and also
      * creates a hook for others.
      */
-    public static function addExtensionToTwig(TwigEnvironment $twig, Controller $controller = null)
+    public static function addExtensionToTwig(TwigEnvironment $twig, ?Controller $controller = null)
     {
         $twig->addExtension(new static($controller));
 
@@ -109,19 +111,21 @@ class Extension extends TwigExtension
     public function getTokenParsers()
     {
         return [
-            new PageTokenParser,
-            new PartialTokenParser,
-            new AjaxPartialTokenParser,
-            new ContentTokenParser,
-            new PutTokenParser,
-            new PlaceholderTokenParser,
-            new DefaultTokenParser,
-            new FrameworkTokenParser,
-            new ComponentTokenParser,
-            new FlashTokenParser,
-            new ScriptsTokenParser,
-            new StylesTokenParser,
-            new MetaTokenParser,
+            new \Cms\Twig\TokenParser\PageTokenParser,
+            new \Cms\Twig\TokenParser\PartialTokenParser,
+            new \Cms\Twig\TokenParser\AjaxPartialTokenParser,
+            new \Cms\Twig\TokenParser\ContentTokenParser,
+            new \Cms\Twig\TokenParser\PutTokenParser,
+            new \Cms\Twig\TokenParser\PlaceholderTokenParser,
+            new \Cms\Twig\TokenParser\DefaultTokenParser,
+            new \Cms\Twig\TokenParser\FrameworkTokenParser,
+            new \Cms\Twig\TokenParser\ComponentTokenParser,
+            new \Cms\Twig\TokenParser\FlashTokenParser,
+            new \Cms\Twig\TokenParser\ScriptsTokenParser,
+            new \Cms\Twig\TokenParser\StylesTokenParser,
+            new \Cms\Twig\TokenParser\MetaTokenParser,
+            new \Cms\Twig\TokenParser\CacheTokenParser,
+            new \Cms\Twig\TokenParser\PropsTokenParser,
         ];
     }
 
@@ -132,7 +136,7 @@ class Extension extends TwigExtension
     public function getNodeVisitors()
     {
         return [
-            new GetAttrAdjuster
+            new \System\Twig\GetAttrAdjuster
         ];
     }
 
@@ -227,7 +231,11 @@ class Extension extends TwigExtension
         }
 
         if (is_string($result)) {
-            $result = str_replace('<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->', trim($default), $result);
+            $result = str_replace(
+                '<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->',
+                trim((string) $default),
+                $result
+            );
         }
 
         return $result;
@@ -396,7 +404,11 @@ class Extension extends TwigExtension
             $result = $event;
         }
 
-        $result = str_replace('<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->', trim($default), $result);
+        $result = str_replace(
+            '<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->',
+            trim((string) $default),
+            $result
+        );
 
         return $result;
     }
@@ -440,6 +452,36 @@ class Extension extends TwigExtension
 
             $this->putOnceCache[$cacheKey] = true;
         }
+    }
+
+    /**
+     * setCache
+     */
+    public function setCache(string $key, $ttl, $callable): string
+    {
+        $repo = Cache::store(config('cache.twig', config('cache.default')));
+
+        $themeCode = $this->controller->getTheme()?->getDirName();
+
+        $cacheKey = "cms_twig_{$themeCode}_cache_{$key}";
+
+        if ($ttl === null) {
+            $value = $repo->rememberForever($cacheKey, $callable);
+        }
+        else {
+            if ($ttl instanceof \DateTimeInterface) {
+                $expiresAt = $ttl;
+            }
+            elseif ($ttl instanceof \DateInterval) {
+                $expiresAt = now()->add($ttl);
+            }
+            else {
+                $expiresAt = now()->addMinutes((int) $ttl);
+            }
+            $value = $repo->remember($cacheKey, $expiresAt, $callable);
+        }
+
+        return is_string($value) ? $value : (string) $value;
     }
 
     /**

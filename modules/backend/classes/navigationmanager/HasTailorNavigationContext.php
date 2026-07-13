@@ -14,7 +14,7 @@ trait HasTailorNavigationContext
     /**
      * setTailorContextUuid
      */
-    public function setTailorContextUuid(string $uuid, string $sideMenuItemCode = null)
+    public function setTailorContextUuid(string $uuid, ?string $sideMenuItemCode = null)
     {
         if (!System::hasModule('Tailor')) {
             return;
@@ -35,7 +35,7 @@ trait HasTailorNavigationContext
     /**
      * setTailorContext
      */
-    public function setTailorContext(string $handle, string $sideMenuItemCode = null)
+    public function setTailorContext(string $handle, ?string $sideMenuItemCode = null)
     {
         if (!System::hasModule('Tailor')) {
             return;

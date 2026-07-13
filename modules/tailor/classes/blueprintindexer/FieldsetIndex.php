@@ -50,7 +50,7 @@ trait FieldsetIndex
     /**
      * findFieldset
      */
-    public function findFieldset(string $uuid, string $group = null): ?Fieldset
+    public function findFieldset(string $uuid, ?string $group = null): ?Fieldset
     {
         $index = $this->listFieldsetsRaw();
 

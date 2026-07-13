@@ -4,7 +4,7 @@ use File;
 use Cache;
 use System as SystemHelper;
 use System\Models\Parameter;
-use October\Rain\Composer\Manager as ComposerManager;
+use October\Rain\Composer\ComposerManager;
 
 /**
  * ManagesProject
@@ -159,7 +159,7 @@ trait ManagesProject
     /**
      * requestProjectDetails requests details about a project based on its identifier
      */
-    public function requestProjectDetails(string $projectKey = null): array
+    public function requestProjectDetails(?string $projectKey = null): array
     {
         if ($projectKey === null) {
             $projectKey = $this->getProjectKey();
@@ -175,7 +175,7 @@ trait ManagesProject
     {
         $cacheKey = 'system-market-project';
 
-        if ($cache = Cache::get($cacheKey)) {
+        if ($cache = Cache::memo()->get($cacheKey)) {
             return @json_decode(@base64_decode($cache), true) ?: [];
         }
 
@@ -199,7 +199,7 @@ trait ManagesProject
 
         $cacheKey = "system-market-browse-{$type}-{$page}";
 
-        if ($cache = Cache::get($cacheKey)) {
+        if ($cache = Cache::memo()->get($cacheKey)) {
             return @json_decode(@base64_decode($cache), true) ?: [];
         }
 

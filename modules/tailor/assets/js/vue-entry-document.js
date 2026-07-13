@@ -1,4 +1,7 @@
-oc.registerControl('vue-entry-document', class extends oc.VueControlBase {
+import { VueControlBase } from '../../../backend/assets/js/vueapp/vue-control-base.js';
+import { PreviewTracker } from './preview-tracker.js';
+
+class VueEntryDocument extends VueControlBase {
     init() {
         this.registerState({
             showDraftNotes: true,
@@ -32,11 +35,11 @@ oc.registerControl('vue-entry-document', class extends oc.VueControlBase {
         // Wait for hot controls
         setTimeout(() => this.refreshToolbars(), 0);
 
-        this.state.eventBus.$on('documentloadingstart', () => {
+        this.state.eventBus.on('documentloadingstart', () => {
             this.state.processing = true;
         });
 
-        this.state.eventBus.$on('documentloadingend', () => {
+        this.state.eventBus.on('documentloadingend', () => {
             this.state.processing = false;
         });
     }
@@ -48,7 +51,7 @@ oc.registerControl('vue-entry-document', class extends oc.VueControlBase {
 
     refreshToolbars() {
         this.state.toolbarExtensionPoint.splice(0);
-        this.state.eventBus.$emit('extendapptoolbar');
+        this.state.eventBus.emit('extendapptoolbar');
     }
 
     refreshToolbarExtraButtons() {
@@ -305,7 +308,7 @@ oc.registerControl('vue-entry-document', class extends oc.VueControlBase {
         this.state.initial.drafts = data.result.drafts;
         this.state.initial.fullSlug = data.result.fullSlug;
 
-        Vue.set(this.state.toolbarElements, 0, this.makeSaveButton());
+        this.state.toolbarElements[0] = this.makeSaveButton();
 
         if (this.previewTracker && this.previewTracker.isPreviewAvailable()) {
             this.previewTracker.refreshPreview();
@@ -361,19 +364,18 @@ oc.registerControl('vue-entry-document', class extends oc.VueControlBase {
         this.state.toolbarDisabled = true;
 
         if (!this.previewTracker) {
-            this.previewTracker = oc.Modules.import('tailor.preview-tracker').newTracker();
+            this.previewTracker = PreviewTracker.newTracker();
         }
 
         try {
             if (this.previewTracker.isPreviewAvailable()) {
                 await oc.request(targetElement, 'onPreview', {
-                    async: true,
                     data: { preview_token: this.previewTracker.getToken() }
                 });
                 this.previewTracker.refreshPreview(true);
             }
             else {
-                const data = await oc.request(targetElement, 'onPreview', { async: true });
+                const data = await oc.request(targetElement, 'onPreview');
                 this.previewTracker.openPreview(data.token, data.url);
             }
         }
@@ -396,4 +398,9 @@ oc.registerControl('vue-entry-document', class extends oc.VueControlBase {
         }
         catch (error) {}
     }
-});
+}
+
+oc.registerControl('vue-entry-document', VueEntryDocument);
+
+export { VueEntryDocument };
+export default VueEntryDocument;

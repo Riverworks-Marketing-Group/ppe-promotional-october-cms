@@ -198,9 +198,9 @@ class SnippetManager
         $key = self::getPartialMapCacheKey($theme);
 
         $result = [];
-        $cached = Cache::get($key, false);
+        $cached = Cache::memo()->get($key, false);
 
-        if ($cached !== false && ($cached = @unserialize($cached)) !== false) {
+        if ($cached !== false && ($cached = @unserialize($cached, ['allowed_classes' => false])) !== false) {
             return $cached;
         }
 

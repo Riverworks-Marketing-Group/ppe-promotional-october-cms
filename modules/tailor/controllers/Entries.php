@@ -6,7 +6,6 @@ use Flash;
 use Backend;
 use Redirect;
 use BackendMenu;
-use Tailor\Models\EntryRecord;
 use Tailor\Classes\RecordIndexer;
 use Tailor\Classes\Blueprint;
 use Tailor\Classes\BlueprintIndexer;
@@ -58,6 +57,11 @@ class Entries extends WildcardController
     protected $actionMethod;
 
     /**
+     * @var \Model modelInstance is an instance of the blueprint model
+     */
+    protected $modelInstance;
+
+    /**
      * @var array customMessages contains default messages that you can override
      */
     protected $customMessages = [
@@ -95,6 +99,8 @@ class Entries extends WildcardController
             throw new NotFoundException;
         }
 
+        $this->modelInstance = $this->activeSource->newModelInstance();
+
         $this->checkSourcePermission();
 
         $this->setNavigationContext();
@@ -125,11 +131,11 @@ class Entries extends WildcardController
         }
 
         if ($this->actionMethod) {
-            $this->addJs('/modules/tailor/assets/js/vue-entry-header-controls.js');
-            $this->addJs('/modules/tailor/assets/js/vue-entry-document.js');
-            $this->addJs('/modules/tailor/assets/js/preview-tracker.js');
+            $this->bodyClass = $this->getDesignBodyClass();
 
-            $this->registerVueComponent(\Backend\VueComponents\Document::class);
+            $this->addJs('/modules/tailor/assets/js/vue-entry-header-controls.js', ['type' => 'module']);
+            $this->addJs('/modules/tailor/assets/js/vue-entry-document.js', ['type' => 'module']);
+
             $this->registerVueComponent(\Backend\VueComponents\DropdownMenuButton::class);
             $this->registerVueComponent(\Tailor\VueComponents\PublishingControls::class);
             $this->registerVueComponent(\Tailor\VueComponents\PublishButton::class);
@@ -219,8 +225,6 @@ class Entries extends WildcardController
             return $this->asExtension('DraftController')->create();
         }
 
-        $this->bodyClass = 'compact-container';
-
         $this->setPageTitleFromMessage('titleCreateForm', "Create Entry");
 
         $this->asExtension('FormController')->create();
@@ -235,8 +239,6 @@ class Entries extends WildcardController
      */
     public function update($recordId = null)
     {
-        $this->bodyClass = 'compact-container';
-
         $this->setPageTitleFromMessage('titleUpdateForm', "Update Entry");
 
         if ($this->isVersionMode()) {
@@ -257,7 +259,6 @@ class Entries extends WildcardController
 
         // Record not found or some error happened
         if (!$model) {
-            // throw new ApplicationException('Record not found');
             return;
         }
 
@@ -494,6 +495,8 @@ class Entries extends WildcardController
         }
 
         $this->formGetWidget()->setFormValues();
+        $this->prepareVars();
+
         return ['#entryPrimaryTabs' => $this->makePartial('primary_tabs')];
     }
 
@@ -542,6 +545,9 @@ class Entries extends WildcardController
             $definition . '-' . $section->handleSlug
         );
 
+        // Model class
+        $config->modelClass = $this->modelInstance::class;
+
         return $config;
     }
 
@@ -553,18 +559,37 @@ class Entries extends WildcardController
         $model = $widget->getModel();
 
         // Entry type switching
-        if ($model instanceof \Tailor\Classes\BlueprintModel && ($entryType = post('EntryRecord[content_group]'))) {
-            $model->setBlueprintGroup($entryType);
+        if ($model instanceof \Tailor\Classes\BlueprintModel) {
+            if ($entryType = post('_content_group_switch')) {
+                $model->setBlueprintGroup($entryType);
+            }
+            elseif (!$model->exists) {
+                $model->setDefaultContentGroup();
+            }
         }
 
         // Disable adaptive fields
         $widget->bindEvent('form.extendFields', function ($fields) {
             foreach ($fields as $field) {
                 if ($field->span === 'adaptive') {
-                    $field->span('full')->externalToolbarAppState(null);
+                    $field->span('full')->externalToolbarBus(null);
                 }
             }
         });
+    }
+
+    /**
+     * relationBeforeSave
+     */
+    public function relationBeforeSave($field, $model)
+    {
+        // Entry type switching
+        if (
+            $model instanceof \Tailor\Classes\BlueprintModel &&
+            ($entryType = post('_content_group_value'))
+        ) {
+            $model->setBlueprintGroup($entryType);
+        }
     }
 
     /**
@@ -649,6 +674,11 @@ class Entries extends WildcardController
      */
     public function formBeforeSave($model)
     {
+        // Entry type switching
+        if ($entryType = post('_content_group_value')) {
+            $model->setBlueprintGroup($entryType);
+        }
+
         if ($this->isSectionVersionable()) {
             $this->asExtension('VersionController')->versionBeforeSave($model);
         }
@@ -671,7 +701,7 @@ class Entries extends WildcardController
             $recordId = $this->findSingularModelObjectWithFallback()->getKey();
         }
 
-        $model = EntryRecord::inSection($this->activeSource->handle);
+        $model = $this->modelInstance::inSection($this->activeSource->handle);
 
         // Remove multisite restriction
         if ($this->formHasMultisite($model)) {
@@ -694,7 +724,7 @@ class Entries extends WildcardController
 
         if (!$model) {
             throw new ApplicationException(__("Form record with an ID of :id could not be found.", [
-                'class' => EntryRecord::class, 'id' => $recordId
+                'class' => $this->modelInstance::class, 'id' => $recordId
             ]));
         }
 
@@ -724,7 +754,7 @@ class Entries extends WildcardController
      */
     public function formCreateModelObject()
     {
-        $model = new EntryRecord;
+        $model = $this->modelInstance;
 
         $model->extendWithBlueprint($this->activeSource->uuid);
 
@@ -744,7 +774,7 @@ class Entries extends WildcardController
     public function formExtendModel($model)
     {
         // Entry type switching
-        if ($entryType = post('EntryRecord[content_group]')) {
+        if ($entryType = post('_content_group_switch')) {
             $model->setBlueprintGroup($entryType);
         }
     }
@@ -895,22 +925,22 @@ class Entries extends WildcardController
         $uuid = $this->activeSource->uuid;
 
         if (!$this->isSectionMultisite()) {
-            return EntryRecord::findSingleForSectionUuid($uuid);
+            return $this->modelInstance::findSingleForSectionUuid($uuid);
         }
 
         // Check site context first
-        $record = EntryRecord::inSectionUuid($uuid)->first();
+        $record = $this->modelInstance::inSectionUuid($uuid)->first();
         if ($record) {
             return $record;
         }
 
         // Try by removing the multisite restriction
-        $record = EntryRecord::inSectionUuid($uuid)->withSites()->first();
+        $record = $this->modelInstance::inSectionUuid($uuid)->withSites()->first();
         if ($record) {
             return $record;
         }
 
         // Time to create a new record
-        return EntryRecord::findSingleForSectionUuid($uuid);
+        return $this->modelInstance::findSingleForSectionUuid($uuid);
     }
 }

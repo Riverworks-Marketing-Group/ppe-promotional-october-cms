@@ -56,7 +56,7 @@ class CustomMultiJoinRelation extends MorphToMany
     /**
      * addDefinedConstraintsToRelation
      */
-    public function addDefinedConstraintsToRelation($relation, array $args = null)
+    public function addDefinedConstraintsToRelation($relation, ?array $args = null)
     {
         parent::addDefinedConstraintsToRelation($relation, $args);
 
@@ -66,7 +66,7 @@ class CustomMultiJoinRelation extends MorphToMany
     /**
      * addDefinedConstraintsToQuery
      */
-    public function addDefinedConstraintsToQuery($query, array $args = null)
+    public function addDefinedConstraintsToQuery($query, ?array $args = null)
     {
         parent::addDefinedConstraintsToQuery($query, $args);
     }

@@ -182,7 +182,7 @@ trait HasOverrides
 
     /**
      * formExtendFieldsBefore is called before the form fields are defined
-     * @param Backend\Widgets\Form $host The hosting form widget
+     * @param \Backend\Widgets\Form $host The hosting form widget
      * @return void
      */
     public function formExtendFieldsBefore($host)
@@ -191,8 +191,8 @@ trait HasOverrides
 
     /**
      * formExtendFields is called after the form fields are defined
-     * @param Backend\Widgets\Form $host The hosting form widget
-     * @param array $fields Array of all defined form field objects (\Backend\Classes\FormField)
+     * @param \Backend\Widgets\Form $host The hosting form widget
+     * @param \October\Rain\Element\ElementHolder|array $fields Array of all defined form field objects (\Backend\Classes\FormField)
      * @return void
      */
     public function formExtendFields($host, $fields)
@@ -202,7 +202,7 @@ trait HasOverrides
     /**
      * formExtendRefreshData is called before the form is refreshed, should return an array
      * of additional save data.
-     * @param Backend\Widgets\Form $host The hosting form widget
+     * @param \Backend\Widgets\Form $host The hosting form widget
      * @param array $saveData Current save data
      * @return array
      */
@@ -213,7 +213,7 @@ trait HasOverrides
     /**
      * formExtendRefreshFields is called when the form is refreshed, giving the opportunity
      * to modify the form fields.
-     * @param Backend\Widgets\Form $host The hosting form widget
+     * @param \Backend\Widgets\Form $host The hosting form widget
      * @param array $fields Current form fields
      * @return array
      */
@@ -224,7 +224,7 @@ trait HasOverrides
     /**
      * formExtendRefreshResults is called after the form is refreshed, should return an
      * array of additional result parameters.
-     * @param Backend\Widgets\Form $host The hosting form widget
+     * @param \Backend\Widgets\Form $host The hosting form widget
      * @param array $result Current result parameters.
      * @return array
      */

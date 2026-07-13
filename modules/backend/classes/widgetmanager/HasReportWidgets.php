@@ -1,6 +1,7 @@
 <?php namespace Backend\Classes\WidgetManager;
 
 use App;
+use Str;
 use Event;
 use System;
 use BackendAuth;
@@ -23,6 +24,12 @@ trait HasReportWidgets
      * @var array reportWidgetCallbacks cache
      */
     protected $reportWidgetCallbacks = [];
+
+    /**
+     * @var array reportWidgetHints keyed by their code.
+     * Stored in the report of ['reportwidgetcode' => 'FormWidgetClass'].
+     */
+    protected $reportWidgetHints;
 
     /**
      * listReportWidgets returns a list of registered report widgets.
@@ -116,7 +123,18 @@ trait HasReportWidgets
      */
     public function registerReportWidget($className, $widgetInfo)
     {
+        if (!is_array($widgetInfo)) {
+            $widgetInfo = ['code' => $widgetInfo];
+        }
+
+        $widgetCode = $widgetInfo['code'] ?? null;
+
+        if (!$widgetCode) {
+            $widgetCode = Str::getClassId($className);
+        }
+
         $this->reportWidgets[$className] = $widgetInfo;
+        $this->reportWidgetHints[$widgetCode] = $className;
     }
 
     /**
@@ -133,6 +151,33 @@ trait HasReportWidgets
     public function registerReportWidgets(callable $definitions)
     {
         $this->reportWidgetCallbacks[] = $definitions;
+    }
+
+    /**
+     * resolveReportWidget returns a class name from a report widget code
+     * Normalizes a class name or converts an code to its class name.
+     * Returns the class name resolved, or the original name.
+     * @param string $name
+     * @return string
+     */
+    public function resolveReportWidget($name)
+    {
+        if ($this->reportWidgets === null) {
+            $this->listReportWidgets();
+        }
+
+        $hints = $this->reportWidgetHints;
+
+        if (isset($hints[$name])) {
+            return $hints[$name];
+        }
+
+        $_name = Str::normalizeClassName($name);
+        if (isset($this->reportWidgets[$_name])) {
+            return $_name;
+        }
+
+        return $name;
     }
 
     /**

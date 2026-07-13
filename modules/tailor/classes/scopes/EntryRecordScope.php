@@ -17,13 +17,7 @@ class EntryRecordScope implements ScopeInterface
      */
     public function apply(BuilderBase $builder, ModelBase $model)
     {
-        if ($model->isEntryStructure()) {
-            $builder->orderBy('nest_left');
-        }
-
-        if ($model->isEntryStream()) {
-            $builder->orderBy('published_at_date', 'desc');
-        }
+        // Placeholder
     }
 
     /**
@@ -31,7 +25,7 @@ class EntryRecordScope implements ScopeInterface
      */
     public function extend(BuilderBase $builder)
     {
-        $removeOnMethods = ['orderBy', 'groupBy'];
+        $removeOnMethods = ['reorder', 'orderBy', 'groupBy'];
 
         foreach ($removeOnMethods as $method) {
             $builder->macro($method, function ($builder, ...$args) use ($method) {

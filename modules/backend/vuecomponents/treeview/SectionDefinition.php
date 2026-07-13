@@ -88,7 +88,7 @@ class SectionDefinition
     /**
      * addMenuItem
      */
-    public function addMenuItem($type, string $label = null, string $command = null)
+    public function addMenuItem($type, ?string $label = null, ?string $command = null)
     {
         if (!$this->menuItems) {
             $this->menuItems = new ItemDefinition(ItemDefinition::TYPE_TEXT, 'root', 'none');
@@ -112,7 +112,7 @@ class SectionDefinition
     /**
      * addCreateMenuItem
      */
-    public function addCreateMenuItem($type, string $label = null, string $command = null)
+    public function addCreateMenuItem($type, ?string $label = null, ?string $command = null)
     {
         if (!$this->createMenuItems) {
             $this->createMenuItems = new ItemDefinition(ItemDefinition::TYPE_TEXT, 'root', 'none');

@@ -1,12 +1,9 @@
 <?php namespace System\Traits;
 
-use App;
-use Url;
 use Html;
 use File;
 use Event;
 use Request;
-use Backend;
 use System\Classes\CombineAssets;
 
 /**
@@ -47,9 +44,6 @@ trait AssetMaker
      * flushAssets disables the use, and subsequent broadcast, of assets. This is useful
      * to call during an AJAX request to speed things up. This method works
      * by specifically targeting the hasAssetsDefined method.
-     *
-     * @todo in terms of speeding up AJAX, assets should be requested instead of sent
-     * by default all the time, widgets can specify if they will need a asset refresh
      *
      * @return void
      */
@@ -320,6 +314,43 @@ trait AssetMaker
     }
 
     /**
+     * getAssetPathsWithAttributes returns an array of all registered asset paths
+     * with their attributes, suitable for use with ajax()->asset().
+     *
+     * Returns format: ['js' => [path => attributes, ...], 'css' => [...], ...]
+     *
+     * @return array
+     */
+    public function getAssetPathsWithAttributes()
+    {
+        $this->removeDuplicateAssets();
+
+        // Internal attributes to be excluded from output
+        $reserved = ['build'];
+
+        $assets = [];
+
+        foreach ($this->assets as $type => $collection) {
+            $assets[$type] = [];
+            foreach ($collection as $asset) {
+                $path = $this->getAssetEntryBuildPath($asset);
+                $attributes = array_except(array_get($asset, 'attributes', []), $reserved);
+                $assets[$type][$path] = $attributes;
+            }
+        }
+
+        foreach (['js', 'css'] as $bundleType) {
+            foreach ($this->combineBundledAssets($bundleType) as $asset) {
+                $path = $this->getAssetEntryBuildPath($asset);
+                $attributes = array_except(array_get($asset, 'attributes', []), $reserved);
+                $assets[$bundleType][$path] = $attributes;
+            }
+        }
+
+        return $assets;
+    }
+
+    /**
      * getAssetPath locates a file based on it's definition. If the file starts with
      * a forward slash, it will be returned in context of the application public path,
      * otherwise it will be returned in context of the asset path.
@@ -329,7 +360,11 @@ trait AssetMaker
      */
     public function getAssetPath($fileName, $assetPath = null)
     {
-        if (starts_with($fileName, ['//', 'http://', 'https://'])) {
+        if (
+            str_starts_with($fileName, '//') ||
+            str_starts_with($fileName, 'http://') ||
+            str_starts_with($fileName, 'https://')
+        ) {
             return $fileName;
         }
 
@@ -375,34 +410,12 @@ trait AssetMaker
     }
 
     /**
-     * Internal helper, attaches a build code to an asset path
-     * @param  array $asset Stored asset array
+     * getAssetEntryBuildPath is an internal marker that returns the asset path
      * @return string
      */
     protected function getAssetEntryBuildPath($asset)
     {
-        $path = $asset['path'];
-
-        // Has build and query string not already included
-        $useBuild = !empty($asset['attributes']['build']) &&
-            strpos($path, '?') === false;
-
-        if ($useBuild) {
-            $build = $asset['attributes']['build'];
-
-            if (!App::runningInBackend()) {
-                $build = '';
-            }
-            else {
-                $build = 'v' . Backend::assetVersion();
-            }
-
-            if (strlen($build)) {
-                $path .= '?' . $build;
-            }
-        }
-
-        return $path;
+        return $asset['path'];
     }
 
     /**
@@ -410,12 +423,16 @@ trait AssetMaker
      */
     protected function getAssetScheme(string $asset): string
     {
-        if (starts_with($asset, ['//', 'http://', 'https://'])) {
+        if (
+            str_starts_with($asset, '//') ||
+            str_starts_with($asset, 'http://') ||
+            str_starts_with($asset, 'https://')
+        ) {
             return $asset;
         }
 
         if (substr($asset, 0, 1) === '/') {
-            $asset = Url::asset($asset);
+            $asset = Request::getBasePath() . $asset;
         }
 
         return $asset;

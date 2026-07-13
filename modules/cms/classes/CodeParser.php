@@ -123,10 +123,10 @@ class CodeParser
             }
         }
 
-        $body = $this->object->code;
+        $body = (string) $this->object->code;
         $body = preg_replace('/^\s*function/m', 'public function', $body);
 
-        $pattern = '/(use\s+[a-z0-9_\\\\]+(\s+as\s+[a-z0-9_]+)?;\n?)/mi';
+        $pattern = '/(use\s+[a-z0-9_\\\\]+(\s+as\s+[a-z0-9_]+)?;(?:\r?\n)?)/mi';
         preg_match_all($pattern, $body, $namespaces);
         $body = preg_replace($pattern, '', $body);
 
@@ -271,7 +271,7 @@ class CodeParser
 
         if (
             $cached !== false &&
-            ($cached = @unserialize(@base64_decode($cached))) !== false
+            ($cached = @unserialize(@base64_decode($cached), ['allowed_classes' => false])) !== false
         ) {
             return $cached;
         }

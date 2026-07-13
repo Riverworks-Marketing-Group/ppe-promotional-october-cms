@@ -13,6 +13,7 @@ use October\Rain\Element\Navigation\ItemDefinition;
  * @method SideMenuItem attributes(array $attributes) attributes
  * @method SideMenuItem permissions(array $permissions) permissions
  * @method SideMenuItem itemType(string $itemType) itemType
+ * @method SideMenuItem visibleOn(string|array $visibleOn) visibleOn another side menu item code
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges

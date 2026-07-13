@@ -144,7 +144,7 @@ class PaletteEditor extends FormWidgetBase
     /**
      * getPaletteValue
      */
-    protected function getPaletteValue(string $mode = null): array
+    protected function getPaletteValue(?string $mode = null): array
     {
         if ($mode === null) {
             $mode = $this->getColorModeValue();

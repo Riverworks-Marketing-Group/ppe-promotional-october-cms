@@ -94,7 +94,7 @@ class MailBrandSetting extends SettingModel
     {
         $cacheKey = self::instance()->cacheKey;
 
-        if ($cache = Cache::get($cacheKey)) {
+        if ($cache = Cache::memo()->get($cacheKey)) {
             return $cache;
         }
 
@@ -103,7 +103,7 @@ class MailBrandSetting extends SettingModel
             Cache::forever($cacheKey, $customCss);
         }
         catch (Exception $ex) {
-            $customCss = '/* ' . $ex->getMessage() . ' */';
+            $customCss = '/* ' . e($ex->getMessage()) . ' */';
         }
 
         return $customCss;

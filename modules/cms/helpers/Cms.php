@@ -103,7 +103,7 @@ class Cms
      * entryUrl returns an entry point URL from the CMS theme based on a component name
      * and the isDefault component property to assign it explicitly.
      */
-    public function entryUrl($componentName, array $parameters = [], array $componentProps = null)
+    public function entryUrl($componentName, array $parameters = [], ?array $componentProps = null)
     {
         // @todo check cached, if not, see \Tailor\Behaviors\PreviewController for example -sg
         $pages = $componentProps

@@ -132,7 +132,7 @@ class Loader extends LoaderBase implements TwigLoaderInterface
 
     /**
      * findFallbackObject looks up a fallback CMS partial object.
-     * @return Cms\Classes\Partial
+     * @return \Cms\Classes\Partial
      */
     protected function findFallbackObject($name)
     {
@@ -156,7 +156,8 @@ class Loader extends LoaderBase implements TwigLoaderInterface
             return $this->fallbackCache[$name] = CmsPartial::find($name);
         }
         catch (Exception $ex) {
-            return false;
         }
+
+        return false;
     }
 }

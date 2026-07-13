@@ -126,7 +126,7 @@ div.mainmenu-submenu-overlay {
     }
 }
 
-html.mobile {
+@media (pointer: coarse) {
     ul.mainmenu-items {
         &.mainmenu-submenu-dropdown {
             > li.mainmenu-item {
@@ -135,13 +135,5 @@ html.mobile {
                 }
             }
         }
-    }
-}
-
-// PJAX support
-html[data-turbo-preview] {
-    ul.mainmenu-items.mainmenu-submenu-dropdown,
-    div.mainmenu-submenu-overlay {
-        display: none !important;
     }
 }

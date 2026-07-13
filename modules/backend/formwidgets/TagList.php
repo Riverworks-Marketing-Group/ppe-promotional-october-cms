@@ -28,12 +28,12 @@ class TagList extends FormWidgetBase
     /**
      * @var bool customTags allowed to be entered manually by the user.
      */
-    public $customTags = true;
+    public $customTags = false;
 
     /**
      * @var bool useKey instead of value for saving and reading data.
      */
-    public $useKey = false;
+    public $useKey = true;
 
     /**
      * @var mixed options settings. Set to true to get from model.
@@ -90,6 +90,11 @@ class TagList extends FormWidgetBase
             'placeholder'
         ]);
 
+        // Keys cannot be used with custom tags
+        if ($this->customTags) {
+            $this->useKey = false;
+        }
+
         $this->processMode();
 
         $this->useOptions = $this->formField->hasOptions();
@@ -139,7 +144,6 @@ class TagList extends FormWidgetBase
         $this->vars['maxItems'] = $this->maxItems;
         $this->vars['useKey'] = $this->useKey;
         $this->vars['field'] = $this->formField;
-        $this->vars['fieldOptions'] = $this->getFieldOptions();
         $this->vars['selectedValues'] = $this->getLoadValue();
         $this->vars['customSeparators'] = $this->getCustomSeparators();
     }

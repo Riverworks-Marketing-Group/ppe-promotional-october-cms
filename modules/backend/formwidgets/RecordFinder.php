@@ -228,7 +228,7 @@ class RecordFinder extends FormWidgetBase
     protected function loadAssets()
     {
         $this->addCss('css/recordfinder.css');
-        $this->addJs('js/recordfinder.js');
+        $this->addJs('js/recordfinder.js', ['type' => 'module']);
     }
 
     /**
@@ -442,7 +442,7 @@ class RecordFinder extends FormWidgetBase
         $config->showCheckboxes = false;
         $config->defaultSort = $this->defaultSort;
         $config->recordsPerPage = $this->recordsPerPage;
-        $config->recordOnClick = sprintf("$('#%s').recordFinder('updateRecord', this, ':" . $this->getKeyFromAttributeName() . "')", $this->getId());
+        $config->recordOnClick = sprintf("oc.fetchControl(document.getElementById('%s'), 'recordfinder').updateRecord(this, ':" . $this->getKeyFromAttributeName() . "')", $this->getId());
 
         // Structure support
         $structureConfig = $this->makeListStructureConfig($config);
@@ -500,14 +500,12 @@ class RecordFinder extends FormWidgetBase
         elseif ($this->structure === true) {
             $structureConfig['showTree'] = true;
         }
-        // Auto detection, waiting on a tailor refactor
-        // @todo see https://github.com/octobercms/october-private/pull/552
-        // elseif (
-        //     ($model = $config->model) &&
-        //     $model->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)
-        // ) {
-        //     $structureConfig['showTree'] = true;
-        // }
+        elseif (
+            ($model = $config->model) &&
+            $model->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)
+        ) {
+            $structureConfig['showTree'] = true;
+        }
 
         // Force read-only mode
         if ($structureConfig) {

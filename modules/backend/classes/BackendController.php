@@ -1,9 +1,11 @@
 <?php namespace Backend\Classes;
 
 use App;
+use Site;
 use File;
 use View;
 use System;
+use Request;
 use Response;
 use Illuminate\Routing\Controller as ControllerBase;
 use October\Rain\Router\Helper as RouterHelper;
@@ -77,25 +79,30 @@ class BackendController extends ControllerBase
                 : $this->runPageNotFound();
         }
 
+        // Locate edit site
+        $this->findEditSite();
+
         // Look for App or Module controller
         $module = $params[0] ?? 'backend';
         $controller = $params[1] ?? 'index';
         $isApp = strtolower($module) === 'app';
-
-        self::$action = $action = isset($params[2]) ? $this->parseAction($params[2]) : 'index';
-        self::$params = $controllerParams = array_slice($params, 3);
         $controllerClass = "{$module}\\Controllers\\{$controller}";
         $controllerBase = $isApp ? base_path() : base_path('modules');
+
+        // Store the current context
+        self::$action = $params[2] ?? 'index';
+        self::$params = array_slice($params, 3);
+
         if ($controllerObj = $this->findController(
             $controllerClass,
-            $action,
+            self::$action,
             $controllerBase
         )) {
             if (!$isApp && !System::hasModule(ucfirst($module))) {
                 return Response::make(View::make('backend::404'), 404);
             }
 
-            return $controllerObj->run($action, $controllerParams);
+            return $controllerObj->run(self::$action, self::$params);
         }
 
         // Look for Plugin controller using hint segment
@@ -104,16 +111,18 @@ class BackendController extends ControllerBase
         if ($namespace && str_contains($namespace, '.')) {
             [$author, $plugin] = explode('.', strtolower($namespace));
             $controller = $params[1] ?? 'index';
-
-            self::$action = $action = isset($params[2]) ? $this->parseAction($params[2]) : 'index';
-            self::$params = $controllerParams = array_slice($params, 3);
             $controllerClass = "{$author}\\{$plugin}\Controllers\\{$controller}";
+
+            // Store the current context
+            self::$action = $params[2] ?? 'index';
+            self::$params = array_slice($params, 3);
+
             if ($controllerObj = $this->findController(
                 $controllerClass,
-                $action,
+                self::$action,
                 plugins_path()
             )) {
-                return $controllerObj->run($action, $controllerParams);
+                return $controllerObj->run(self::$action, self::$params);
             }
         }
 
@@ -121,25 +130,47 @@ class BackendController extends ControllerBase
         if (count($params) >= 2) {
             [$author, $plugin] = $params;
             $controller = $params[2] ?? 'index';
-
-            self::$action = $action = isset($params[3]) ? $this->parseAction($params[3]) : 'index';
-            self::$params = $controllerParams = array_slice($params, 4);
             $controllerClass = "{$author}\\{$plugin}\Controllers\\{$controller}";
+
+            // Store the current context
+            self::$action = $params[3] ?? 'index';
+            self::$params = array_slice($params, 4);
+
             if ($controllerObj = $this->findController(
                 $controllerClass,
-                $action,
+                self::$action,
                 plugins_path()
             )) {
                 if (PluginManager::instance()->isDisabled(ucfirst($author).'.'.ucfirst($plugin))) {
                     return Response::make(View::make('backend::404'), 404);
                 }
 
-                return $controllerObj->run($action, $controllerParams);
+                return $controllerObj->run(self::$action, self::$params);
             }
         }
 
         // Fall back to CMS controller
         return $this->runPageNotFound();
+    }
+
+    /**
+     * findEditSite locates the edit site based on the current request
+     */
+    protected function findEditSite()
+    {
+        if (!Site::hasAnyEditSite()) {
+            return;
+        }
+
+        if ($id = get('_site_id')) {
+            Site::applyEditSiteId($id);
+        }
+        elseif ($id = Request::header('X_SITE_ID')) {
+            Site::applyEditSiteId($id);
+        }
+        elseif ($site = Site::getEditSiteFromRequest()) {
+            Site::applyEditSite($site);
+        }
     }
 
     /**
@@ -188,7 +219,10 @@ class BackendController extends ControllerBase
 
         $controllerObj = App::make($controller);
 
-        if ($controllerObj->actionExists($action)) {
+        // Parse the action now that the controller class is loaded
+        self::$action = $this->parseAction($controllerObj, $action);
+
+        if ($controllerObj->actionExists(self::$action)) {
             return $controllerObj;
         }
 
@@ -196,14 +230,19 @@ class BackendController extends ControllerBase
     }
 
     /**
-     * parseAction processes the action name, since dashes are not supported in PHP methods
+     * parseAction processes the action name, since dashes are not supported in PHP methods.
+     * WildcardControllers keep the original action name since it is used as a parameter.
      */
-    protected function parseAction(string $actionName): string
+    protected function parseAction($controller, string $actionName): string
     {
-        if (strpos($actionName, '-') !== false) {
-            return snake_case(camel_case($actionName));
+        if ($controller instanceof WildcardController) {
+            return $actionName;
         }
 
-        return $actionName;
+        if (strpos($actionName, '-') === false) {
+            return $actionName;
+        }
+
+        return snake_case(camel_case($actionName));
     }
 }

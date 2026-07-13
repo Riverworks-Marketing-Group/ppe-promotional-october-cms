@@ -361,7 +361,7 @@ class NodeDefinition
     /**
      * addRootMenuItem
      */
-    public function addRootMenuItem($type, string $label = null, string $command = null)
+    public function addRootMenuItem($type, ?string $label = null, ?string $command = null)
     {
         if (!$this->rootMenuItems) {
             $this->rootMenuItems = new ItemDefinition(ItemDefinition::TYPE_TEXT, 'root', 'none');

@@ -22,11 +22,11 @@ class MarkupExtensionItemTest extends TestCase
     */
     public function testOutputEscaping()
     {
-        // Escaped
+        // Escaped (default)
         $item = $this->defineMarkupExtensionItem([
             'name' => 'test_func',
             'type' => MarkupExtensionItem::TYPE_FILTER,
-            'definition' => ['count', true]
+            'definition' => 'count'
         ]);
 
         $this->assertTrue($item->escapeOutput);
@@ -36,7 +36,7 @@ class MarkupExtensionItemTest extends TestCase
         $item = $this->defineMarkupExtensionItem([
             'name' => 'test_func',
             'type' => MarkupExtensionItem::TYPE_FILTER,
-            'definition' => 'count'
+            'definition' => ['count', false]
         ]);
 
         $this->assertFalse($item->escapeOutput);

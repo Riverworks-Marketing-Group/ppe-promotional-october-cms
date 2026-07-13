@@ -441,7 +441,7 @@ class Asset extends Extendable
     /**
      * getFilePath returns the absolute file path of an asset
      */
-    public function getFilePath(string $fileName = null): string
+    public function getFilePath(?string $fileName = null): string
     {
         if ($fileName === null) {
             $fileName = $this->fileName;

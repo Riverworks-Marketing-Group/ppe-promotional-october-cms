@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['th'] = $.extend(
+window.oc.langMessages['th'] = Object.assign(
     window.oc.langMessages['th'] || {},
-    {"markdowneditor":{"formatting":"\u0e01\u0e32\u0e23\u0e08\u0e31\u0e14\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a","quote":"\u0e2d\u0e49\u0e32\u0e07\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21","code":"\u0e42\u0e04\u0e49\u0e14","header1":"\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 1","header2":"\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 2","header3":"\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 3","header4":"\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 4","header5":"\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 5","header6":"\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 6","bold":"\u0e15\u0e31\u0e27\u0e2b\u0e19\u0e32","italic":"\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e35\u0e22\u0e07","unorderedlist":"\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e41\u0e1a\u0e1a\u0e44\u0e21\u0e48\u0e21\u0e35\u0e25\u0e33\u0e14\u0e31\u0e1a","orderedlist":"\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e41\u0e1a\u0e1a\u0e21\u0e35\u0e25\u0e33\u0e14\u0e31\u0e1a","snippet":"Snippet","video":"\u0e27\u0e34\u0e14\u0e35\u0e42\u0e2d","image":"\u0e23\u0e39\u0e1b\u0e20\u0e32\u0e1e","link":"\u0e25\u0e34\u0e07\u0e01\u0e4c","horizontalrule":"\u0e43\u0e2a\u0e48\u0e17\u0e35\u0e48\u0e04\u0e31\u0e48\u0e19\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14","fullscreen":"\u0e40\u0e15\u0e47\u0e21\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d","preview":"\u0e14\u0e39\u0e15\u0e31\u0e27\u0e2d\u0e22\u0e48\u0e32\u0e07","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"\u0e43\u0e2a\u0e48\u0e25\u0e34\u0e07\u0e01\u0e4c","insert_image":"\u0e43\u0e2a\u0e48\u0e23\u0e39\u0e1b\u0e20\u0e32\u0e1e","insert_video":"\u0e43\u0e2a\u0e48\u0e27\u0e34\u0e14\u0e35\u0e42\u0e2d","insert_audio":"\u0e43\u0e2a\u0e48\u0e44\u0e1f\u0e25\u0e4c\u0e40\u0e2a\u0e35\u0e22\u0e07","invalid_file_empty_insert":"\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1f\u0e25\u0e4c\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48\u0e25\u0e34\u0e07\u0e01\u0e4c","invalid_file_single_insert":"\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1f\u0e25\u0e4c\u0e40\u0e14\u0e35\u0e22\u0e27","invalid_image_empty_insert":"\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e23\u0e39\u0e1b\u0e20\u0e32\u0e1e\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48","invalid_video_empty_insert":"\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e27\u0e34\u0e14\u0e35\u0e42\u0e2d\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48","invalid_audio_empty_insert":"\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1f\u0e25\u0e4c\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48"},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"\u0e15\u0e01\u0e25\u0e07","cancel_button_text":"\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01","widget_remove_confirm":"\u0e25\u0e1a\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e17\u0e19\u0e35\u0e49?"},"datepicker":{"previousMonth":"\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32","nextMonth":"\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e16\u0e31\u0e14\u0e44\u0e1b","months":["\u0e21\u0e01\u0e23\u0e32\u0e04\u0e21","\u0e01\u0e38\u0e21\u0e20\u0e32\u0e1e\u0e31\u0e19\u0e18\u0e4c","\u0e21\u0e35\u0e19\u0e32\u0e04\u0e21","\u0e40\u0e21\u0e29\u0e32\u0e22\u0e19","\u0e1e\u0e24\u0e29\u0e20\u0e32\u0e04\u0e21","\u0e21\u0e34\u0e16\u0e38\u0e19\u0e32\u0e22\u0e19","\u0e01\u0e23\u0e01\u0e0e\u0e32\u0e04\u0e21","\u0e2a\u0e34\u0e07\u0e2b\u0e32\u0e04\u0e21","\u0e01\u0e31\u0e19\u0e22\u0e32\u0e22\u0e19","\u0e15\u0e38\u0e25\u0e32\u0e04\u0e21","\u0e1e\u0e24\u0e28\u0e08\u0e34\u0e01\u0e32\u0e22\u0e19","\u0e18\u0e31\u0e19\u0e27\u0e32\u0e04\u0e21"],"weekdays":["\u0e2d\u0e32\u0e17\u0e34\u0e15\u0e22\u0e4c","\u0e08\u0e31\u0e19\u0e17\u0e23\u0e4c","\u0e2d\u0e31\u0e07\u0e04\u0e32\u0e23","\u0e1e\u0e38\u0e18","\u0e1e\u0e24\u0e2b\u0e31\u0e2a\u0e1a\u0e14\u0e35","\u0e28\u0e38\u0e01\u0e23\u0e4c","\u0e40\u0e2a\u0e32\u0e23\u0e4c"],"weekdaysShort":["\u0e2d\u0e32.","\u0e08.","\u0e2d.","\u0e1e.","\u0e1e\u0e24.","\u0e28.","\u0e2a."]},"colorpicker":{"choose":"\u0e15\u0e01\u0e25\u0e07"},"filter":{"group":{"all":"\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14"},"scopes":{"apply_button_text":"\u0e19\u0e33\u0e44\u0e1b\u0e43\u0e0a\u0e49","clear_button_text":"\u0e40\u0e04\u0e25\u0e35\u0e22\u0e23\u0e4c"},"dates":{"all":"\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14","filter_button_text":"\u0e01\u0e23\u0e2d\u0e07","reset_button_text":"\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19","date_placeholder":"\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48","after_placeholder":"\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01","before_placeholder":"\u0e01\u0e48\u0e2d\u0e19"},"numbers":{"all":"\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14","filter_button_text":"\u0e01\u0e23\u0e2d\u0e07","reset_button_text":"\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19","min_placeholder":"\u0e19\u0e49\u0e2d\u0e22\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14","max_placeholder":"\u0e21\u0e32\u0e01\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14"}},"eventlog":{"show_stacktrace":"\u0e41\u0e2a\u0e14\u0e07 stacktrace","hide_stacktrace":"\u0e0b\u0e48\u0e2d\u0e19 stacktrace","tabs":{"formatted":"\u0e08\u0e31\u0e14\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e41\u0e25\u0e49\u0e27","raw":"\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e14\u0e34\u0e1a"},"editor":{"title":"\u0e15\u0e31\u0e27\u0e41\u0e01\u0e49\u0e44\u0e02\u0e0b\u0e2d\u0e23\u0e4c\u0e2a\u0e42\u0e04\u0e49\u0e14","description":"Your operating system should be configured to listen to one of these URL schemes.","openWith":"\u0e40\u0e1b\u0e34\u0e14\u0e14\u0e49\u0e27\u0e22","remember_choice":"\u0e08\u0e33\u0e15\u0e31\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e27\u0e49","open":"\u0e40\u0e1b\u0e34\u0e14","cancel":"\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "\u0e01\u0e32\u0e23\u0e08\u0e31\u0e14\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a",
+        "quote": "\u0e2d\u0e49\u0e32\u0e07\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21",
+        "code": "\u0e42\u0e04\u0e49\u0e14",
+        "header1": "\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 1",
+        "header2": "\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 2",
+        "header3": "\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 3",
+        "header4": "\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 4",
+        "header5": "\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 5",
+        "header6": "\u0e2b\u0e31\u0e27\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07 6",
+        "bold": "\u0e15\u0e31\u0e27\u0e2b\u0e19\u0e32",
+        "italic": "\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e35\u0e22\u0e07",
+        "unorderedlist": "\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e41\u0e1a\u0e1a\u0e44\u0e21\u0e48\u0e21\u0e35\u0e25\u0e33\u0e14\u0e31\u0e1a",
+        "orderedlist": "\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e41\u0e1a\u0e1a\u0e21\u0e35\u0e25\u0e33\u0e14\u0e31\u0e1a",
+        "snippet": "Snippet",
+        "video": "\u0e27\u0e34\u0e14\u0e35\u0e42\u0e2d",
+        "image": "\u0e23\u0e39\u0e1b\u0e20\u0e32\u0e1e",
+        "link": "\u0e25\u0e34\u0e07\u0e01\u0e4c",
+        "horizontalrule": "\u0e43\u0e2a\u0e48\u0e17\u0e35\u0e48\u0e04\u0e31\u0e48\u0e19\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14",
+        "fullscreen": "\u0e40\u0e15\u0e47\u0e21\u0e2b\u0e19\u0e49\u0e32\u0e08\u0e2d",
+        "preview": "\u0e14\u0e39\u0e15\u0e31\u0e27\u0e2d\u0e22\u0e48\u0e32\u0e07",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "\u0e43\u0e2a\u0e48\u0e25\u0e34\u0e07\u0e01\u0e4c",
+        "insert_image": "\u0e43\u0e2a\u0e48\u0e23\u0e39\u0e1b\u0e20\u0e32\u0e1e",
+        "insert_video": "\u0e43\u0e2a\u0e48\u0e27\u0e34\u0e14\u0e35\u0e42\u0e2d",
+        "insert_audio": "\u0e43\u0e2a\u0e48\u0e44\u0e1f\u0e25\u0e4c\u0e40\u0e2a\u0e35\u0e22\u0e07",
+        "invalid_file_empty_insert": "\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1f\u0e25\u0e4c\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48\u0e25\u0e34\u0e07\u0e01\u0e4c",
+        "invalid_file_single_insert": "\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1f\u0e25\u0e4c\u0e40\u0e14\u0e35\u0e22\u0e27",
+        "invalid_image_empty_insert": "\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e23\u0e39\u0e1b\u0e20\u0e32\u0e1e\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48",
+        "invalid_video_empty_insert": "\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e27\u0e34\u0e14\u0e35\u0e42\u0e2d\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48",
+        "invalid_audio_empty_insert": "\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e1f\u0e25\u0e4c\u0e40\u0e2a\u0e35\u0e22\u0e07\u0e17\u0e35\u0e48\u0e08\u0e30\u0e43\u0e2a\u0e48"
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "\u0e15\u0e01\u0e25\u0e07",
+        "cancel_button_text": "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01",
+        "widget_remove_confirm": "\u0e25\u0e1a\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e17\u0e19\u0e35\u0e49?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32",
+        "nextMonth": "\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e16\u0e31\u0e14\u0e44\u0e1b",
+        "months": [
+            "\u0e21\u0e01\u0e23\u0e32\u0e04\u0e21",
+            "\u0e01\u0e38\u0e21\u0e20\u0e32\u0e1e\u0e31\u0e19\u0e18\u0e4c",
+            "\u0e21\u0e35\u0e19\u0e32\u0e04\u0e21",
+            "\u0e40\u0e21\u0e29\u0e32\u0e22\u0e19",
+            "\u0e1e\u0e24\u0e29\u0e20\u0e32\u0e04\u0e21",
+            "\u0e21\u0e34\u0e16\u0e38\u0e19\u0e32\u0e22\u0e19",
+            "\u0e01\u0e23\u0e01\u0e0e\u0e32\u0e04\u0e21",
+            "\u0e2a\u0e34\u0e07\u0e2b\u0e32\u0e04\u0e21",
+            "\u0e01\u0e31\u0e19\u0e22\u0e32\u0e22\u0e19",
+            "\u0e15\u0e38\u0e25\u0e32\u0e04\u0e21",
+            "\u0e1e\u0e24\u0e28\u0e08\u0e34\u0e01\u0e32\u0e22\u0e19",
+            "\u0e18\u0e31\u0e19\u0e27\u0e32\u0e04\u0e21"
+        ],
+        "weekdays": [
+            "\u0e2d\u0e32\u0e17\u0e34\u0e15\u0e22\u0e4c",
+            "\u0e08\u0e31\u0e19\u0e17\u0e23\u0e4c",
+            "\u0e2d\u0e31\u0e07\u0e04\u0e32\u0e23",
+            "\u0e1e\u0e38\u0e18",
+            "\u0e1e\u0e24\u0e2b\u0e31\u0e2a\u0e1a\u0e14\u0e35",
+            "\u0e28\u0e38\u0e01\u0e23\u0e4c",
+            "\u0e40\u0e2a\u0e32\u0e23\u0e4c"
+        ],
+        "weekdaysShort": [
+            "\u0e2d\u0e32.",
+            "\u0e08.",
+            "\u0e2d.",
+            "\u0e1e.",
+            "\u0e1e\u0e24.",
+            "\u0e28.",
+            "\u0e2a."
+        ]
+    },
+    "colorpicker": {
+        "choose": "\u0e15\u0e01\u0e25\u0e07"
+    },
+    "filter": {
+        "group": {
+            "all": "\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14"
+        },
+        "scopes": {
+            "apply_button_text": "\u0e19\u0e33\u0e44\u0e1b\u0e43\u0e0a\u0e49",
+            "clear_button_text": "\u0e40\u0e04\u0e25\u0e35\u0e22\u0e23\u0e4c"
+        },
+        "dates": {
+            "all": "\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14",
+            "filter_button_text": "\u0e01\u0e23\u0e2d\u0e07",
+            "reset_button_text": "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19",
+            "date_placeholder": "\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48",
+            "after_placeholder": "\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01",
+            "before_placeholder": "\u0e01\u0e48\u0e2d\u0e19"
+        },
+        "numbers": {
+            "all": "\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14",
+            "filter_button_text": "\u0e01\u0e23\u0e2d\u0e07",
+            "reset_button_text": "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19",
+            "min_placeholder": "\u0e19\u0e49\u0e2d\u0e22\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14",
+            "max_placeholder": "\u0e21\u0e32\u0e01\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "\u0e41\u0e2a\u0e14\u0e07 stacktrace",
+        "hide_stacktrace": "\u0e0b\u0e48\u0e2d\u0e19 stacktrace",
+        "tabs": {
+            "formatted": "\u0e08\u0e31\u0e14\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e41\u0e25\u0e49\u0e27",
+            "raw": "\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e14\u0e34\u0e1a"
+        },
+        "editor": {
+            "title": "\u0e15\u0e31\u0e27\u0e41\u0e01\u0e49\u0e44\u0e02\u0e0b\u0e2d\u0e23\u0e4c\u0e2a\u0e42\u0e04\u0e49\u0e14",
+            "description": "Your operating system should be configured to listen to one of these URL schemes.",
+            "openWith": "\u0e40\u0e1b\u0e34\u0e14\u0e14\u0e49\u0e27\u0e22",
+            "remember_choice": "\u0e08\u0e33\u0e15\u0e31\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e27\u0e49",
+            "open": "\u0e40\u0e1b\u0e34\u0e14",
+            "cancel": "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32]",
+    "1 day (today) if not set": "1 \u0e27\u0e31\u0e19 (\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49) \u0e2b\u0e32\u0e01\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32",
+    "Apply": "\u0e19\u0e33\u0e21\u0e32\u0e43\u0e0a\u0e49",
+    "Ascending": "\u0e02\u0e36\u0e49\u0e19\u0e44\u0e1b",
+    "Attribute": "\u0e04\u0e38\u0e13\u0e25\u0e31\u0e01\u0e29\u0e13\u0e30",
+    "Bar": "\u0e1a\u0e32\u0e23\u0e4c",
+    "Cancel": "\u0e22\u0e01\u0e40\u0e25\u0e34\u0e01",
+    "Chart": "\u0e41\u0e1c\u0e19\u0e20\u0e39\u0e21\u0e34",
+    "Chart type": "\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e41\u0e1c\u0e19\u0e20\u0e39\u0e21\u0e34",
+    "Color": "\u0e2a\u0e35",
+    "Compare Totals": "\u0e40\u0e1b\u0e23\u0e35\u0e22\u0e1a\u0e40\u0e17\u0e35\u0e22\u0e1a\u0e22\u0e2d\u0e14\u0e23\u0e27\u0e21",
+    "Configure": "\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e04\u0e48\u0e32",
+    "Custom": "\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e40\u0e2d\u0e07",
+    "Custom Range": "\u0e0a\u0e48\u0e27\u0e07\u0e17\u0e35\u0e48\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e40\u0e2d\u0e07",
+    "Dashboard interval": "\u0e0a\u0e48\u0e27\u0e07\u0e40\u0e27\u0e25\u0e32\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14",
+    "Data source": "\u0e41\u0e2b\u0e25\u0e48\u0e07\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25",
+    "Date interval": "\u0e0a\u0e48\u0e27\u0e07\u0e40\u0e27\u0e25\u0e32\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48",
+    "Day": "\u0e27\u0e31\u0e19",
+    "Delete": "\u0e25\u0e1a",
+    "Delete Dashboard": "\u0e25\u0e1a\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14",
+    "Delete row": "\u0e25\u0e1a\u0e41\u0e16\u0e27",
+    "Descending": "\u0e25\u0e07",
+    "Dimension": "\u0e21\u0e34\u0e15\u0e34",
+    "Direction": "\u0e17\u0e34\u0e28\u0e17\u0e32\u0e07",
+    "Disabled": "\u0e1e\u0e34\u0e01\u0e32\u0e23",
+    "Display": "\u0e41\u0e2a\u0e14\u0e07",
+    "Display [not set]": "\u0e41\u0e2a\u0e14\u0e07\u0e1c\u0e25 [\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32]",
+    "Display all records": "\u0e41\u0e2a\u0e14\u0e07\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14",
+    "Display relative bars": "\u0e41\u0e2a\u0e14\u0e07\u0e41\u0e17\u0e48\u0e07\u0e01\u0e23\u0e32\u0e1f\u0e41\u0e2a\u0e14\u0e07\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e1e\u0e31\u0e19\u0e18\u0e4c",
+    "Display totals": "\u0e41\u0e2a\u0e14\u0e07\u0e1c\u0e25\u0e23\u0e27\u0e21",
+    "Edit Dashboard": "\u0e41\u0e01\u0e49\u0e44\u0e02\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14",
+    "Empty values": "\u0e04\u0e48\u0e32\u0e27\u0e48\u0e32\u0e07",
+    "Enter a positive number": "\u0e1b\u0e49\u0e2d\u0e19\u0e15\u0e31\u0e27\u0e40\u0e25\u0e02\u0e1a\u0e27\u0e01",
+    "Enter a positive number or leave empty to display all records.": "\u0e1b\u0e49\u0e2d\u0e19\u0e15\u0e31\u0e27\u0e40\u0e25\u0e02\u0e1a\u0e27\u0e01 \u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e27\u0e49\u0e19\u0e27\u0e48\u0e32\u0e07\u0e44\u0e27\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e41\u0e2a\u0e14\u0e07\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14",
+    "Equal to": "\u0e40\u0e17\u0e48\u0e32\u0e01\u0e31\u0e1a",
+    "Export Dashboard": "\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14\u0e2a\u0e48\u0e07\u0e2d\u0e2d\u0e01",
+    "Extra table fields": "\u0e0a\u0e48\u0e2d\u0e07\u0e15\u0e32\u0e23\u0e32\u0e07\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e15\u0e34\u0e21",
+    "Filters": "\u0e15\u0e31\u0e27\u0e01\u0e23\u0e2d\u0e07",
+    "General": "\u0e17\u0e31\u0e48\u0e27\u0e44\u0e1b",
+    "Greater or equal to": "\u0e21\u0e32\u0e01\u0e01\u0e27\u0e48\u0e32\u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e17\u0e48\u0e32\u0e01\u0e31\u0e1a",
+    "Greater than": "\u0e21\u0e32\u0e01\u0e01\u0e27\u0e48\u0e32",
+    "Hide": "\u0e0b\u0e48\u0e2d\u0e19",
+    "Horizontal": "\u0e41\u0e19\u0e27\u0e19\u0e2d\u0e19",
+    "Icon": "\u0e44\u0e2d\u0e04\u0e2d\u0e19",
+    "Icon Status": "\u0e2a\u0e16\u0e32\u0e19\u0e30\u0e44\u0e2d\u0e04\u0e2d\u0e19",
+    "Important": "\u0e2a\u0e33\u0e04\u0e31\u0e0d",
+    "Includes": "\u0e23\u0e27\u0e21\u0e16\u0e36\u0e07",
+    "Indicator": "\u0e15\u0e31\u0e27\u0e1a\u0e48\u0e07\u0e0a\u0e35\u0e49",
+    "Information": "\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25",
+    "Last 30 days": "30 \u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32",
+    "Last 7 days": "7 \u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32",
+    "Last month": "\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e17\u0e35\u0e48\u0e41\u0e25\u0e49\u0e27",
+    "Leave empty to disable pagination": "\u0e40\u0e27\u0e49\u0e19\u0e27\u0e48\u0e32\u0e07\u0e44\u0e27\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e1b\u0e34\u0e14\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e01\u0e32\u0e23\u0e41\u0e1a\u0e48\u0e07\u0e2b\u0e19\u0e49\u0e32",
+    "Leave empty to hide the title": "\u0e40\u0e27\u0e49\u0e19\u0e27\u0e48\u0e32\u0e07\u0e44\u0e27\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e0b\u0e48\u0e2d\u0e19\u0e0a\u0e37\u0e48\u0e2d\u0e40\u0e23\u0e37\u0e48\u0e2d\u0e07",
+    "Less or equal to": "\u0e19\u0e49\u0e2d\u0e22\u0e01\u0e27\u0e48\u0e32\u0e2b\u0e23\u0e37\u0e2d\u0e40\u0e17\u0e48\u0e32\u0e01\u0e31\u0e1a",
+    "Less than": "\u0e19\u0e49\u0e2d\u0e22\u0e01\u0e27\u0e48\u0e32",
+    "Limit": "\u0e02\u0e35\u0e14\u0e08\u0e33\u0e01\u0e31\u0e14",
+    "Line": "\u0e40\u0e2a\u0e49\u0e19",
+    "Link Text": "\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e25\u0e34\u0e07\u0e01\u0e4c",
+    "Link URL": "\u0e25\u0e34\u0e07\u0e01\u0e4c URL",
+    "Make Default": "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19",
+    "Manage Dashboards": "\u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14",
+    "Metric": "\u0e40\u0e21\u0e15\u0e23\u0e34\u0e01",
+    "Metrics": "\u0e15\u0e31\u0e27\u0e0a\u0e35\u0e49\u0e27\u0e31\u0e14",
+    "Month": "\u0e40\u0e14\u0e37\u0e2d\u0e19",
+    "My Custom Widget": "\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15\u0e41\u0e1a\u0e1a\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e40\u0e2d\u0e07\u0e02\u0e2d\u0e07\u0e09\u0e31\u0e19",
+    "No Value": "\u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e48\u0e32",
+    "Notice text": "\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19",
+    "Number of days": "\u0e08\u0e33\u0e19\u0e27\u0e19\u0e27\u0e31\u0e19",
+    "One of": "\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e43\u0e19",
+    "One value per line": "\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e04\u0e48\u0e32\u0e15\u0e48\u0e2d\u0e1a\u0e23\u0e23\u0e17\u0e31\u0e14",
+    "Operation": "\u0e01\u0e32\u0e23\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23",
+    "Order": "\u0e04\u0e33\u0e2a\u0e31\u0e48\u0e07",
+    "Past hour": "\u0e0a\u0e31\u0e48\u0e27\u0e42\u0e21\u0e07\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32",
+    "Past X days": "\u0e0a\u0e48\u0e27\u0e07 X \u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32",
+    "Please provide the widget title": "\u0e42\u0e1b\u0e23\u0e14\u0e23\u0e30\u0e1a\u0e38\u0e0a\u0e37\u0e48\u0e2d\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15",
+    "Please select a data source": "\u0e42\u0e1b\u0e23\u0e14\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e41\u0e2b\u0e25\u0e48\u0e07\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25",
+    "Please select a dimension": "\u0e42\u0e1b\u0e23\u0e14\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e02\u0e19\u0e32\u0e14",
+    "Please select an icon": "\u0e42\u0e1b\u0e23\u0e14\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e44\u0e2d\u0e04\u0e2d\u0e19",
+    "Please select metric(s).": "\u0e42\u0e1b\u0e23\u0e14\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e15\u0e31\u0e27\u0e0a\u0e35\u0e49\u0e27\u0e31\u0e14",
+    "Prev period": "\u0e0a\u0e48\u0e27\u0e07\u0e40\u0e27\u0e25\u0e32\u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32",
+    "Quarter": "\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e43\u0e19\u0e2a\u0e35\u0e48",
+    "Records per page": "\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e15\u0e48\u0e2d\u0e2b\u0e19\u0e49\u0e32",
+    "Refresh every minute": "\u0e23\u0e35\u0e40\u0e1f\u0e23\u0e0a\u0e17\u0e38\u0e01\u0e19\u0e32\u0e17\u0e35",
+    "Rename Dashboard": "\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e0a\u0e37\u0e48\u0e2d\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14",
+    "Reset Layout": "\u0e23\u0e35\u0e40\u0e0b\u0e47\u0e15\u0e40\u0e04\u0e49\u0e32\u0e42\u0e04\u0e23\u0e07",
+    "Reset layout back to default?": "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e04\u0e49\u0e32\u0e42\u0e04\u0e23\u0e07\u0e01\u0e25\u0e31\u0e1a\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48?",
+    "Same period last year": "\u0e0a\u0e48\u0e27\u0e07\u0e40\u0e27\u0e25\u0e32\u0e40\u0e14\u0e35\u0e22\u0e27\u0e01\u0e31\u0e19\u0e02\u0e2d\u0e07\u0e1b\u0e35\u0e17\u0e35\u0e48\u0e41\u0e25\u0e49\u0e27",
+    "Section": "\u0e2a\u0e48\u0e27\u0e19",
+    "Section Title": "\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d\u0e2a\u0e48\u0e27\u0e19",
+    "Select a dimension and metrics": "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e21\u0e34\u0e15\u0e34\u0e41\u0e25\u0e30\u0e15\u0e31\u0e27\u0e0a\u0e35\u0e49\u0e27\u0e31\u0e14",
+    "Select an attribute": "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e04\u0e38\u0e13\u0e25\u0e31\u0e01\u0e29\u0e13\u0e30",
+    "Select an operation": "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e01\u0e32\u0e23\u0e14\u0e33\u0e40\u0e19\u0e34\u0e19\u0e01\u0e32\u0e23",
+    "Select sorting metric or dimension": "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e15\u0e31\u0e27\u0e0a\u0e35\u0e49\u0e27\u0e31\u0e14\u0e2b\u0e23\u0e37\u0e2d\u0e21\u0e34\u0e15\u0e34\u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e07\u0e25\u0e33\u0e14\u0e31\u0e1a",
+    "Select the metric color": "\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e2a\u0e35\u0e40\u0e21\u0e15\u0e23\u0e34\u0e01",
+    "Set the current layout as the default?": "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e40\u0e04\u0e49\u0e32\u0e42\u0e04\u0e23\u0e07\u0e1b\u0e31\u0e08\u0e08\u0e38\u0e1a\u0e31\u0e19\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e2b\u0e23\u0e37\u0e2d\u0e44\u0e21\u0e48?",
+    "Show Date Interval": "\u0e41\u0e2a\u0e14\u0e07\u0e0a\u0e48\u0e27\u0e07\u0e40\u0e27\u0e25\u0e32\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48",
+    "Sort by": "\u0e40\u0e23\u0e35\u0e22\u0e07\u0e25\u0e33\u0e14\u0e31\u0e1a\u0e15\u0e32\u0e21",
+    "Sorting": "\u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e07\u0e25\u0e33\u0e14\u0e31\u0e1a",
+    "Sorting & Filtering": "\u0e01\u0e32\u0e23\u0e08\u0e31\u0e14\u0e40\u0e23\u0e35\u0e22\u0e07\u0e41\u0e25\u0e30\u0e01\u0e32\u0e23\u0e01\u0e23\u0e2d\u0e07",
+    "Stacked Bar": "\u0e1a\u0e32\u0e23\u0e4c\u0e0b\u0e49\u0e2d\u0e19",
+    "Starts with": "\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e14\u0e49\u0e27\u0e22",
+    "Success": "\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08",
+    "Table": "\u0e42\u0e15\u0e4a\u0e30",
+    "Text Notice": "\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19",
+    "The dashboard layout has been reset to default.": "\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14\u0e16\u0e39\u0e01\u0e23\u0e35\u0e40\u0e0b\u0e47\u0e15\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e48\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e41\u0e25\u0e49\u0e27",
+    "The dashboard was successfully updated.": "\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e2d\u0e31\u0e1b\u0e40\u0e14\u0e15\u0e40\u0e23\u0e35\u0e22\u0e1a\u0e23\u0e49\u0e2d\u0e22\u0e41\u0e25\u0e49\u0e27",
+    "The limit value must be at least 1": "\u0e04\u0e48\u0e32\u0e08\u0e33\u0e01\u0e31\u0e14\u0e15\u0e49\u0e2d\u0e07\u0e21\u0e35\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e19\u0e49\u0e2d\u0e22 1",
+    "This dashboard is now the default layout.": "\u0e02\u0e13\u0e30\u0e19\u0e35\u0e49\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14\u0e19\u0e35\u0e49\u0e16\u0e39\u0e01\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e43\u0e2b\u0e49\u0e40\u0e1b\u0e47\u0e19\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e41\u0e25\u0e49\u0e27",
+    "This is a text notice widget.": "\u0e19\u0e35\u0e48\u0e04\u0e37\u0e2d\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21",
+    "This month": "\u0e40\u0e14\u0e37\u0e2d\u0e19\u0e19\u0e35\u0e49",
+    "This quarter": "\u0e44\u0e15\u0e23\u0e21\u0e32\u0e2a\u0e19\u0e35\u0e49",
+    "This week": "\u0e2a\u0e31\u0e1b\u0e14\u0e32\u0e2b\u0e4c\u0e19\u0e35\u0e49",
+    "This year": "\u0e1b\u0e35\u0e19\u0e35\u0e49",
+    "Title": "\u0e0a\u0e37\u0e48\u0e2d",
+    "Today": "\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49",
+    "Value": "\u0e04\u0e48\u0e32",
+    "Values": "\u0e04\u0e48\u0e32\u0e19\u0e34\u0e22\u0e21",
+    "Vertical": "\u0e41\u0e19\u0e27\u0e15\u0e31\u0e49\u0e07",
+    "Warning": "\u0e04\u0e33\u0e40\u0e15\u0e37\u0e2d\u0e19",
+    "Week": "\u0e2a\u0e31\u0e1b\u0e14\u0e32\u0e2b\u0e4c",
+    "Year": "\u0e1b\u0e35",
+    "Yesterday": "\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e27\u0e32\u0e19"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Thai [th]
+//! author : Kridsada Thanabulpong : https://github.com/sirn
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,58 +293,66 @@ window.oc.langMessages['th'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     var th = moment.defineLocale('th', {
-        months : 'มกราคม_กุมภาพันธ์_มีนาคม_เมษายน_พฤษภาคม_มิถุนายน_กรกฎาคม_สิงหาคม_กันยายน_ตุลาคม_พฤศจิกายน_ธันวาคม'.split('_'),
-        monthsShort : 'ม.ค._ก.พ._มี.ค._เม.ย._พ.ค._มิ.ย._ก.ค._ส.ค._ก.ย._ต.ค._พ.ย._ธ.ค.'.split('_'),
+        months: 'มกราคม_กุมภาพันธ์_มีนาคม_เมษายน_พฤษภาคม_มิถุนายน_กรกฎาคม_สิงหาคม_กันยายน_ตุลาคม_พฤศจิกายน_ธันวาคม'.split(
+            '_'
+        ),
+        monthsShort:
+            'ม.ค._ก.พ._มี.ค._เม.ย._พ.ค._มิ.ย._ก.ค._ส.ค._ก.ย._ต.ค._พ.ย._ธ.ค.'.split(
+                '_'
+            ),
         monthsParseExact: true,
-        weekdays : 'อาทิตย์_จันทร์_อังคาร_พุธ_พฤหัสบดี_ศุกร์_เสาร์'.split('_'),
-        weekdaysShort : 'อาทิตย์_จันทร์_อังคาร_พุธ_พฤหัส_ศุกร์_เสาร์'.split('_'), // yes, three characters difference
-        weekdaysMin : 'อา._จ._อ._พ._พฤ._ศ._ส.'.split('_'),
-        weekdaysParseExact : true,
-        longDateFormat : {
-            LT : 'H:mm',
-            LTS : 'H:mm:ss',
-            L : 'DD/MM/YYYY',
-            LL : 'D MMMM YYYY',
-            LLL : 'D MMMM YYYY เวลา H:mm',
-            LLLL : 'วันddddที่ D MMMM YYYY เวลา H:mm'
+        weekdays: 'อาทิตย์_จันทร์_อังคาร_พุธ_พฤหัสบดี_ศุกร์_เสาร์'.split('_'),
+        weekdaysShort: 'อาทิตย์_จันทร์_อังคาร_พุธ_พฤหัส_ศุกร์_เสาร์'.split('_'), // yes, three characters difference
+        weekdaysMin: 'อา._จ._อ._พ._พฤ._ศ._ส.'.split('_'),
+        weekdaysParseExact: true,
+        longDateFormat: {
+            LT: 'H:mm',
+            LTS: 'H:mm:ss',
+            L: 'DD/MM/YYYY',
+            LL: 'D MMMM YYYY',
+            LLL: 'D MMMM YYYY เวลา H:mm',
+            LLLL: 'วันddddที่ D MMMM YYYY เวลา H:mm',
         },
         meridiemParse: /ก่อนเที่ยง|หลังเที่ยง/,
         isPM: function (input) {
             return input === 'หลังเที่ยง';
         },
-        meridiem : function (hour, minute, isLower) {
+        meridiem: function (hour, minute, isLower) {
             if (hour < 12) {
                 return 'ก่อนเที่ยง';
             } else {
                 return 'หลังเที่ยง';
             }
         },
-        calendar : {
-            sameDay : '[วันนี้ เวลา] LT',
-            nextDay : '[พรุ่งนี้ เวลา] LT',
-            nextWeek : 'dddd[หน้า เวลา] LT',
-            lastDay : '[เมื่อวานนี้ เวลา] LT',
-            lastWeek : '[วัน]dddd[ที่แล้ว เวลา] LT',
-            sameElse : 'L'
+        calendar: {
+            sameDay: '[วันนี้ เวลา] LT',
+            nextDay: '[พรุ่งนี้ เวลา] LT',
+            nextWeek: 'dddd[หน้า เวลา] LT',
+            lastDay: '[เมื่อวานนี้ เวลา] LT',
+            lastWeek: '[วัน]dddd[ที่แล้ว เวลา] LT',
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'อีก %s',
-            past : '%sที่แล้ว',
-            s : 'ไม่กี่วินาที',
-            ss : '%d วินาที',
-            m : '1 นาที',
-            mm : '%d นาที',
-            h : '1 ชั่วโมง',
-            hh : '%d ชั่วโมง',
-            d : '1 วัน',
-            dd : '%d วัน',
-            M : '1 เดือน',
-            MM : '%d เดือน',
-            y : '1 ปี',
-            yy : '%d ปี'
-        }
+        relativeTime: {
+            future: 'อีก %s',
+            past: '%sที่แล้ว',
+            s: 'ไม่กี่วินาที',
+            ss: '%d วินาที',
+            m: '1 นาที',
+            mm: '%d นาที',
+            h: '1 ชั่วโมง',
+            hh: '%d ชั่วโมง',
+            d: '1 วัน',
+            dd: '%d วัน',
+            w: '1 สัปดาห์',
+            ww: '%d สัปดาห์',
+            M: '1 เดือน',
+            MM: '%d เดือน',
+            y: '1 ปี',
+            yy: '%d ปี',
+        },
     });
 
     return th;

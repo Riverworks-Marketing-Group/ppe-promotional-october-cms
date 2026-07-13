@@ -9,13 +9,283 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['tr'] = $.extend(
+window.oc.langMessages['tr'] = Object.assign(
     window.oc.langMessages['tr'] || {},
-    {"markdowneditor":{"formatting":"Formatlama","quote":"Al\u0131nt\u0131","code":"Kod","header1":"Ba\u015fl\u0131k 1","header2":"Ba\u015fl\u0131k 2","header3":"Ba\u015fl\u0131k 3","header4":"Ba\u015fl\u0131k 4","header5":"Ba\u015fl\u0131k 5","header6":"Ba\u015fl\u0131k 6","bold":"Kal\u0131n","italic":"\u0130talik","unorderedlist":"S\u0131ras\u0131z Liste","orderedlist":"S\u0131ral\u0131 Liste","snippet":"Snippet","video":"Video","image":"G\u00f6rsel\/Resim","link":"Link","horizontalrule":"Yatay \u00c7izgi Ekle","fullscreen":"Tam Ekran","preview":"\u00d6nizleme","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Medya Linki Ekle","insert_image":"Medya Resim Ekle","insert_video":"Medya Video Ekle","insert_audio":"Medya Ses Ekle","invalid_file_empty_insert":"L\u00fctfen link verilecek dosyay\u0131 se\u00e7in.","invalid_file_single_insert":"L\u00fctfen tek bir dosya se\u00e7in.","invalid_image_empty_insert":"L\u00fctfen eklenecek resim(ler)i se\u00e7in.","invalid_video_empty_insert":"L\u00fctfen eklenecek video dosyas\u0131n\u0131 se\u00e7in.","invalid_audio_empty_insert":"L\u00fctfen eklenecek ses dosyas\u0131n\u0131 se\u00e7in."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"Evet","cancel_button_text":"\u0130ptal","widget_remove_confirm":"Bu eklentiyi kald\u0131rma istedi\u011finize emin misiniz?"},"datepicker":{"previousMonth":"\u00d6nceki Ay","nextMonth":"Sonraki Ay","months":["Ocak","\u015eubat","Mart","Nisan","May\u0131s","Haziran","Temmuz","A\u011fustos","Eyl\u00fcl","Ekim","Kas\u0131m","Aral\u0131k"],"weekdays":["Pazar","Pazartesi","Sal\u0131","\u00c7ar\u015famba","Per\u015fembe","Cuma","Cumartesi"],"weekdaysShort":["Paz","Pzt","Sal","\u00c7ar","Per","Cum","Cmt"]},"colorpicker":{"choose":"Se\u00e7"},"filter":{"group":{"all":"t\u00fcm\u00fc"},"scopes":{"apply_button_text":"Uygula","clear_button_text":"Temizle"},"dates":{"all":"t\u00fcm\u00fc","filter_button_text":"Filtrele","reset_button_text":"S\u0131f\u0131rla","date_placeholder":"Tarih","after_placeholder":"Sonra","before_placeholder":"\u00d6nce"},"numbers":{"all":"all","filter_button_text":"Filtrele","reset_button_text":"S\u0131f\u0131rla","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Veri y\u0131\u011f\u0131n\u0131n\u0131 g\u00f6ster","hide_stacktrace":"Veri y\u0131\u011f\u0131n\u0131n\u0131 gizle","tabs":{"formatted":"Formatl\u0131","raw":"Ham Veri"},"editor":{"title":"Kaynak kod edit\u00f6r\u00fc","description":"\u0130\u015fletim sisteminiz URL \u015femalar\u0131na yan\u0131t verecek \u015fekilde yap\u0131land\u0131r\u0131lmal\u0131d\u0131r.","openWith":"Birlikte a\u00e7","remember_choice":"Bu oturum i\u00e7in se\u00e7enekleri hat\u0131rla","open":"A\u00e7","cancel":"\u0130ptal"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Formatlama",
+        "quote": "Al\u0131nt\u0131",
+        "code": "Kod",
+        "header1": "Ba\u015fl\u0131k 1",
+        "header2": "Ba\u015fl\u0131k 2",
+        "header3": "Ba\u015fl\u0131k 3",
+        "header4": "Ba\u015fl\u0131k 4",
+        "header5": "Ba\u015fl\u0131k 5",
+        "header6": "Ba\u015fl\u0131k 6",
+        "bold": "Kal\u0131n",
+        "italic": "\u0130talik",
+        "unorderedlist": "S\u0131ras\u0131z Liste",
+        "orderedlist": "S\u0131ral\u0131 Liste",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "G\u00f6rsel/Resim",
+        "link": "Link",
+        "horizontalrule": "Yatay \u00c7izgi Ekle",
+        "fullscreen": "Tam Ekran",
+        "preview": "\u00d6nizleme",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Medya Linki Ekle",
+        "insert_image": "Medya Resim Ekle",
+        "insert_video": "Medya Video Ekle",
+        "insert_audio": "Medya Ses Ekle",
+        "invalid_file_empty_insert": "L\u00fctfen link verilecek dosyay\u0131 se\u00e7in.",
+        "invalid_file_single_insert": "L\u00fctfen tek bir dosya se\u00e7in.",
+        "invalid_image_empty_insert": "L\u00fctfen eklenecek resim(ler)i se\u00e7in.",
+        "invalid_video_empty_insert": "L\u00fctfen eklenecek video dosyas\u0131n\u0131 se\u00e7in.",
+        "invalid_audio_empty_insert": "L\u00fctfen eklenecek ses dosyas\u0131n\u0131 se\u00e7in."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "Evet",
+        "cancel_button_text": "\u0130ptal",
+        "widget_remove_confirm": "Bu eklentiyi kald\u0131rma istedi\u011finize emin misiniz?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "\u00d6nceki Ay",
+        "nextMonth": "Sonraki Ay",
+        "months": [
+            "Ocak",
+            "\u015eubat",
+            "Mart",
+            "Nisan",
+            "May\u0131s",
+            "Haziran",
+            "Temmuz",
+            "A\u011fustos",
+            "Eyl\u00fcl",
+            "Ekim",
+            "Kas\u0131m",
+            "Aral\u0131k"
+        ],
+        "weekdays": [
+            "Pazar",
+            "Pazartesi",
+            "Sal\u0131",
+            "\u00c7ar\u015famba",
+            "Per\u015fembe",
+            "Cuma",
+            "Cumartesi"
+        ],
+        "weekdaysShort": [
+            "Paz",
+            "Pzt",
+            "Sal",
+            "\u00c7ar",
+            "Per",
+            "Cum",
+            "Cmt"
+        ]
+    },
+    "colorpicker": {
+        "choose": "Se\u00e7"
+    },
+    "filter": {
+        "group": {
+            "all": "t\u00fcm\u00fc"
+        },
+        "scopes": {
+            "apply_button_text": "Uygula",
+            "clear_button_text": "Temizle"
+        },
+        "dates": {
+            "all": "t\u00fcm\u00fc",
+            "filter_button_text": "Filtrele",
+            "reset_button_text": "S\u0131f\u0131rla",
+            "date_placeholder": "Tarih",
+            "after_placeholder": "Sonra",
+            "before_placeholder": "\u00d6nce"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filtrele",
+            "reset_button_text": "S\u0131f\u0131rla",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Veri y\u0131\u011f\u0131n\u0131n\u0131 g\u00f6ster",
+        "hide_stacktrace": "Veri y\u0131\u011f\u0131n\u0131n\u0131 gizle",
+        "tabs": {
+            "formatted": "Formatl\u0131",
+            "raw": "Ham Veri"
+        },
+        "editor": {
+            "title": "Kaynak kod edit\u00f6r\u00fc",
+            "description": "\u0130\u015fletim sisteminiz URL \u015femalar\u0131na yan\u0131t verecek \u015fekilde yap\u0131land\u0131r\u0131lmal\u0131d\u0131r.",
+            "openWith": "Birlikte a\u00e7",
+            "remember_choice": "Bu oturum i\u00e7in se\u00e7enekleri hat\u0131rla",
+            "open": "A\u00e7",
+            "cancel": "\u0130ptal",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[ayarlanmad\u0131]",
+    "1 day (today) if not set": "Ayarlanmam\u0131\u015fsa 1 g\u00fcn (bug\u00fcn)",
+    "Apply": "Uygula",
+    "Ascending": "Y\u00fckselen",
+    "Attribute": "Ba\u011flanmak",
+    "Bar": "\u00c7ubuk",
+    "Cancel": "\u0130ptal",
+    "Chart": "\u00c7izelge",
+    "Chart type": "Grafik t\u00fcr\u00fc",
+    "Color": "Renk",
+    "Compare Totals": "Toplamlar\u0131 Kar\u015f\u0131la\u015ft\u0131r",
+    "Configure": "Yap\u0131land\u0131r",
+    "Custom": "Gelenek",
+    "Custom Range": "\u00d6zel Aral\u0131k",
+    "Dashboard interval": "G\u00f6sterge paneli aral\u0131\u011f\u0131",
+    "Data source": "Veri kayna\u011f\u0131",
+    "Date interval": "Tarih aral\u0131\u011f\u0131",
+    "Day": "G\u00fcn",
+    "Delete": "Silmek",
+    "Delete Dashboard": "Kontrol Panelini Sil",
+    "Delete row": "Sat\u0131r\u0131 sil",
+    "Descending": "\u0130nen",
+    "Dimension": "Boyut",
+    "Direction": "Y\u00f6n",
+    "Disabled": "Engelli",
+    "Display": "G\u00f6r\u00fcnt\u00fclemek",
+    "Display [not set]": "[Ayarlanmad\u0131]",
+    "Display all records": "T\u00fcm kay\u0131tlar\u0131 g\u00f6r\u00fcnt\u00fcle",
+    "Display relative bars": "G\u00f6reli \u00e7ubuklar\u0131 g\u00f6ster",
+    "Display totals": "Toplamlar\u0131 g\u00f6ster",
+    "Edit Dashboard": "Kontrol Panelini D\u00fczenle",
+    "Empty values": "Bo\u015f de\u011ferler",
+    "Enter a positive number": "Pozitif bir say\u0131 girin",
+    "Enter a positive number or leave empty to display all records.": "Pozitif bir say\u0131 girin veya t\u00fcm kay\u0131tlar\u0131 g\u00f6r\u00fcnt\u00fclemek i\u00e7in bo\u015f b\u0131rak\u0131n.",
+    "Equal to": "E\u015fittir",
+    "Export Dashboard": "D\u0131\u015fa Aktarma Kontrol Paneli",
+    "Extra table fields": "Ek tablo alanlar\u0131",
+    "Filters": "Filtreler",
+    "General": "Genel",
+    "Greater or equal to": "Daha b\u00fcy\u00fck veya e\u015fit",
+    "Greater than": "Daha b\u00fcy\u00fck",
+    "Hide": "Saklamak",
+    "Horizontal": "Yatay",
+    "Icon": "Simge",
+    "Icon Status": "Simge Durumu",
+    "Important": "\u00d6nemli",
+    "Includes": "\u0130\u00e7erir",
+    "Indicator": "G\u00f6sterge",
+    "Information": "Bilgi",
+    "Last 30 days": "Son 30 g\u00fcn",
+    "Last 7 days": "Son 7 g\u00fcn",
+    "Last month": "Ge\u00e7en ay",
+    "Leave empty to disable pagination": "Sayfalama \u00f6zelli\u011fini devre d\u0131\u015f\u0131 b\u0131rakmak i\u00e7in bo\u015f b\u0131rak\u0131n.",
+    "Leave empty to hide the title": "Ba\u015fl\u0131\u011f\u0131 gizlemek i\u00e7in bo\u015f b\u0131rak\u0131n.",
+    "Less or equal to": "Daha az veya e\u015fit",
+    "Less than": "Daha az",
+    "Limit": "S\u0131n\u0131r",
+    "Line": "Astar",
+    "Link Text": "Ba\u011flant\u0131 Metni",
+    "Link URL": "Ba\u011flant\u0131 URL'si",
+    "Make Default": "Varsay\u0131lan\u0131 Ayarla",
+    "Manage Dashboards": "Kontrol Panellerini Y\u00f6netin",
+    "Metric": "Metrik",
+    "Metrics": "Metrikler",
+    "Month": "Ay",
+    "My Custom Widget": "\u00d6zel Widget'\u0131m",
+    "No Value": "De\u011feri Yok",
+    "Notice text": "Bildirim metni",
+    "Number of days": "G\u00fcn say\u0131s\u0131",
+    "One of": "Bir tanesi",
+    "One value per line": "Her sat\u0131rda bir de\u011fer",
+    "Operation": "Operasyon",
+    "Order": "Emir",
+    "Past hour": "Ge\u00e7ti\u011fimiz saat",
+    "Past X days": "Ge\u00e7ti\u011fimiz X g\u00fcn",
+    "Please provide the widget title": "L\u00fctfen widget ba\u015fl\u0131\u011f\u0131n\u0131 belirtin.",
+    "Please select a data source": "L\u00fctfen bir veri kayna\u011f\u0131 se\u00e7in.",
+    "Please select a dimension": "L\u00fctfen bir boyut se\u00e7in.",
+    "Please select an icon": "L\u00fctfen bir simge se\u00e7in.",
+    "Please select metric(s).": "L\u00fctfen \u00f6l\u00e7\u00fct(ler)i se\u00e7in.",
+    "Prev period": "\u00d6nceki d\u00f6nem",
+    "Quarter": "\u00c7eyrek",
+    "Records per page": "Sayfa ba\u015f\u0131na kay\u0131t say\u0131s\u0131",
+    "Refresh every minute": "Her dakika yenileyin",
+    "Rename Dashboard": "Kontrol Panelini Yeniden Adland\u0131r",
+    "Reset Layout": "D\u00fczeni S\u0131f\u0131rla",
+    "Reset layout back to default?": "D\u00fczeni varsay\u0131lan ayarlara s\u0131f\u0131rla?",
+    "Same period last year": "Ge\u00e7en y\u0131l\u0131n ayn\u0131 d\u00f6nemi",
+    "Section": "B\u00f6l\u00fcm",
+    "Section Title": "B\u00f6l\u00fcm Ba\u015fl\u0131\u011f\u0131",
+    "Select a dimension and metrics": "Bir boyut ve \u00f6l\u00e7\u00fct se\u00e7in.",
+    "Select an attribute": "Bir \u00f6zellik se\u00e7in",
+    "Select an operation": "Bir i\u015flem se\u00e7in",
+    "Select sorting metric or dimension": "S\u0131ralama \u00f6l\u00e7\u00fct\u00fcn\u00fc veya boyutunu se\u00e7in",
+    "Select the metric color": "Metrik rengi se\u00e7in",
+    "Set the current layout as the default?": "Ge\u00e7erli d\u00fczeni varsay\u0131lan olarak ayarla?",
+    "Show Date Interval": "Tarih Aral\u0131\u011f\u0131n\u0131 G\u00f6ster",
+    "Sort by": "G\u00f6re s\u0131rala",
+    "Sorting": "S\u0131ralama",
+    "Sorting & Filtering": "S\u0131ralama ve Filtreleme",
+    "Stacked Bar": "\u00dcst \u00dcste Dizilmi\u015f Bar",
+    "Starts with": "\u015eununla ba\u015flar:",
+    "Success": "Ba\u015far\u0131",
+    "Table": "Masa",
+    "Text Notice": "Metin Bildirimi",
+    "The dashboard layout has been reset to default.": "Kontrol paneli d\u00fczeni varsay\u0131lan ayarlara s\u0131f\u0131rland\u0131.",
+    "The dashboard was successfully updated.": "Kontrol paneli ba\u015far\u0131yla g\u00fcncellendi.",
+    "The limit value must be at least 1": "S\u0131n\u0131r de\u011feri en az 1 olmal\u0131d\u0131r.",
+    "This dashboard is now the default layout.": "Bu kontrol paneli art\u0131k varsay\u0131lan d\u00fczen olarak ayarlanm\u0131\u015ft\u0131r.",
+    "This is a text notice widget.": "Bu bir metin bildirim widget'\u0131d\u0131r.",
+    "This month": "Bu ay",
+    "This quarter": "Bu \u00e7eyrek",
+    "This week": "Bu hafta",
+    "This year": "Bu y\u0131l",
+    "Title": "Ba\u015fl\u0131k",
+    "Today": "Bug\u00fcn",
+    "Value": "De\u011fer",
+    "Values": "De\u011ferler",
+    "Vertical": "Dikey",
+    "Warning": "Uyar\u0131",
+    "Week": "Hafta",
+    "Year": "Y\u0131l",
+    "Yesterday": "D\u00fcn"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Turkish [tr]
+//! authors : Erhan Gundogan : https://github.com/erhangundogan,
+//!           Burak Yiğit Kaya: https://github.com/BYK
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,64 +294,83 @@ window.oc.langMessages['tr'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
+
     var suffixes = {
-        1: '\'inci',
-        5: '\'inci',
-        8: '\'inci',
-        70: '\'inci',
-        80: '\'inci',
-        2: '\'nci',
-        7: '\'nci',
-        20: '\'nci',
-        50: '\'nci',
-        3: '\'üncü',
-        4: '\'üncü',
-        100: '\'üncü',
-        6: '\'ncı',
-        9: '\'uncu',
-        10: '\'uncu',
-        30: '\'uncu',
-        60: '\'ıncı',
-        90: '\'ıncı'
+        1: "'inci",
+        5: "'inci",
+        8: "'inci",
+        70: "'inci",
+        80: "'inci",
+        2: "'nci",
+        7: "'nci",
+        20: "'nci",
+        50: "'nci",
+        3: "'üncü",
+        4: "'üncü",
+        100: "'üncü",
+        6: "'ncı",
+        9: "'uncu",
+        10: "'uncu",
+        30: "'uncu",
+        60: "'ıncı",
+        90: "'ıncı",
     };
 
     var tr = moment.defineLocale('tr', {
-        months : 'Ocak_Şubat_Mart_Nisan_Mayıs_Haziran_Temmuz_Ağustos_Eylül_Ekim_Kasım_Aralık'.split('_'),
-        monthsShort : 'Oca_Şub_Mar_Nis_May_Haz_Tem_Ağu_Eyl_Eki_Kas_Ara'.split('_'),
-        weekdays : 'Pazar_Pazartesi_Salı_Çarşamba_Perşembe_Cuma_Cumartesi'.split('_'),
-        weekdaysShort : 'Paz_Pts_Sal_Çar_Per_Cum_Cts'.split('_'),
-        weekdaysMin : 'Pz_Pt_Sa_Ça_Pe_Cu_Ct'.split('_'),
-        longDateFormat : {
-            LT : 'HH:mm',
-            LTS : 'HH:mm:ss',
-            L : 'DD.MM.YYYY',
-            LL : 'D MMMM YYYY',
-            LLL : 'D MMMM YYYY HH:mm',
-            LLLL : 'dddd, D MMMM YYYY HH:mm'
+        months: 'Ocak_Şubat_Mart_Nisan_Mayıs_Haziran_Temmuz_Ağustos_Eylül_Ekim_Kasım_Aralık'.split(
+            '_'
+        ),
+        monthsShort: 'Oca_Şub_Mar_Nis_May_Haz_Tem_Ağu_Eyl_Eki_Kas_Ara'.split('_'),
+        weekdays: 'Pazar_Pazartesi_Salı_Çarşamba_Perşembe_Cuma_Cumartesi'.split(
+            '_'
+        ),
+        weekdaysShort: 'Paz_Pzt_Sal_Çar_Per_Cum_Cmt'.split('_'),
+        weekdaysMin: 'Pz_Pt_Sa_Ça_Pe_Cu_Ct'.split('_'),
+        meridiem: function (hours, minutes, isLower) {
+            if (hours < 12) {
+                return isLower ? 'öö' : 'ÖÖ';
+            } else {
+                return isLower ? 'ös' : 'ÖS';
+            }
         },
-        calendar : {
-            sameDay : '[bugün saat] LT',
-            nextDay : '[yarın saat] LT',
-            nextWeek : '[gelecek] dddd [saat] LT',
-            lastDay : '[dün] LT',
-            lastWeek : '[geçen] dddd [saat] LT',
-            sameElse : 'L'
+        meridiemParse: /öö|ÖÖ|ös|ÖS/,
+        isPM: function (input) {
+            return input === 'ös' || input === 'ÖS';
         },
-        relativeTime : {
-            future : '%s sonra',
-            past : '%s önce',
-            s : 'birkaç saniye',
-            ss : '%d saniye',
-            m : 'bir dakika',
-            mm : '%d dakika',
-            h : 'bir saat',
-            hh : '%d saat',
-            d : 'bir gün',
-            dd : '%d gün',
-            M : 'bir ay',
-            MM : '%d ay',
-            y : 'bir yıl',
-            yy : '%d yıl'
+        longDateFormat: {
+            LT: 'HH:mm',
+            LTS: 'HH:mm:ss',
+            L: 'DD.MM.YYYY',
+            LL: 'D MMMM YYYY',
+            LLL: 'D MMMM YYYY HH:mm',
+            LLLL: 'dddd, D MMMM YYYY HH:mm',
+        },
+        calendar: {
+            sameDay: '[bugün saat] LT',
+            nextDay: '[yarın saat] LT',
+            nextWeek: '[gelecek] dddd [saat] LT',
+            lastDay: '[dün] LT',
+            lastWeek: '[geçen] dddd [saat] LT',
+            sameElse: 'L',
+        },
+        relativeTime: {
+            future: '%s sonra',
+            past: '%s önce',
+            s: 'birkaç saniye',
+            ss: '%d saniye',
+            m: 'bir dakika',
+            mm: '%d dakika',
+            h: 'bir saat',
+            hh: '%d saat',
+            d: 'bir gün',
+            dd: '%d gün',
+            w: 'bir hafta',
+            ww: '%d hafta',
+            M: 'bir ay',
+            MM: '%d ay',
+            y: 'bir yıl',
+            yy: '%d yıl',
         },
         ordinal: function (number, period) {
             switch (period) {
@@ -91,19 +380,20 @@ window.oc.langMessages['tr'] = $.extend(
                 case 'DD':
                     return number;
                 default:
-                    if (number === 0) {  // special case for zero
-                        return number + '\'ıncı';
+                    if (number === 0) {
+                        // special case for zero
+                        return number + "'ıncı";
                     }
                     var a = number % 10,
-                        b = number % 100 - a,
+                        b = (number % 100) - a,
                         c = number >= 100 ? 100 : null;
                     return number + (suffixes[a] || suffixes[b] || suffixes[c]);
             }
         },
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 7  // The week that contains Jan 1st is the first week of the year.
-        }
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 7, // The week that contains Jan 7th is the first week of the year.
+        },
     });
 
     return tr;

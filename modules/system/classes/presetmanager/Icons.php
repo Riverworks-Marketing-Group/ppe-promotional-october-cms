@@ -27,15 +27,15 @@ class Icons
     }
 
     /**
-     * phosphorIcons
+     * iconsPhosphor
      */
-    public static function phosphorIcons(): array
+    public static function iconsPhosphor(): array
     {
         $icons = json_decode(file_get_contents(__DIR__.'/icons-phosphor.json'), true);
 
         $result = [];
         foreach ((array) $icons as $icon) {
-            $result["ph-{$icon}"] = [$icon, "ph ph-{$icon}"];
+            $result["ph ph-{$icon}"] = [$icon, "ph ph-{$icon}"];
         }
 
         // Sort icons alphabetically

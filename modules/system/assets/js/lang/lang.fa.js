@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['fa'] = $.extend(
+window.oc.langMessages['fa'] = Object.assign(
     window.oc.langMessages['fa'] || {},
-    {"markdowneditor":{"formatting":"\u0642\u0627\u0644\u0628 \u0628\u0646\u062f\u06cc","quote":"\u0646\u0642\u0644 \u0642\u0648\u0644","code":"\u06a9\u062f","header1":"\u0633\u0631\u062e\u0637 1","header2":"\u0633\u0631\u062e\u0637 2","header3":"\u0633\u0631\u062e\u0637 3","header4":"\u0633\u0631\u062e\u0637 4","header5":"\u0633\u0631\u062e\u0637 5","header6":"\u0633\u0631\u062e\u0637 6","bold":"\u0638\u062e\u06cc\u0645","italic":"\u0645\u0648\u0631\u0628","unorderedlist":"\u0644\u06cc\u0633\u062a \u0628\u062f\u0648\u0646 \u062a\u0631\u062a\u06cc\u0628","orderedlist":"\u0644\u06cc\u0633\u062a \u0628\u0627 \u062a\u0631\u062a\u06cc\u0628","snippet":"Snippet","video":"\u0648\u06cc\u062f\u06cc\u0648","image":"\u062a\u0635\u0648\u06cc\u0631","link":"\u0644\u06cc\u0646\u06a9","horizontalrule":"\u062f\u0631\u062c \u062e\u0637 \u0627\u0641\u0642\u06cc","fullscreen":"\u062a\u0645\u0627\u0645 \u0635\u0641\u062d\u0647","preview":"\u067e\u06cc\u0634 \u0646\u0645\u0627\u06cc\u0634","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"\u062f\u0631\u062c \u0622\u062f\u0631\u0633 \u0631\u0633\u0627\u0646\u0647","insert_image":"\u062f\u0631\u062c \u062a\u0635\u0648\u06cc\u0631","insert_video":"\u062f\u0631\u062c \u0648\u06cc\u062f\u06cc\u0648","insert_audio":"\u062f\u0631\u062c \u0635\u0648\u062a","invalid_file_empty_insert":"\u0644\u0637\u0641\u0627 \u0641\u0627\u06cc\u0644\u06cc \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0644\u06cc\u0646\u06a9 \u0622\u0646 \u0648\u0627\u0631\u062f \u0646\u0645\u0627\u06cc\u06cc\u062f","invalid_file_single_insert":"\u0644\u0637\u0641\u0627 \u06cc\u06a9 \u0641\u0627\u06cc\u0644 \u0631\u0627 \u0648\u0627\u0631\u062f \u0646\u0645\u0627\u06cc\u06cc\u062f","invalid_image_empty_insert":"\u0644\u0637\u0641\u0627 \u062a\u0635\u0648\u06cc\u0631(\u0647\u0627) \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0645\u0627\u06cc\u06cc\u062f","invalid_video_empty_insert":"\u0644\u0637\u0641\u0627 \u0648\u06cc\u062f\u06cc\u0648 \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0645\u0627\u06cc\u06cc\u062f.","invalid_audio_empty_insert":"\u0644\u0637\u0641\u0627 \u0641\u0627\u06cc\u0644 \u0635\u0648\u062a\u06cc \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0645\u0627\u06cc\u06cc\u062f"},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"\u062a\u0627\u06cc\u06cc\u062f","cancel_button_text":"\u0627\u0646\u0635\u0631\u0627\u0641","widget_remove_confirm":"\u0627\u06cc\u0646 \u0627\u0628\u0632\u0627\u0631\u06a9 \u062d\u0630\u0641 \u0634\u0648\u062f\u061f"},"datepicker":{"previousMonth":"\u0645\u0627\u0647 \u0642\u0628\u0644","nextMonth":"\u0645\u0627\u0647 \u0628\u0639\u062f","months":["\u0641\u0631\u0648\u0631\u062f\u06cc\u0646","\u0627\u0631\u062f\u06cc\u0628\u0647\u0634\u062a","\u062e\u0631\u062f\u0627\u062f","\u062a\u06cc\u0631","\u0645\u0631\u062f\u0627\u062f","\u0634\u0647\u0631\u06cc\u0648\u0631","\u0645\u0647\u0631","\u0622\u0628\u0627\u0646","\u0622\u0630\u0631","\u062f\u06cc","\u0628\u0647\u0645\u0646","\u0627\u0633\u0641\u0646\u062f"],"weekdays":["\u06cc\u06a9\u0634\u0646\u0628\u0647","\u062f\u0648\u0634\u0646\u0628\u0647","\u0633\u0647 \u0634\u0646\u0628\u0647","\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647","\u067e\u0646\u062c \u0634\u0646\u0628\u0647","\u062c\u0645\u0639\u0647","\u0634\u0646\u0628\u0647"],"weekdaysShort":["\u06cc","\u062f","\u0633","\u0686","\u067e","\u062c","\u0634"]},"colorpicker":{"choose":"\u062a\u0627\u06cc\u06cc\u062f"},"filter":{"group":{"all":"\u0647\u0645\u0647"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"\u0647\u0645\u0647","filter_button_text":"\u0641\u06cc\u0644\u062a\u0631","reset_button_text":"\u0628\u0627\u0632\u0646\u0634\u0627\u0646\u06cc","date_placeholder":"\u062a\u0627\u0631\u06cc\u062e","after_placeholder":"\u0628\u0639\u062f \u0627\u0632","before_placeholder":"\u0642\u0628\u0644 \u0627\u0632"},"numbers":{"all":"\u0647\u0645\u0647","filter_button_text":"\u0641\u06cc\u0644\u062a\u0631","reset_button_text":"\u0628\u0627\u0632\u0646\u0634\u0627\u0646\u06cc","min_placeholder":"\u06a9\u0645","max_placeholder":"\u0632\u06cc\u0627\u062f"}},"eventlog":{"show_stacktrace":"\u0646\u0645\u0627\u06cc\u0634 \u0631\u0648\u0646\u062f \u0627\u062c\u0631\u0627","hide_stacktrace":"\u0645\u062e\u0641\u06cc \u0633\u0627\u0632\u06cc \u0631\u0648\u0646\u062f \u0627\u062c\u0631\u0627","tabs":{"formatted":"\u0642\u0627\u0644\u0628 \u0628\u0646\u062f\u06cc \u0634\u062f\u0647","raw":"\u062e\u0627\u0645"},"editor":{"title":"\u0648\u06cc\u0631\u0627\u06cc\u0634\u06af\u0631 \u06a9\u062f","description":"\u0633\u06cc\u0633\u062a\u0645 \u0639\u0627\u0645\u0644 \u0634\u0645\u0627 \u0628\u0627\u06cc\u062f \u0628\u0631\u0627\u06cc \u06cc\u06a9\u06cc \u0627\u0632 \u0627\u06cc\u0646 \u0634\u0645\u0627\u06cc \u0622\u062f\u0631\u0633 \u0647\u0627 \u067e\u06cc\u06a9\u0631\u0628\u0646\u062f\u06cc \u0634\u062f\u0647 \u0628\u0627\u0634\u062f.","openWith":"\u0628\u0627\u0632 \u06a9\u0631\u062f\u0646 \u062a\u0648\u0633\u0637","remember_choice":"\u06af\u0632\u06cc\u0646\u0647 \u0627\u0646\u062a\u062e\u0627\u0628 \u0634\u062f\u0647 \u0631\u0627 \u0628\u0647 \u062e\u0627\u0637\u0631 \u062f\u0627\u0634\u062a\u0647 \u0628\u0627\u0634","open":"\u0628\u0627\u0632 \u06a9\u0631\u062f\u0646","cancel":"\u0627\u0646\u0635\u0631\u0627\u0641"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "\u0642\u0627\u0644\u0628 \u0628\u0646\u062f\u06cc",
+        "quote": "\u0646\u0642\u0644 \u0642\u0648\u0644",
+        "code": "\u06a9\u062f",
+        "header1": "\u0633\u0631\u062e\u0637 1",
+        "header2": "\u0633\u0631\u062e\u0637 2",
+        "header3": "\u0633\u0631\u062e\u0637 3",
+        "header4": "\u0633\u0631\u062e\u0637 4",
+        "header5": "\u0633\u0631\u062e\u0637 5",
+        "header6": "\u0633\u0631\u062e\u0637 6",
+        "bold": "\u0638\u062e\u06cc\u0645",
+        "italic": "\u0645\u0648\u0631\u0628",
+        "unorderedlist": "\u0644\u06cc\u0633\u062a \u0628\u062f\u0648\u0646 \u062a\u0631\u062a\u06cc\u0628",
+        "orderedlist": "\u0644\u06cc\u0633\u062a \u0628\u0627 \u062a\u0631\u062a\u06cc\u0628",
+        "snippet": "Snippet",
+        "video": "\u0648\u06cc\u062f\u06cc\u0648",
+        "image": "\u062a\u0635\u0648\u06cc\u0631",
+        "link": "\u0644\u06cc\u0646\u06a9",
+        "horizontalrule": "\u062f\u0631\u062c \u062e\u0637 \u0627\u0641\u0642\u06cc",
+        "fullscreen": "\u062a\u0645\u0627\u0645 \u0635\u0641\u062d\u0647",
+        "preview": "\u067e\u06cc\u0634 \u0646\u0645\u0627\u06cc\u0634",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "\u062f\u0631\u062c \u0622\u062f\u0631\u0633 \u0631\u0633\u0627\u0646\u0647",
+        "insert_image": "\u062f\u0631\u062c \u062a\u0635\u0648\u06cc\u0631",
+        "insert_video": "\u062f\u0631\u062c \u0648\u06cc\u062f\u06cc\u0648",
+        "insert_audio": "\u062f\u0631\u062c \u0635\u0648\u062a",
+        "invalid_file_empty_insert": "\u0644\u0637\u0641\u0627 \u0641\u0627\u06cc\u0644\u06cc \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0644\u06cc\u0646\u06a9 \u0622\u0646 \u0648\u0627\u0631\u062f \u0646\u0645\u0627\u06cc\u06cc\u062f",
+        "invalid_file_single_insert": "\u0644\u0637\u0641\u0627 \u06cc\u06a9 \u0641\u0627\u06cc\u0644 \u0631\u0627 \u0648\u0627\u0631\u062f \u0646\u0645\u0627\u06cc\u06cc\u062f",
+        "invalid_image_empty_insert": "\u0644\u0637\u0641\u0627 \u062a\u0635\u0648\u06cc\u0631(\u0647\u0627) \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0645\u0627\u06cc\u06cc\u062f",
+        "invalid_video_empty_insert": "\u0644\u0637\u0641\u0627 \u0648\u06cc\u062f\u06cc\u0648 \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0645\u0627\u06cc\u06cc\u062f.",
+        "invalid_audio_empty_insert": "\u0644\u0637\u0641\u0627 \u0641\u0627\u06cc\u0644 \u0635\u0648\u062a\u06cc \u0631\u0627 \u062c\u0647\u062a \u062f\u0631\u062c \u0627\u0646\u062a\u062e\u0627\u0628 \u0646\u0645\u0627\u06cc\u06cc\u062f"
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "\u062a\u0627\u06cc\u06cc\u062f",
+        "cancel_button_text": "\u0627\u0646\u0635\u0631\u0627\u0641",
+        "widget_remove_confirm": "\u0627\u06cc\u0646 \u0627\u0628\u0632\u0627\u0631\u06a9 \u062d\u0630\u0641 \u0634\u0648\u062f\u061f",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "\u0645\u0627\u0647 \u0642\u0628\u0644",
+        "nextMonth": "\u0645\u0627\u0647 \u0628\u0639\u062f",
+        "months": [
+            "\u0641\u0631\u0648\u0631\u062f\u06cc\u0646",
+            "\u0627\u0631\u062f\u06cc\u0628\u0647\u0634\u062a",
+            "\u062e\u0631\u062f\u0627\u062f",
+            "\u062a\u06cc\u0631",
+            "\u0645\u0631\u062f\u0627\u062f",
+            "\u0634\u0647\u0631\u06cc\u0648\u0631",
+            "\u0645\u0647\u0631",
+            "\u0622\u0628\u0627\u0646",
+            "\u0622\u0630\u0631",
+            "\u062f\u06cc",
+            "\u0628\u0647\u0645\u0646",
+            "\u0627\u0633\u0641\u0646\u062f"
+        ],
+        "weekdays": [
+            "\u06cc\u06a9\u0634\u0646\u0628\u0647",
+            "\u062f\u0648\u0634\u0646\u0628\u0647",
+            "\u0633\u0647 \u0634\u0646\u0628\u0647",
+            "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647",
+            "\u067e\u0646\u062c \u0634\u0646\u0628\u0647",
+            "\u062c\u0645\u0639\u0647",
+            "\u0634\u0646\u0628\u0647"
+        ],
+        "weekdaysShort": [
+            "\u06cc",
+            "\u062f",
+            "\u0633",
+            "\u0686",
+            "\u067e",
+            "\u062c",
+            "\u0634"
+        ]
+    },
+    "colorpicker": {
+        "choose": "\u062a\u0627\u06cc\u06cc\u062f"
+    },
+    "filter": {
+        "group": {
+            "all": "\u0647\u0645\u0647"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "\u0647\u0645\u0647",
+            "filter_button_text": "\u0641\u06cc\u0644\u062a\u0631",
+            "reset_button_text": "\u0628\u0627\u0632\u0646\u0634\u0627\u0646\u06cc",
+            "date_placeholder": "\u062a\u0627\u0631\u06cc\u062e",
+            "after_placeholder": "\u0628\u0639\u062f \u0627\u0632",
+            "before_placeholder": "\u0642\u0628\u0644 \u0627\u0632"
+        },
+        "numbers": {
+            "all": "\u0647\u0645\u0647",
+            "filter_button_text": "\u0641\u06cc\u0644\u062a\u0631",
+            "reset_button_text": "\u0628\u0627\u0632\u0646\u0634\u0627\u0646\u06cc",
+            "min_placeholder": "\u06a9\u0645",
+            "max_placeholder": "\u0632\u06cc\u0627\u062f",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "\u0646\u0645\u0627\u06cc\u0634 \u0631\u0648\u0646\u062f \u0627\u062c\u0631\u0627",
+        "hide_stacktrace": "\u0645\u062e\u0641\u06cc \u0633\u0627\u0632\u06cc \u0631\u0648\u0646\u062f \u0627\u062c\u0631\u0627",
+        "tabs": {
+            "formatted": "\u0642\u0627\u0644\u0628 \u0628\u0646\u062f\u06cc \u0634\u062f\u0647",
+            "raw": "\u062e\u0627\u0645"
+        },
+        "editor": {
+            "title": "\u0648\u06cc\u0631\u0627\u06cc\u0634\u06af\u0631 \u06a9\u062f",
+            "description": "\u0633\u06cc\u0633\u062a\u0645 \u0639\u0627\u0645\u0644 \u0634\u0645\u0627 \u0628\u0627\u06cc\u062f \u0628\u0631\u0627\u06cc \u06cc\u06a9\u06cc \u0627\u0632 \u0627\u06cc\u0646 \u0634\u0645\u0627\u06cc \u0622\u062f\u0631\u0633 \u0647\u0627 \u067e\u06cc\u06a9\u0631\u0628\u0646\u062f\u06cc \u0634\u062f\u0647 \u0628\u0627\u0634\u062f.",
+            "openWith": "\u0628\u0627\u0632 \u06a9\u0631\u062f\u0646 \u062a\u0648\u0633\u0637",
+            "remember_choice": "\u06af\u0632\u06cc\u0646\u0647 \u0627\u0646\u062a\u062e\u0627\u0628 \u0634\u062f\u0647 \u0631\u0627 \u0628\u0647 \u062e\u0627\u0637\u0631 \u062f\u0627\u0634\u062a\u0647 \u0628\u0627\u0634",
+            "open": "\u0628\u0627\u0632 \u06a9\u0631\u062f\u0646",
+            "cancel": "\u0627\u0646\u0635\u0631\u0627\u0641",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[\u062a\u0646\u0638\u06cc\u0645 \u0646\u0634\u062f\u0647]",
+    "1 day (today) if not set": "\u06f1 \u0631\u0648\u0632 (\u0627\u0645\u0631\u0648\u0632) \u0627\u06af\u0631 \u062a\u0646\u0638\u06cc\u0645 \u0646\u0634\u062f\u0647 \u0628\u0627\u0634\u062f",
+    "Apply": "\u0627\u0639\u0645\u0627\u0644 \u06a9\u0631\u062f\u0646",
+    "Ascending": "\u0635\u0639\u0648\u062f\u06cc",
+    "Attribute": "\u0648\u06cc\u0698\u06af\u06cc",
+    "Bar": "\u0628\u0627\u0631",
+    "Cancel": "\u0644\u063a\u0648",
+    "Chart": "\u0646\u0645\u0648\u062f\u0627\u0631",
+    "Chart type": "\u0646\u0648\u0639 \u0646\u0645\u0648\u062f\u0627\u0631",
+    "Color": "\u0631\u0646\u06af",
+    "Compare Totals": "\u0645\u0642\u0627\u06cc\u0633\u0647 \u0645\u062c\u0645\u0648\u0639\u200c\u0647\u0627",
+    "Configure": "\u067e\u06cc\u06a9\u0631\u0628\u0646\u062f\u06cc",
+    "Custom": "\u0633\u0641\u0627\u0631\u0634\u06cc",
+    "Custom Range": "\u0628\u0627\u0632\u0647 \u0633\u0641\u0627\u0631\u0634\u06cc",
+    "Dashboard interval": "\u0641\u0627\u0635\u0644\u0647 \u062f\u0627\u0634\u0628\u0648\u0631\u062f",
+    "Data source": "\u0645\u0646\u0628\u0639 \u062f\u0627\u062f\u0647",
+    "Date interval": "\u0641\u0627\u0635\u0644\u0647 \u0632\u0645\u0627\u0646\u06cc \u062a\u0627\u0631\u06cc\u062e",
+    "Day": "\u0631\u0648\u0632",
+    "Delete": "\u062d\u0630\u0641",
+    "Delete Dashboard": "\u062d\u0630\u0641 \u062f\u0627\u0634\u0628\u0648\u0631\u062f",
+    "Delete row": "\u062d\u0630\u0641 \u0631\u062f\u06cc\u0641",
+    "Descending": "\u0646\u0632\u0648\u0644\u06cc",
+    "Dimension": "\u0627\u0628\u0639\u0627\u062f",
+    "Direction": "\u062c\u0647\u062a",
+    "Disabled": "\u0645\u0639\u0644\u0648\u0644",
+    "Display": "\u0646\u0645\u0627\u06cc\u0634",
+    "Display [not set]": "\u0646\u0645\u0627\u06cc\u0634 [\u062a\u0646\u0638\u06cc\u0645 \u0646\u0634\u062f\u0647]",
+    "Display all records": "\u0646\u0645\u0627\u06cc\u0634 \u0647\u0645\u0647 \u0631\u06a9\u0648\u0631\u062f\u0647\u0627",
+    "Display relative bars": "\u0646\u0645\u0627\u06cc\u0634 \u0645\u06cc\u0644\u0647\u200c\u0647\u0627\u06cc \u0646\u0633\u0628\u06cc",
+    "Display totals": "\u0646\u0645\u0627\u06cc\u0634 \u0645\u062c\u0645\u0648\u0639",
+    "Edit Dashboard": "\u0648\u06cc\u0631\u0627\u06cc\u0634 \u062f\u0627\u0634\u0628\u0648\u0631\u062f",
+    "Empty values": "\u0645\u0642\u0627\u062f\u06cc\u0631 \u062e\u0627\u0644\u06cc",
+    "Enter a positive number": "\u06cc\u06a9 \u0639\u062f\u062f \u0645\u062b\u0628\u062a \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f",
+    "Enter a positive number or leave empty to display all records.": "\u06cc\u06a9 \u0639\u062f\u062f \u0645\u062b\u0628\u062a \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f \u06cc\u0627 \u0628\u0631\u0627\u06cc \u0646\u0645\u0627\u06cc\u0634 \u0647\u0645\u0647 \u0631\u06a9\u0648\u0631\u062f\u0647\u0627\u060c \u0622\u0646 \u0631\u0627 \u062e\u0627\u0644\u06cc \u0628\u06af\u0630\u0627\u0631\u06cc\u062f.",
+    "Equal to": "\u0628\u0631\u0627\u0628\u0631 \u0628\u0627",
+    "Export Dashboard": "\u062f\u0627\u0634\u0628\u0648\u0631\u062f \u062e\u0631\u0648\u062c\u06cc",
+    "Extra table fields": "\u0641\u06cc\u0644\u062f\u0647\u0627\u06cc \u062c\u062f\u0648\u0644 \u0627\u0636\u0627\u0641\u06cc",
+    "Filters": "\u0641\u06cc\u0644\u062a\u0631\u0647\u0627",
+    "General": "\u0639\u0645\u0648\u0645\u06cc",
+    "Greater or equal to": "\u0628\u0632\u0631\u06af\u062a\u0631 \u06cc\u0627 \u0645\u0633\u0627\u0648\u06cc",
+    "Greater than": "\u0628\u0632\u0631\u06af\u062a\u0631 \u0627\u0632",
+    "Hide": "\u067e\u0646\u0647\u0627\u0646 \u06a9\u0631\u062f\u0646",
+    "Horizontal": "\u0627\u0641\u0642\u06cc",
+    "Icon": "\u0622\u06cc\u06a9\u0648\u0646",
+    "Icon Status": "\u0648\u0636\u0639\u06cc\u062a \u0622\u06cc\u06a9\u0648\u0646",
+    "Important": "\u0645\u0647\u0645",
+    "Includes": "\u0634\u0627\u0645\u0644 \u0645\u06cc\u200c\u0634\u0648\u062f",
+    "Indicator": "\u0634\u0627\u062e\u0635",
+    "Information": "\u0627\u0637\u0644\u0627\u0639\u0627\u062a",
+    "Last 30 days": "\u06f3\u06f0 \u0631\u0648\u0632 \u06af\u0630\u0634\u062a\u0647",
+    "Last 7 days": "\u06f7 \u0631\u0648\u0632 \u06af\u0630\u0634\u062a\u0647",
+    "Last month": "\u0645\u0627\u0647 \u06af\u0630\u0634\u062a\u0647",
+    "Leave empty to disable pagination": "\u0628\u0631\u0627\u06cc \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u06a9\u0631\u062f\u0646 \u0635\u0641\u062d\u0647\u200c\u0628\u0646\u062f\u06cc\u060c \u062e\u0627\u0644\u06cc \u0628\u06af\u0630\u0627\u0631\u06cc\u062f",
+    "Leave empty to hide the title": "\u0628\u0631\u0627\u06cc \u0645\u062e\u0641\u06cc \u06a9\u0631\u062f\u0646 \u0639\u0646\u0648\u0627\u0646\u060c \u062e\u0627\u0644\u06cc \u0628\u06af\u0630\u0627\u0631\u06cc\u062f",
+    "Less or equal to": "\u06a9\u0645\u062a\u0631 \u06cc\u0627 \u0645\u0633\u0627\u0648\u06cc",
+    "Less than": "\u06a9\u0645\u062a\u0631 \u0627\u0632",
+    "Limit": "\u062d\u062f",
+    "Line": "\u062e\u0637",
+    "Link Text": "\u0645\u062a\u0646 \u067e\u06cc\u0648\u0646\u062f",
+    "Link URL": "\u0622\u062f\u0631\u0633 \u0644\u06cc\u0646\u06a9",
+    "Make Default": "\u067e\u06cc\u0634\u200c\u0641\u0631\u0636 \u0642\u0631\u0627\u0631 \u062f\u0647\u06cc\u062f",
+    "Manage Dashboards": "\u0645\u062f\u06cc\u0631\u06cc\u062a \u062f\u0627\u0634\u0628\u0648\u0631\u062f\u0647\u0627",
+    "Metric": "\u0645\u062a\u0631\u06cc\u06a9",
+    "Metrics": "\u0645\u0639\u06cc\u0627\u0631\u0647\u0627",
+    "Month": "\u0645\u0627\u0647",
+    "My Custom Widget": "\u0627\u0628\u0632\u0627\u0631\u06a9 \u0633\u0641\u0627\u0631\u0634\u06cc \u0645\u0646",
+    "No Value": "\u0628\u062f\u0648\u0646 \u0627\u0631\u0632\u0634",
+    "Notice text": "\u0645\u062a\u0646 \u0627\u0637\u0644\u0627\u0639\u06cc\u0647",
+    "Number of days": "\u062a\u0639\u062f\u0627\u062f \u0631\u0648\u0632\u0647\u0627",
+    "One of": "\u06cc\u06a9\u06cc \u0627\u0632",
+    "One value per line": "\u06cc\u06a9 \u0645\u0642\u062f\u0627\u0631 \u062f\u0631 \u0647\u0631 \u062e\u0637",
+    "Operation": "\u0639\u0645\u0644\u06cc\u0627\u062a",
+    "Order": "\u0633\u0641\u0627\u0631\u0634 \u062f\u0647\u06cc\u062f",
+    "Past hour": "\u0633\u0627\u0639\u062a \u06af\u0630\u0634\u062a\u0647",
+    "Past X days": "X \u0631\u0648\u0632 \u06af\u0630\u0634\u062a\u0647",
+    "Please provide the widget title": "\u0644\u0637\u0641\u0627 \u0639\u0646\u0648\u0627\u0646 \u0627\u0628\u0632\u0627\u0631\u06a9 \u0631\u0627 \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f",
+    "Please select a data source": "\u0644\u0637\u0641\u0627 \u06cc\u06a9 \u0645\u0646\u0628\u0639 \u062f\u0627\u062f\u0647 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "Please select a dimension": "\u0644\u0637\u0641\u0627 \u06cc\u06a9 \u0628\u0639\u062f \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "Please select an icon": "\u0644\u0637\u0641\u0627 \u06cc\u06a9 \u0622\u06cc\u06a9\u0648\u0646 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "Please select metric(s).": "\u0644\u0637\u0641\u0627 \u0645\u0639\u06cc\u0627\u0631(\u0647\u0627\u06cc) \u0645\u0648\u0631\u062f \u0646\u0638\u0631 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f.",
+    "Prev period": "\u062f\u0648\u0631\u0647 \u0642\u0628\u0644\u06cc",
+    "Quarter": "\u0631\u0628\u0639",
+    "Records per page": "\u0631\u06a9\u0648\u0631\u062f\u0647\u0627 \u062f\u0631 \u0647\u0631 \u0635\u0641\u062d\u0647",
+    "Refresh every minute": "\u0647\u0631 \u062f\u0642\u06cc\u0642\u0647 \u062a\u0627\u0632\u0647 \u06a9\u0646\u06cc\u062f",
+    "Rename Dashboard": "\u062a\u063a\u06cc\u06cc\u0631 \u0646\u0627\u0645 \u062f\u0627\u0634\u0628\u0648\u0631\u062f",
+    "Reset Layout": "\u062a\u0646\u0638\u06cc\u0645 \u0645\u062c\u062f\u062f \u0637\u0631\u062d\u200c\u0628\u0646\u062f\u06cc",
+    "Reset layout back to default?": "\u0637\u0631\u062d\u200c\u0628\u0646\u062f\u06cc \u0628\u0647 \u062d\u0627\u0644\u062a \u067e\u06cc\u0634\u200c\u0641\u0631\u0636 \u0628\u0631\u06af\u0631\u062f\u0627\u0646\u062f\u0647 \u0634\u0648\u062f\u061f",
+    "Same period last year": "\u0645\u062f\u062a \u0645\u0634\u0627\u0628\u0647 \u0633\u0627\u0644 \u06af\u0630\u0634\u062a\u0647",
+    "Section": "\u0628\u062e\u0634",
+    "Section Title": "\u0639\u0646\u0648\u0627\u0646 \u0628\u062e\u0634",
+    "Select a dimension and metrics": "\u0627\u0646\u062a\u062e\u0627\u0628 \u0627\u0628\u0639\u0627\u062f \u0648 \u0645\u0639\u06cc\u0627\u0631\u0647\u0627",
+    "Select an attribute": "\u06cc\u06a9 \u0648\u06cc\u0698\u06af\u06cc \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "Select an operation": "\u0627\u0646\u062a\u062e\u0627\u0628 \u06cc\u06a9 \u0639\u0645\u0644\u06cc\u0627\u062a",
+    "Select sorting metric or dimension": "\u0627\u0646\u062a\u062e\u0627\u0628 \u0645\u0639\u06cc\u0627\u0631 \u06cc\u0627 \u0628\u064f\u0639\u062f \u0645\u0631\u062a\u0628\u200c\u0633\u0627\u0632\u06cc",
+    "Select the metric color": "\u0631\u0646\u06af \u0645\u062a\u0631\u06cc\u06a9 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "Set the current layout as the default?": "\u0637\u0631\u062d \u0641\u0639\u0644\u06cc \u0631\u0627 \u0628\u0647 \u0639\u0646\u0648\u0627\u0646 \u0637\u0631\u062d \u067e\u06cc\u0634\u200c\u0641\u0631\u0636 \u062a\u0646\u0638\u06cc\u0645 \u06a9\u0646\u06cc\u062f\u061f",
+    "Show Date Interval": "\u0646\u0645\u0627\u06cc\u0634 \u0628\u0627\u0632\u0647 \u0632\u0645\u0627\u0646\u06cc \u062a\u0627\u0631\u06cc\u062e",
+    "Sort by": "\u0645\u0631\u062a\u0628 \u0633\u0627\u0632\u06cc \u0628\u0631 \u0627\u0633\u0627\u0633",
+    "Sorting": "\u0645\u0631\u062a\u0628\u200c\u0633\u0627\u0632\u06cc",
+    "Sorting & Filtering": "\u0645\u0631\u062a\u0628\u200c\u0633\u0627\u0632\u06cc \u0648 \u0641\u06cc\u0644\u062a\u0631 \u06a9\u0631\u062f\u0646",
+    "Stacked Bar": "\u0645\u06cc\u0644\u0647 \u0627\u0646\u0628\u0627\u0634\u062a\u0647",
+    "Starts with": "\u0634\u0631\u0648\u0639 \u0645\u06cc\u200c\u0634\u0648\u062f \u0628\u0627",
+    "Success": "\u0645\u0648\u0641\u0642\u06cc\u062a",
+    "Table": "\u0645\u06cc\u0632",
+    "Text Notice": "\u0627\u0637\u0644\u0627\u0639\u06cc\u0647 \u0645\u062a\u0646\u06cc",
+    "The dashboard layout has been reset to default.": "\u0637\u0631\u062d \u062f\u0627\u0634\u0628\u0648\u0631\u062f \u0628\u0647 \u062d\u0627\u0644\u062a \u067e\u06cc\u0634\u200c\u0641\u0631\u0636 \u0628\u0627\u0632\u0646\u0634\u0627\u0646\u06cc \u0634\u062f.",
+    "The dashboard was successfully updated.": "\u062f\u0627\u0634\u0628\u0648\u0631\u062f \u0628\u0627 \u0645\u0648\u0641\u0642\u06cc\u062a \u0628\u0647\u200c\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f.",
+    "The limit value must be at least 1": "\u0645\u0642\u062f\u0627\u0631 \u062d\u062f \u0628\u0627\u06cc\u062f \u062d\u062f\u0627\u0642\u0644 \u06f1 \u0628\u0627\u0634\u062f",
+    "This dashboard is now the default layout.": "\u0627\u06cc\u0646 \u062f\u0627\u0634\u0628\u0648\u0631\u062f \u0627\u06a9\u0646\u0648\u0646 \u0637\u0631\u062d \u067e\u06cc\u0634\u200c\u0641\u0631\u0636 \u0627\u0633\u062a.",
+    "This is a text notice widget.": "\u0627\u06cc\u0646 \u06cc\u06a9 \u0627\u0628\u0632\u0627\u0631\u06a9 \u0627\u0639\u0644\u0627\u0646 \u0645\u062a\u0646\u06cc \u0627\u0633\u062a.",
+    "This month": "\u0627\u06cc\u0646 \u0645\u0627\u0647",
+    "This quarter": "\u0627\u06cc\u0646 \u0633\u0647 \u0645\u0627\u0647\u0647",
+    "This week": "\u0627\u06cc\u0646 \u0647\u0641\u062a\u0647",
+    "This year": "\u0627\u0645\u0633\u0627\u0644",
+    "Title": "\u0639\u0646\u0648\u0627\u0646",
+    "Today": "\u0627\u0645\u0631\u0648\u0632",
+    "Value": "\u0627\u0631\u0632\u0634",
+    "Values": "\u0627\u0631\u0632\u0634\u200c\u0647\u0627",
+    "Vertical": "\u0639\u0645\u0648\u062f\u06cc",
+    "Warning": "\u0647\u0634\u062f\u0627\u0631",
+    "Week": "\u0647\u0641\u062a\u0647",
+    "Year": "\u0633\u0627\u0644",
+    "Yesterday": "\u062f\u06cc\u0631\u0648\u0632"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Persian [fa]
+//! author : Ebrahim Byagowi : https://github.com/ebraminio
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,97 +293,114 @@ window.oc.langMessages['fa'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     var symbolMap = {
-        '1': '۱',
-        '2': '۲',
-        '3': '۳',
-        '4': '۴',
-        '5': '۵',
-        '6': '۶',
-        '7': '۷',
-        '8': '۸',
-        '9': '۹',
-        '0': '۰'
-    }, numberMap = {
-        '۱': '1',
-        '۲': '2',
-        '۳': '3',
-        '۴': '4',
-        '۵': '5',
-        '۶': '6',
-        '۷': '7',
-        '۸': '8',
-        '۹': '9',
-        '۰': '0'
-    };
+            1: '۱',
+            2: '۲',
+            3: '۳',
+            4: '۴',
+            5: '۵',
+            6: '۶',
+            7: '۷',
+            8: '۸',
+            9: '۹',
+            0: '۰',
+        },
+        numberMap = {
+            '۱': '1',
+            '۲': '2',
+            '۳': '3',
+            '۴': '4',
+            '۵': '5',
+            '۶': '6',
+            '۷': '7',
+            '۸': '8',
+            '۹': '9',
+            '۰': '0',
+        };
 
     var fa = moment.defineLocale('fa', {
-        months : 'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split('_'),
-        monthsShort : 'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split('_'),
-        weekdays : 'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split('_'),
-        weekdaysShort : 'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split('_'),
-        weekdaysMin : 'ی_د_س_چ_پ_ج_ش'.split('_'),
-        weekdaysParseExact : true,
-        longDateFormat : {
-            LT : 'HH:mm',
-            LTS : 'HH:mm:ss',
-            L : 'DD/MM/YYYY',
-            LL : 'D MMMM YYYY',
-            LLL : 'D MMMM YYYY HH:mm',
-            LLLL : 'dddd, D MMMM YYYY HH:mm'
+        months: 'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split(
+            '_'
+        ),
+        monthsShort:
+            'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split(
+                '_'
+            ),
+        weekdays:
+            'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split(
+                '_'
+            ),
+        weekdaysShort:
+            'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split(
+                '_'
+            ),
+        weekdaysMin: 'ی_د_س_چ_پ_ج_ش'.split('_'),
+        weekdaysParseExact: true,
+        longDateFormat: {
+            LT: 'HH:mm',
+            LTS: 'HH:mm:ss',
+            L: 'DD/MM/YYYY',
+            LL: 'D MMMM YYYY',
+            LLL: 'D MMMM YYYY HH:mm',
+            LLLL: 'dddd, D MMMM YYYY HH:mm',
         },
         meridiemParse: /قبل از ظهر|بعد از ظهر/,
         isPM: function (input) {
             return /بعد از ظهر/.test(input);
         },
-        meridiem : function (hour, minute, isLower) {
+        meridiem: function (hour, minute, isLower) {
             if (hour < 12) {
                 return 'قبل از ظهر';
             } else {
                 return 'بعد از ظهر';
             }
         },
-        calendar : {
-            sameDay : '[امروز ساعت] LT',
-            nextDay : '[فردا ساعت] LT',
-            nextWeek : 'dddd [ساعت] LT',
-            lastDay : '[دیروز ساعت] LT',
-            lastWeek : 'dddd [پیش] [ساعت] LT',
-            sameElse : 'L'
+        calendar: {
+            sameDay: '[امروز ساعت] LT',
+            nextDay: '[فردا ساعت] LT',
+            nextWeek: 'dddd [ساعت] LT',
+            lastDay: '[دیروز ساعت] LT',
+            lastWeek: 'dddd [پیش] [ساعت] LT',
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : 'در %s',
-            past : '%s پیش',
-            s : 'چند ثانیه',
-            ss : 'ثانیه d%',
-            m : 'یک دقیقه',
-            mm : '%d دقیقه',
-            h : 'یک ساعت',
-            hh : '%d ساعت',
-            d : 'یک روز',
-            dd : '%d روز',
-            M : 'یک ماه',
-            MM : '%d ماه',
-            y : 'یک سال',
-            yy : '%d سال'
+        relativeTime: {
+            future: 'در %s',
+            past: '%s پیش',
+            s: 'چند ثانیه',
+            ss: '%d ثانیه',
+            m: 'یک دقیقه',
+            mm: '%d دقیقه',
+            h: 'یک ساعت',
+            hh: '%d ساعت',
+            d: 'یک روز',
+            dd: '%d روز',
+            M: 'یک ماه',
+            MM: '%d ماه',
+            y: 'یک سال',
+            yy: '%d سال',
         },
         preparse: function (string) {
-            return string.replace(/[۰-۹]/g, function (match) {
-                return numberMap[match];
-            }).replace(/،/g, ',');
+            return string
+                .replace(/[۰-۹]/g, function (match) {
+                    return numberMap[match];
+                })
+                .replace(/،/g, ',');
         },
         postformat: function (string) {
-            return string.replace(/\d/g, function (match) {
-                return symbolMap[match];
-            }).replace(/,/g, '،');
+            return string
+                .replace(/\d/g, function (match) {
+                    return symbolMap[match];
+                })
+                .replace(/,/g, '،');
         },
         dayOfMonthOrdinalParse: /\d{1,2}م/,
-        ordinal : '%dم',
-        week : {
-            dow : 6, // Saturday is the first day of the week.
-            doy : 12 // The week that contains Jan 1st is the first week of the year.
-        }
+        ordinal: '%dم',
+        week: {
+            dow: 6, // Saturday is the first day of the week.
+            doy: 12, // The week that contains Jan 12th is the first week of the year.
+        },
     });
 
     return fa;

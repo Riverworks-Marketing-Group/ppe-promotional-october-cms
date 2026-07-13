@@ -57,7 +57,7 @@ class CustomNestedJoinRelation extends BelongsToMany
     /**
      * addDefinedConstraintsToRelation
      */
-    public function addDefinedConstraintsToRelation($relation, array $args = null)
+    public function addDefinedConstraintsToRelation($relation, ?array $args = null)
     {
         parent::addDefinedConstraintsToRelation($relation, $args);
 
@@ -67,7 +67,7 @@ class CustomNestedJoinRelation extends BelongsToMany
     /**
      * addDefinedConstraintsToQuery
      */
-    public function addDefinedConstraintsToQuery($query, array $args = null)
+    public function addDefinedConstraintsToQuery($query, ?array $args = null)
     {
         parent::addDefinedConstraintsToQuery($query, $args);
     }

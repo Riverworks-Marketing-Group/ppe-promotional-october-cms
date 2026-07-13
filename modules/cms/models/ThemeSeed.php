@@ -59,7 +59,7 @@ class ThemeSeed extends Model
      *
      * @return void
      */
-    public function save(array $options = null, $sessionKey = null)
+    public function save(?array $options = null, $sessionKey = null)
     {
         throw new ApplicationException(sprintf("The % model is not intended to be saved, please use %s instead", get_class($this), 'ThemeData'));
     }
@@ -126,9 +126,9 @@ class ThemeSeed extends Model
         if (File::isDirectory($themeBpPath)) {
             $this->note('Importing Blueprints');
             File::copyDirectory($themeBpPath, $appBpPath);
-
-            BlueprintIndexer::instance()->setNotesOutput($this->getNotesOutput())->migrate();
         }
+
+        BlueprintIndexer::instance()->setNotesOutput($this->getNotesOutput())->migrate();
     }
 
     /**
@@ -231,6 +231,11 @@ class ThemeSeed extends Model
 
         $importModel = new $className;
         $importModel->forceFill($attributes);
+
+        if (method_exists($importModel, 'setSourcePrefix')) {
+            $importModel->setSourcePrefix($this->themePath);
+        }
+
         $importModel->importFile($importFile, ['matches' => $matches, 'sessionKey' => str_random(40)]);
 
         $stats = $importModel->getResultStats();

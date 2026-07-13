@@ -2,16 +2,12 @@
 
 use Db;
 use Str;
-use Url;
 use Html;
 use Lang;
 use Backend;
 use DbDongle;
-use Carbon\Carbon;
 use October\Rain\Html\Helper as HtmlHelper;
 use October\Rain\Router\Helper as RouterHelper;
-use System\Helpers\DateTime as DateTimeHelper;
-use System\Classes\PluginManager;
 use Backend\Classes\ListColumn;
 use Backend\Classes\WidgetBase;
 use October\Rain\Database\Model;
@@ -20,6 +16,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\UrlWindow;
 use ApplicationException;
 use Exception;
+use BackedEnum;
 use UnitEnum;
 
 /**
@@ -33,6 +30,7 @@ class Lists extends WidgetBase implements ListElement
     use \Backend\Widgets\Lists\IsListElement;
     use \Backend\Widgets\Lists\ColumnProcessor;
     use \Backend\Widgets\Lists\HasListSetup;
+    use \Backend\Widgets\Lists\HasValueProcessor;
     use \Backend\Widgets\Lists\HasSorting;
     use \Backend\Widgets\Lists\HasSearch;
     use \Backend\Traits\PreferenceMaker;
@@ -498,6 +496,9 @@ class Lists extends WidgetBase implements ListElement
                     }
                 }
             }
+
+            // Allow extensions inside the search grouping
+            $this->fireSystemEvent('backend.list.extendSearchQuery', [$innerQuery]);
         });
 
         // Custom select queries
@@ -510,7 +511,6 @@ class Lists extends WidgetBase implements ListElement
 
             // Relation column
             if ($column->relation) {
-                // @todo Find a way...
                 $relationType = $this->model->getRelationType($column->relation);
                 if ($relationType === 'morphTo') {
                     throw new ApplicationException('The relationship morphTo is not supported for list columns.');
@@ -529,13 +529,27 @@ class Lists extends WidgetBase implements ListElement
 
                 $countQuery = $relationObj->getRelationExistenceQuery($relationQuery, $query);
 
-                $joinSql = $this->isColumnRelated($column, true)
+                $isMultiRelation = $this->isColumnRelated($column, true);
+
+                $joinSql = $isMultiRelation
                     ? DbDongle::raw("group_concat(" . $sqlSelect . " separator ', ')")
                     : DbDongle::raw($sqlSelect);
 
-                $joinSql = $countQuery->select($joinSql)->reorder()->toSql();
+                $countQuery->select($joinSql);
 
-                $selects[] = Db::raw('('.$joinSql.') as '.$alias);
+                // Only strip ordering for multi-relations (group_concat),
+                // singular relations with LIMIT 1 need ordering for deterministic results
+                if ($isMultiRelation) {
+                    $countQuery->reorder();
+                }
+                // Singular relations need a limit to prevent subquery errors
+                else {
+                    $countQuery->limit(1);
+                }
+
+                $joinSql = $countQuery->toSql();
+
+                $selects[] = Db::raw("({$joinSql}) as {$alias}");
 
                 // If a polymorphic relation, bindings need to be added to the query
                 $bindings = array_merge($bindings, $countQuery->getBindings());
@@ -797,8 +811,9 @@ class Lists extends WidgetBase implements ListElement
         if ($this->pivotMode) {
             $url = RouterHelper::replaceParameters($record->pivot, $this->recordUrl);
         }
-
-        $url = RouterHelper::replaceParameters($record, $this->recordUrl);
+        else {
+            $url = RouterHelper::replaceParameters($record, $this->recordUrl);
+        }
 
         return Backend::url($url);
     }
@@ -1213,7 +1228,7 @@ class Lists extends WidgetBase implements ListElement
                 $value = $record->{$countColumnName};
             }
             else {
-                $value = $record->{$columnName};
+                $value = $record->getAttribute($columnName);
             }
         }
 
@@ -1270,8 +1285,11 @@ class Lists extends WidgetBase implements ListElement
         }
 
         // Cast enums to scalar
-        if ($value instanceof UnitEnum) {
+        if ($value instanceof BackedEnum) {
             $value = $value->value;
+        }
+        elseif ($value instanceof UnitEnum) {
+            $value = $value->name;
         }
 
         // Apply filters
@@ -1401,428 +1419,6 @@ class Lists extends WidgetBase implements ListElement
         }
 
         return (bool) $column->getConfig('useTimezone', $default);
-    }
-
-    //
-    // Value processing
-    //
-
-    /**
-     * evalCustomListType processes a custom list types registered by plugins and the app.
-     */
-    protected function evalCustomListType($type, $record, $column, $value)
-    {
-        // Load plugin and app column types
-        $methodValues = PluginManager::instance()->getRegistrationMethodValues('registerListColumnTypes');
-        foreach ($methodValues as $availableTypes) {
-            if (!isset($availableTypes[$type])) {
-                continue;
-            }
-
-            $callback = $availableTypes[$type];
-
-            if (is_callable($callback)) {
-                return call_user_func_array($callback, [$value, $column, $record]);
-            }
-        }
-
-        $customMessage = '';
-        if ($type === 'relation') {
-            $customMessage = 'Type: relation is not supported, instead use the relation property to specify a relationship to pull the value from and set the type to the type of the value expected.';
-        }
-
-        throw new ApplicationException(sprintf('List column type "%s" could not be found. %s', $type, $customMessage));
-    }
-
-    /**
-     * evalTextTypeValue as text and escape the value
-     * @return string
-     */
-    protected function evalTextTypeValue($record, $column, $value)
-    {
-        if (is_array($value) && count($value) === count($value, COUNT_RECURSIVE)) {
-            $value = implode(', ', $value);
-        }
-
-        if (is_string($column->format) && !empty($column->format)) {
-            $value = sprintf($column->format, $value);
-        }
-
-        return htmlentities($value, ENT_QUOTES, 'UTF-8', false);
-    }
-
-    /**
-     * evalNumberTypeValue process as number, proxy to text but uses different styling
-     * @return string
-     */
-    protected function evalNumberTypeValue($record, $column, $value)
-    {
-        return $this->evalTextTypeValue($record, $column, $value);
-    }
-
-    /**
-     * evalImageTypeValue will process an image value
-     * @return string
-     */
-    protected function evalImageTypeValue($record, $column, $value)
-    {
-        $config = $column->config;
-        $width = isset($config['width']) ? $config['width'] : 68;
-        $height = isset($config['height']) ? $config['height'] : 68;
-        $limit = isset($config['limit']) ? $config['limit'] : 3;
-        $options = isset($config['options']) ? $config['options'] : [];
-        $isDefaultSize = !isset($config['width']) && !isset($config['height']);
-
-        $colName = $column->columnName;
-        $images = [];
-
-        // File model
-        if (isset($record->attachMany[$colName])) {
-            $images = $value->count() ? $value->all() : [];
-        }
-        elseif (isset($record->attachOne[$colName])) {
-            $images = $value ? [$value] : [];
-        }
-        // Media item
-        else {
-            foreach ((array) $value as $val) {
-                if (is_array($val)) {
-                    return '';
-                }
-                if (strpos($val, '://') !== false) {
-                    $images[] = $val;
-                }
-                elseif (strlen($val)) {
-                    $images[] = \Media\Classes\MediaLibrary::url($val);
-                }
-            }
-        }
-
-        if (!$images) {
-            return '';
-        }
-
-        $totalImages = count($images);
-        $images = array_slice($images, 0, $limit);
-
-        $imageUrls = [];
-        foreach ($images as $image) {
-            $imageUrls[] = \System\Classes\ResizeImages::resize($image, $width, $height, $options);
-        }
-
-        return $this->makePartial('column_image', [
-            'totalImages' => $totalImages,
-            'imageUrls' => $imageUrls,
-            'isDefaultSize' => $isDefaultSize,
-            'width' => $width,
-            'height' => $height
-        ]);
-    }
-
-    /**
-     * evalSwitchTypeValue as boolean switch
-     */
-    protected function evalSwitchTypeValue($record, $column, $value)
-    {
-        $config = $column->config;
-
-        return $this->makePartial('column_switch', [
-            'column' => $column,
-            'value' => $value,
-            'trueValue' => Lang::get($config['options'][1] ?? 'backend::lang.list.column_switch_true'),
-            'falseValue' => Lang::get($config['options'][0] ?? 'backend::lang.list.column_switch_false'),
-        ]);
-    }
-
-    /**
-     * evalSummaryTypeValue will limit a value by words
-     */
-    protected function evalSummaryTypeValue($record, $column, $value)
-    {
-        $config = $column->config;
-        $endChars = isset($config['endChars']) ? $config['endChars'] : '...';
-        $limitChars = isset($config['limitChars']) ? $config['limitChars'] : 40;
-        $limitWords = isset($config['limitWords']) ? $config['limitWords'] : null;
-
-        // Collapse spacing for inline nodes that will get stripped
-        // "Welcome <img />, User" should read "Welcome, User"
-        $result = $value;
-        $result = str_replace(' <', '<', $result);
-
-        // Add natural spacing between HTML nodes
-        $result = str_replace("><", '> <', $value);
-
-        // Strip HTML
-        $result = $original = trim(Html::strip($result));
-
-        // Nothing left
-        if (!strlen($result)) {
-            return $result;
-        }
-
-        // Limit by chars and estimate word count
-        if (!$limitWords) {
-            $result = Str::limit($result, $limitChars, '');
-            $limitWords = substr_count($result, ' ') + 1;
-        }
-
-        // Strip HTML, limit to words
-        $result = Str::words($result, $limitWords, '');
-
-        // Add end suffix where original differs
-        if (mb_strlen($result) !== mb_strlen($original)) {
-            $result .= $endChars;
-        }
-
-        return $result;
-    }
-
-    /**
-     * evalDatetimeTypeValue as a datetime value
-     */
-    protected function evalDatetimeTypeValue($record, $column, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $dateTime = $this->validateDateTimeValue($value, $column);
-
-        if ($column->format !== null) {
-            $value = $dateTime->format($column->format);
-        }
-        else {
-            $value = $dateTime->toDayDateTimeString();
-        }
-
-        $options = [
-            'column' => $column,
-            'defaultValue' => $value,
-            'format' => $column->format,
-            'formatAlias' => 'dateTimeLongMin',
-            'useTimezone' => $this->getColumnTimezonePreference($column),
-        ];
-
-        return Backend::dateTime($dateTime, $options);
-    }
-
-    /**
-     * evalTimeTypeValue as a time value
-     */
-    protected function evalTimeTypeValue($record, $column, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $dateTime = $this->validateDateTimeValue($value, $column);
-
-        $format = $column->format ?? 'g:i A';
-
-        $value = $dateTime->format($format);
-
-        $options = [
-            'column' => $column,
-            'defaultValue' => $value,
-            'format' => $column->format,
-            'formatAlias' => 'time',
-            'useTimezone' => $this->getColumnTimezonePreference($column, false),
-        ];
-
-        return Backend::dateTime($dateTime, $options);
-    }
-
-    /**
-     * evalDateTypeValue as a date value
-     */
-    protected function evalDateTypeValue($record, $column, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $dateTime = $this->validateDateTimeValue($value, $column);
-
-        if ($column->format !== null) {
-            $value = $dateTime->format($column->format);
-        }
-        else {
-            $value = $dateTime->toFormattedDateString();
-        }
-
-        $options = [
-            'column' => $column,
-            'defaultValue' => $value,
-            'format' => $column->format,
-            'formatAlias' => 'dateLongMin',
-            'useTimezone' => $this->getColumnTimezonePreference($column, false),
-        ];
-
-        return Backend::dateTime($dateTime, $options);
-    }
-
-    /**
-     * evalTimesinceTypeValue as diff for humans (1 min ago)
-     */
-    protected function evalTimesinceTypeValue($record, $column, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $dateTime = $this->validateDateTimeValue($value, $column);
-
-        $value = DateTimeHelper::timeSince($dateTime);
-
-        $options = [
-            'column' => $column,
-            'defaultValue' => $value,
-            'timeSince' => true,
-            'useTimezone' => $this->getColumnTimezonePreference($column),
-        ];
-
-        return Backend::dateTime($dateTime, $options);
-    }
-
-    /**
-     * evalTimetenseTypeValue as time as current tense (Today at 0:00)
-     */
-    protected function evalTimetenseTypeValue($record, $column, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $dateTime = $this->validateDateTimeValue($value, $column);
-
-        $value = DateTimeHelper::timeTense($dateTime);
-
-        $options = [
-            'column' => $column,
-            'defaultValue' => $value,
-            'timeTense' => true,
-            'useTimezone' => $this->getColumnTimezonePreference($column),
-        ];
-
-        return Backend::dateTime($dateTime, $options);
-    }
-
-    /**
-     * evalSelectableTypeValue processes as selectable value types for 'dropdown',
-     * 'radio', 'balloon-selector' and similar form field types
-     */
-    protected function evalSelectableTypeValue($record, $column, $value)
-    {
-        $formField = new \Backend\Classes\FormField([
-            'fieldName' => $column->columnName,
-            'label' => $column->label
-        ]);
-
-        $fieldOptions = $column->optionsPreset
-            ? 'preset:' . $column->optionsPreset
-            : ($column->optionsMethod ?: $column->options);
-
-        if (!is_array($fieldOptions)) {
-            $model = $this->isColumnRelated($column)
-                ? $this->model->makeRelation($column->relation)
-                : $this->model;
-
-            $fieldOptions = $formField->getOptionsFromModel(
-                $model,
-                $fieldOptions,
-                $record->toArray()
-            );
-        }
-
-        return $this->makePartial('column_selectable', [
-            'fieldOptions' => $fieldOptions,
-            'column' => $column,
-            'value' => $value
-        ]);
-    }
-
-    /**
-     * evalLinkageTypeValue
-     */
-    protected function evalLinkageTypeValue($record, $column, $value)
-    {
-        if (!$value && $column->linkUrl) {
-            $linkUrl = RouterHelper::replaceParameters($record, $column->linkUrl);
-            if (!starts_with($linkUrl, ['//', 'http://', 'https://'])) {
-                $linkUrl = Backend::url($linkUrl);
-            }
-            $value = $linkUrl;
-        }
-
-        if (is_array($value) && count($value) === 2) {
-            $linkUrl = $value[0];
-            $linkText = $value[1];
-        }
-        else {
-            $linkText = $linkUrl = $value;
-        }
-
-        if ($column->linkText) {
-            $linkText = $column->linkText;
-        }
-
-        if (str_starts_with($linkUrl, 'october://')) {
-            $isDefault = $linkUrl === $linkText;
-            $linkUrl = \Cms\Classes\PageManager::url($linkUrl);
-            if (!$linkUrl) {
-                $value = null;
-            }
-            elseif ($isDefault) {
-                $linkText = Url::makeRelative($linkUrl);
-            }
-        }
-
-        return $this->makePartial('column_linkage', [
-            'attributes' => (array) $column->attributes,
-            'linkText' => $linkText,
-            'linkUrl' => $linkUrl,
-            'column' => $column,
-            'value' => $value
-        ]);
-    }
-
-    /**
-     * evalPartialTypeValue as partial reference
-     */
-    protected function evalPartialTypeValue($record, $column, $value)
-    {
-        return $this->makePartial('column_partial', [
-            'record' => $record,
-            'column' => $column,
-            'value' => $value
-        ]);
-    }
-
-    /**
-     * evalColorPickerTypeValue as background color, to be seen at list
-     */
-    protected function evalColorPickerTypeValue($record, $column, $value)
-    {
-        return $this->makePartial('column_colorpicker', [
-            'value' => $value
-        ]);
-    }
-
-    /**
-     * validateDateTimeValue column type
-     */
-    protected function validateDateTimeValue($value, $column)
-    {
-        $value = DateTimeHelper::makeCarbon($value, false);
-
-        if (!$value instanceof Carbon) {
-            throw new ApplicationException(Lang::get(
-                'backend::lang.list.invalid_column_datetime',
-                ['column' => $column->columnName]
-            ));
-        }
-
-        return $value;
     }
 
     //

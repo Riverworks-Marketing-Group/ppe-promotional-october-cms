@@ -9,34 +9,304 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['et'] = $.extend(
+window.oc.langMessages['et'] = Object.assign(
     window.oc.langMessages['et'] || {},
-    {"markdowneditor":{"formatting":"Vorming","quote":"Tsitaat","code":"Kood","header1":"Pealkiri 1","header2":"Pealkiri 2","header3":"Pealkiri 3","header4":"Pealkiri 4","header5":"Pealkiri 5","header6":"Pealkiri 6","bold":"Paks","italic":"Kursiiv","unorderedlist":"J\u00e4rjestamata nimekiri","orderedlist":"J\u00e4rjestatud nimekiri","snippet":"Snippet","video":"Video","image":"Pilt","link":"Link","horizontalrule":"Sisesta horisontaaljoon","fullscreen":"T\u00e4isekraan","preview":"Eelvaade","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Sisesta link","insert_image":"Siseta pilt","insert_video":"Sisesta video","insert_audio":"Sisesta heliklipp","invalid_file_empty_insert":"Palun vali fail, millele link lisada.","invalid_file_single_insert":"Palun vali \u00fcks fail.","invalid_image_empty_insert":"Palun vali pildid, mida lisada.","invalid_video_empty_insert":"Palun vali videoklipp, mida lisada.","invalid_audio_empty_insert":"Palun vali heliklipp, mida lisada."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Loobu","widget_remove_confirm":"Eemalda see widget?"},"datepicker":{"previousMonth":"Eelmine kuu","nextMonth":"J\u00e4rgmine kuu","months":["Jaanuar","Veebruar","M\u00e4rts","Aprill","Mai","Juuni","Juuli","August","September","Oktoober","November","Detsember"],"weekdays":["P\u00fchap\u00e4ev","Esmasp\u00e4ev","Teisip\u00e4ev","Kolmap\u00e4ev","Neljap\u00e4ev","Reede","Laup\u00e4ev"],"weekdaysShort":["P","E","T","K","N","R","L"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"k\u00f5ik"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"k\u00f5ik","filter_button_text":"Filtreeri","reset_button_text":"L\u00e4htesta","date_placeholder":"Kuup\u00e4ev","after_placeholder":"Hiljem kui","before_placeholder":"Varem kui"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"N\u00e4ita stacktrace","hide_stacktrace":"Peida stacktrace","tabs":{"formatted":"Kujundatud","raw":"Algne"},"editor":{"title":"L\u00e4htekoodi redaktor","description":"Sinu operatsioonis\u00fcsteem peaks olema sedistatud \u00fche URL skeemi jaoks.","openWith":"Ava programmiga","remember_choice":"J\u00e4ta valik selleks sessiooniks meelde","open":"Ava","cancel":"Loobu"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Vorming",
+        "quote": "Tsitaat",
+        "code": "Kood",
+        "header1": "Pealkiri 1",
+        "header2": "Pealkiri 2",
+        "header3": "Pealkiri 3",
+        "header4": "Pealkiri 4",
+        "header5": "Pealkiri 5",
+        "header6": "Pealkiri 6",
+        "bold": "Paks",
+        "italic": "Kursiiv",
+        "unorderedlist": "J\u00e4rjestamata nimekiri",
+        "orderedlist": "J\u00e4rjestatud nimekiri",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Pilt",
+        "link": "Link",
+        "horizontalrule": "Sisesta horisontaaljoon",
+        "fullscreen": "T\u00e4isekraan",
+        "preview": "Eelvaade",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Sisesta link",
+        "insert_image": "Siseta pilt",
+        "insert_video": "Sisesta video",
+        "insert_audio": "Sisesta heliklipp",
+        "invalid_file_empty_insert": "Palun vali fail, millele link lisada.",
+        "invalid_file_single_insert": "Palun vali \u00fcks fail.",
+        "invalid_image_empty_insert": "Palun vali pildid, mida lisada.",
+        "invalid_video_empty_insert": "Palun vali videoklipp, mida lisada.",
+        "invalid_audio_empty_insert": "Palun vali heliklipp, mida lisada."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Loobu",
+        "widget_remove_confirm": "Eemalda see widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Eelmine kuu",
+        "nextMonth": "J\u00e4rgmine kuu",
+        "months": [
+            "Jaanuar",
+            "Veebruar",
+            "M\u00e4rts",
+            "Aprill",
+            "Mai",
+            "Juuni",
+            "Juuli",
+            "August",
+            "September",
+            "Oktoober",
+            "November",
+            "Detsember"
+        ],
+        "weekdays": [
+            "P\u00fchap\u00e4ev",
+            "Esmasp\u00e4ev",
+            "Teisip\u00e4ev",
+            "Kolmap\u00e4ev",
+            "Neljap\u00e4ev",
+            "Reede",
+            "Laup\u00e4ev"
+        ],
+        "weekdaysShort": [
+            "P",
+            "E",
+            "T",
+            "K",
+            "N",
+            "R",
+            "L"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "k\u00f5ik"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "k\u00f5ik",
+            "filter_button_text": "Filtreeri",
+            "reset_button_text": "L\u00e4htesta",
+            "date_placeholder": "Kuup\u00e4ev",
+            "after_placeholder": "Hiljem kui",
+            "before_placeholder": "Varem kui"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "N\u00e4ita stacktrace",
+        "hide_stacktrace": "Peida stacktrace",
+        "tabs": {
+            "formatted": "Kujundatud",
+            "raw": "Algne"
+        },
+        "editor": {
+            "title": "L\u00e4htekoodi redaktor",
+            "description": "Sinu operatsioonis\u00fcsteem peaks olema sedistatud \u00fche URL skeemi jaoks.",
+            "openWith": "Ava programmiga",
+            "remember_choice": "J\u00e4ta valik selleks sessiooniks meelde",
+            "open": "Ava",
+            "cancel": "Loobu"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[pole m\u00e4\u00e4ratud]",
+    "1 day (today) if not set": "1 p\u00e4ev (t\u00e4na), kui pole m\u00e4\u00e4ratud",
+    "Apply": "Kandideeri",
+    "Ascending": "Kasvav",
+    "Attribute": "Atribuut",
+    "Bar": "Baar",
+    "Cancel": "T\u00fchista",
+    "Chart": "Diagramm",
+    "Chart type": "Diagrammi t\u00fc\u00fcp",
+    "Color": "V\u00e4rv",
+    "Compare Totals": "V\u00f5rdle kogusummasid",
+    "Configure": "Konfigureeri",
+    "Custom": "Kohandatud",
+    "Custom Range": "Kohandatud vahemik",
+    "Dashboard interval": "Armatuurlaua intervall",
+    "Data source": "Andmeallikas",
+    "Date interval": "Kuup\u00e4evavahemik",
+    "Day": "P\u00e4ev",
+    "Delete": "Kustuta",
+    "Delete Dashboard": "Kustuta armatuurlaud",
+    "Delete row": "Kustuta rida",
+    "Descending": "Kahanev",
+    "Dimension": "M\u00f5\u00f5tme",
+    "Direction": "Suund",
+    "Disabled": "Puudega",
+    "Display": "Ekraan",
+    "Display [not set]": "Ekraan [pole m\u00e4\u00e4ratud]",
+    "Display all records": "Kuva k\u00f5ik kirjed",
+    "Display relative bars": "Kuva suhtelised ribad",
+    "Display totals": "Kuva kogusummad",
+    "Edit Dashboard": "Redigeeri armatuurlauda",
+    "Empty values": "T\u00fchjad v\u00e4\u00e4rtused",
+    "Enter a positive number": "Sisesta positiivne arv",
+    "Enter a positive number or leave empty to display all records.": "Sisestage positiivne arv v\u00f5i j\u00e4tke t\u00fchjaks, et kuvada k\u00f5ik kirjed.",
+    "Equal to": "V\u00f5rdne",
+    "Export Dashboard": "Ekspordi armatuurlaud",
+    "Extra table fields": "Lisatabeli v\u00e4ljad",
+    "Filters": "Filtrid",
+    "General": "\u00dcldine",
+    "Greater or equal to": "Suurem v\u00f5i v\u00f5rdne",
+    "Greater than": "Suurem kui",
+    "Hide": "Peida",
+    "Horizontal": "Horisontaalne",
+    "Icon": "Ikoon",
+    "Icon Status": "Ikooni olek",
+    "Important": "Oluline",
+    "Includes": "Sisaldab",
+    "Indicator": "Indikaator",
+    "Information": "Teave",
+    "Last 30 days": "Viimased 30 p\u00e4eva",
+    "Last 7 days": "Viimased 7 p\u00e4eva",
+    "Last month": "Eelmisel kuul",
+    "Leave empty to disable pagination": "Lehek\u00fclgede nummerdamise keelamiseks j\u00e4tke t\u00fchjaks",
+    "Leave empty to hide the title": "Pealkirja peitmiseks j\u00e4tke t\u00fchjaks",
+    "Less or equal to": "V\u00e4iksem v\u00f5i v\u00f5rdne",
+    "Less than": "V\u00e4hem kui",
+    "Limit": "Limiit",
+    "Line": "Joon",
+    "Link Text": "Lingi tekst",
+    "Link URL": "Lingi URL",
+    "Make Default": "M\u00e4\u00e4ra vaikeseadeks",
+    "Manage Dashboards": "Armatuurlaudade haldamine",
+    "Metric": "M\u00f5\u00f5dik",
+    "Metrics": "M\u00f5\u00f5dikud",
+    "Month": "Kuu",
+    "My Custom Widget": "Minu kohandatud vidin",
+    "No Value": "V\u00e4\u00e4rtuseta",
+    "Notice text": "Teate tekst",
+    "Number of days": "P\u00e4evade arv",
+    "One of": "\u00dcks",
+    "One value per line": "\u00dcks v\u00e4\u00e4rtus rea kohta",
+    "Operation": "Operatsioon",
+    "Order": "Telli",
+    "Past hour": "Viimase tunni",
+    "Past X days": "Viimase X p\u00e4eva",
+    "Please provide the widget title": "Palun sisestage vidina pealkiri",
+    "Please select a data source": "Palun valige andmeallikas",
+    "Please select a dimension": "Palun valige m\u00f5\u00f5de",
+    "Please select an icon": "Palun valige ikoon",
+    "Please select metric(s).": "Palun vali m\u00f5\u00f5dik(ud).",
+    "Prev period": "Eelmine periood",
+    "Quarter": "Kvartal",
+    "Records per page": "Kirjeid lehek\u00fclje kohta",
+    "Refresh every minute": "V\u00e4rskenda iga minuti j\u00e4rel",
+    "Rename Dashboard": "Armatuurlaua \u00fcmbernimetamine",
+    "Reset Layout": "L\u00e4htesta paigutus",
+    "Reset layout back to default?": "Kas l\u00e4htestada paigutus vaikes\u00e4tetele?",
+    "Same period last year": "Sama periood eelmisel aastal",
+    "Section": "Jaotis",
+    "Section Title": "Jaotise pealkiri",
+    "Select a dimension and metrics": "Valige m\u00f5\u00f5de ja m\u00f5\u00f5dikud",
+    "Select an attribute": "Valige atribuut",
+    "Select an operation": "Valige toiming",
+    "Select sorting metric or dimension": "Valige sortimism\u00f5\u00f5dik v\u00f5i -m\u00f5\u00f5de",
+    "Select the metric color": "Valige m\u00f5\u00f5diku v\u00e4rv",
+    "Set the current layout as the default?": "Kas m\u00e4\u00e4rata praegune paigutus vaikeseadeks?",
+    "Show Date Interval": "N\u00e4ita kuup\u00e4evade intervalli",
+    "Sort by": "Sorteeri",
+    "Sorting": "Sorteerimine",
+    "Sorting & Filtering": "Sorteerimine ja filtreerimine",
+    "Stacked Bar": "Virnastatud riba",
+    "Starts with": "Algab",
+    "Success": "Edu",
+    "Table": "Tabel",
+    "Text Notice": "Tekstiteade",
+    "The dashboard layout has been reset to default.": "Armatuurlaua paigutus on l\u00e4htestatud vaikes\u00e4tetele.",
+    "The dashboard was successfully updated.": "Armatuurlauda on edukalt v\u00e4rskendatud.",
+    "The limit value must be at least 1": "Piirv\u00e4\u00e4rtus peab olema v\u00e4hemalt 1",
+    "This dashboard is now the default layout.": "See armatuurlaud on n\u00fc\u00fcd vaikepaigutus.",
+    "This is a text notice widget.": "See on tekstiteadete vidin.",
+    "This month": "Sel kuul",
+    "This quarter": "See kvartal",
+    "This week": "Sel n\u00e4dalal",
+    "This year": "Sel aastal",
+    "Title": "Pealkiri",
+    "Today": "T\u00e4na",
+    "Value": "V\u00e4\u00e4rtus",
+    "Values": "V\u00e4\u00e4rtused",
+    "Vertical": "Vertikaalne",
+    "Warning": "Hoiatus",
+    "Week": "N\u00e4dal",
+    "Year": "Aasta",
+    "Yesterday": "Eile"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Estonian [et]
+//! author : Henry Kehlmann : https://github.com/madhenry
+//! improvements : Illimar Tambek : https://github.com/ragulka
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
        && typeof require === 'function' ? factory(require('../moment')) :
-   typeof define === 'function' && define.amd ? define(['moment'], factory) :
+   typeof define === 'function' && define.amd ? define(['../moment'], factory) :
    factory(global.moment)
-}(this, function (moment) { 'use strict';
+}(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     function processRelativeTime(number, withoutSuffix, key, isFuture) {
         var format = {
-            's' : ['mõne sekundi', 'mõni sekund', 'paar sekundit'],
-            'm' : ['ühe minuti', 'üks minut'],
-            'mm': [number + ' minuti', number + ' minutit'],
-            'h' : ['ühe tunni', 'tund aega', 'üks tund'],
-            'hh': [number + ' tunni', number + ' tundi'],
-            'd' : ['ühe päeva', 'üks päev'],
-            'M' : ['kuu aja', 'kuu aega', 'üks kuu'],
-            'MM': [number + ' kuu', number + ' kuud'],
-            'y' : ['ühe aasta', 'aasta', 'üks aasta'],
-            'yy': [number + ' aasta', number + ' aastat']
+            s: ['mõne sekundi', 'mõni sekund', 'paar sekundit'],
+            ss: [number + 'sekundi', number + 'sekundit'],
+            m: ['ühe minuti', 'üks minut'],
+            mm: [number + ' minuti', number + ' minutit'],
+            h: ['ühe tunni', 'tund aega', 'üks tund'],
+            hh: [number + ' tunni', number + ' tundi'],
+            d: ['ühe päeva', 'üks päev'],
+            M: ['kuu aja', 'kuu aega', 'üks kuu'],
+            MM: [number + ' kuu', number + ' kuud'],
+            y: ['ühe aasta', 'aasta', 'üks aasta'],
+            yy: [number + ' aasta', number + ' aastat'],
         };
         if (withoutSuffix) {
             return format[key][2] ? format[key][2] : format[key][1];
@@ -45,53 +315,60 @@ window.oc.langMessages['et'] = $.extend(
     }
 
     var et = moment.defineLocale('et', {
-        months        : 'jaanuar_veebruar_märts_aprill_mai_juuni_juuli_august_september_oktoober_november_detsember'.split('_'),
-        monthsShort   : 'jaan_veebr_märts_apr_mai_juuni_juuli_aug_sept_okt_nov_dets'.split('_'),
-        weekdays      : 'pühapäev_esmaspäev_teisipäev_kolmapäev_neljapäev_reede_laupäev'.split('_'),
-        weekdaysShort : 'P_E_T_K_N_R_L'.split('_'),
-        weekdaysMin   : 'P_E_T_K_N_R_L'.split('_'),
-        longDateFormat : {
-            LT   : 'H:mm',
-            LTS : 'H:mm:ss',
-            L    : 'DD.MM.YYYY',
-            LL   : 'D. MMMM YYYY',
-            LLL  : 'D. MMMM YYYY H:mm',
-            LLLL : 'dddd, D. MMMM YYYY H:mm'
+        months: 'jaanuar_veebruar_märts_aprill_mai_juuni_juuli_august_september_oktoober_november_detsember'.split(
+            '_'
+        ),
+        monthsShort:
+            'jaan_veebr_märts_apr_mai_juuni_juuli_aug_sept_okt_nov_dets'.split('_'),
+        weekdays:
+            'pühapäev_esmaspäev_teisipäev_kolmapäev_neljapäev_reede_laupäev'.split(
+                '_'
+            ),
+        weekdaysShort: 'P_E_T_K_N_R_L'.split('_'),
+        weekdaysMin: 'P_E_T_K_N_R_L'.split('_'),
+        longDateFormat: {
+            LT: 'H:mm',
+            LTS: 'H:mm:ss',
+            L: 'DD.MM.YYYY',
+            LL: 'D. MMMM YYYY',
+            LLL: 'D. MMMM YYYY H:mm',
+            LLLL: 'dddd, D. MMMM YYYY H:mm',
         },
-        calendar : {
-            sameDay  : '[Täna,] LT',
-            nextDay  : '[Homme,] LT',
-            nextWeek : '[Järgmine] dddd LT',
-            lastDay  : '[Eile,] LT',
-            lastWeek : '[Eelmine] dddd LT',
-            sameElse : 'L'
+        calendar: {
+            sameDay: '[Täna,] LT',
+            nextDay: '[Homme,] LT',
+            nextWeek: '[Järgmine] dddd LT',
+            lastDay: '[Eile,] LT',
+            lastWeek: '[Eelmine] dddd LT',
+            sameElse: 'L',
         },
-        relativeTime : {
-            future : '%s pärast',
-            past   : '%s tagasi',
-            s      : processRelativeTime,
-            m      : processRelativeTime,
-            mm     : processRelativeTime,
-            h      : processRelativeTime,
-            hh     : processRelativeTime,
-            d      : processRelativeTime,
-            dd     : '%d päeva',
-            M      : processRelativeTime,
-            MM     : processRelativeTime,
-            y      : processRelativeTime,
-            yy     : processRelativeTime
+        relativeTime: {
+            future: '%s pärast',
+            past: '%s tagasi',
+            s: processRelativeTime,
+            ss: processRelativeTime,
+            m: processRelativeTime,
+            mm: processRelativeTime,
+            h: processRelativeTime,
+            hh: processRelativeTime,
+            d: processRelativeTime,
+            dd: '%d päeva',
+            M: processRelativeTime,
+            MM: processRelativeTime,
+            y: processRelativeTime,
+            yy: processRelativeTime,
         },
-        ordinalParse: /\d{1,2}\./,
-        ordinal : '%d.',
-        week : {
-            dow : 1, // Monday is the first day of the week.
-            doy : 4  // The week that contains Jan 4th is the first week of the year.
-        }
+        dayOfMonthOrdinalParse: /\d{1,2}\./,
+        ordinal: '%d.',
+        week: {
+            dow: 1, // Monday is the first day of the week.
+            doy: 4, // The week that contains Jan 4th is the first week of the year.
+        },
     });
 
     return et;
 
-}));
+})));
 
 
 /*! Select2 4.1.0-rc.0 | https://github.com/select2/select2/blob/master/LICENSE.md */

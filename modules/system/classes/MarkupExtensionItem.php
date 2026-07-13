@@ -42,21 +42,34 @@ class MarkupExtensionItem
     public $callback;
 
     /**
+     * @var array options
+     */
+    public $options = [];
+
+    /**
      * @var bool escapeOutput
      */
-    public $escapeOutput;
+    public $escapeOutput = true;
 
     /**
      * useConfig
      */
     public function useConfig(array $data): MarkupExtensionItem
     {
-        [$callback, $escapeOutput] = $this->parseDefinition($data['definition'] ?? null);
+        [$callback, $options] = $this->parseDefinition($data['definition'] ?? null);
 
         $this->name = $data['name'] ?? $this->name;
         $this->type = $data['type'] ?? $this->type;
         $this->callback = $data['callback'] ?? $callback;
-        $this->escapeOutput = $data['escapeOutput'] ?? $escapeOutput;
+        $this->options = $data['options'] ?? $this->options;
+        $this->escapeOutput = $data['escapeOutput'] ?? $this->escapeOutput;
+
+        if (is_array($options)) {
+            $this->options = $options;
+        }
+        elseif (is_bool($options)) {
+            $this->escapeOutput = $options;
+        }
 
         return $this;
     }
@@ -66,16 +79,13 @@ class MarkupExtensionItem
      */
     protected function parseDefinition($definition): array
     {
-        $escapeOutput = false;
+        $options = [];
         $callback = $definition;
 
         // If the last item in the array is a boolean, it defines output escaping
-        if (
-            is_array($callback) &&
-            count($callback) > 1 &&
-            is_bool($callback[array_key_last($callback)])
-        ) {
-            $escapeOutput = array_pop($callback);
+        // otherwise if it is an array, it defines the Twig extension options
+        if ($this->isOptionOrEscapedCheck($callback)) {
+            $options = array_pop($callback);
         }
 
         // Convert an array with 1 item to a scalar, to make it callable
@@ -84,7 +94,7 @@ class MarkupExtensionItem
             $callback = array_pop($callback);
         }
 
-        return [$callback, $escapeOutput];
+        return [$callback, $options];
     }
 
     /**
@@ -172,8 +182,21 @@ class MarkupExtensionItem
      */
     public function getTwigOptions(): array
     {
-        return $this->escapeOutput
-            ? []
-            : ['is_safe' => ['html']];
+        return ($this->escapeOutput ? [] : ['is_safe' => ['html']]) + $this->options;
+    }
+
+    /**
+     * isOptionOrEscapedCheck determines if the last value of the definition
+     */
+    protected function isOptionOrEscapedCheck($callback): bool
+    {
+        if (!is_array($callback) || count($callback) < 2) {
+            return false;
+        }
+
+        // Grab the last value found in the array
+        $value = $callback[array_key_last($callback)];
+
+        return is_bool($value) || is_array($value);
     }
 }

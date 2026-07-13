@@ -67,8 +67,5 @@
         <?php if ($useGroups): ?>
             <input type="hidden" name="<?= $widget->arrayName ?>[<?= $groupKeyFrom ?>]" value="<?= $groupCode ?>" />
         <?php endif ?>
-        <?php if ($useRelation): ?>
-            <input type="hidden" name="<?= $widget->arrayName ?>[_id]" value="<?= $widget->model->getKey() ?>" />
-        <?php endif ?>
     </div>
 </li>

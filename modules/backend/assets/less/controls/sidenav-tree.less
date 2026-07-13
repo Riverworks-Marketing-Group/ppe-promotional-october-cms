@@ -1,3 +1,4 @@
+/* @deprecated v4 -sg */
 @settings-icon-size:     22px;
 @settings-color:         var(--oc-settings-color);
 @settings-bg:            var(--oc-settings-bg);
@@ -419,16 +420,5 @@ body:not(.sidenav-tree-expanded) .sidenav-tree {
         .is-inactive-group {
             display: block;
         }
-    }
-}
-
-//
-// PJAX support
-//
-
-html[data-turbo-preview] {
-    body.sidenav-tree-expanded .settings-search-toolbar-item input.form-control {
-        box-shadow: none;
-        border: 1px solid #d7e1eA;
     }
 }

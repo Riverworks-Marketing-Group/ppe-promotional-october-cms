@@ -31,9 +31,12 @@ class ErrorHandler extends ErrorHandlerBase
     {
         $handler = App::make(ExceptionHandler::class);
 
-        $handler->map(\Twig\Error\RuntimeError::class, function($e) {
-            return $this->handleTwigRuntimeError($e);
-        });
+        // The map method is not part of the contract (nunomaduro/collision)
+        if (method_exists($handler, 'map')) {
+            $handler->map(\Twig\Error\RuntimeError::class, function($e) {
+                return $this->handleTwigRuntimeError($e);
+            });
+        }
     }
 
     /**
@@ -197,8 +200,7 @@ class ErrorHandler extends ErrorHandlerBase
         }
 
         // Legacy exception logic
-        // @deprecated Change default value to false in v4
-        if (Config::get('cms.exception_policy_v1', true)) {
+        if (Config::get('cms.exception_policy_v1', false)) {
             if (
                 $exception instanceof \Illuminate\Database\QueryException ||
                 $exception instanceof \ErrorException

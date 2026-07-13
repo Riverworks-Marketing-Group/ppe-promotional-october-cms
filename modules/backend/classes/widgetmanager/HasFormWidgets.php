@@ -118,8 +118,9 @@ trait HasFormWidgets
     /**
      * resolveFormWidget returns a class name from a form widget code
      * Normalizes a class name or converts an code to its class name.
-     * @param string $name Class name or form widget code.
-     * @return string The class name resolved, or the original name.
+     * Returns the class name resolved, or the original name.
+     * @param string $name
+     * @return string
      */
     public function resolveFormWidget($name)
     {

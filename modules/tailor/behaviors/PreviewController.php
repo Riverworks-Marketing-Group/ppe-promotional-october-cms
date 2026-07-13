@@ -1,5 +1,8 @@
 <?php namespace Tailor\Behaviors;
 
+use Cms;
+use Url;
+use Site;
 use Event;
 use Cache;
 use System;
@@ -80,6 +83,11 @@ class PreviewController extends ControllerBehavior
         // Get the URL from the CMS controller
         $controller = new Controller(Theme::getEditTheme());
 
+        // Force the custom app URL from the site
+        if (($site = Site::getSiteFromContext()) && $site->is_custom_url) {
+            Url::forceRootUrl($site->app_url);
+        }
+
         $url = $controller->pageUrl($pageName, $model->makePageUrlParams());
 
         // Generate preview token
@@ -126,8 +134,8 @@ class PreviewController extends ControllerBehavior
         $result = [];
 
         // Check cache
-        $cached = Cache::get($cacheKey, false);
-        if ($cached !== false && ($cached = @unserialize($cached)) !== false && is_array($cached)) {
+        $cached = Cache::memo()->get($cacheKey, false);
+        if ($cached !== false && ($cached = @unserialize($cached, ['allowed_classes' => false])) !== false && is_array($cached)) {
             if (array_key_exists($lookupKey, $cached)) {
                 return $cached[$lookupKey];
             }

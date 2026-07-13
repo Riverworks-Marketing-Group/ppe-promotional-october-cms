@@ -14,10 +14,10 @@
 // Common layout elements
 // --------------------------------------------------
 
-html:not(.mobile) body.drag * {
-    cursor: grab !important;
-    cursor: -webkit-grab !important;
-    cursor: -moz-grab !important;
+@media (pointer: fine) {
+    body.drag * {
+        cursor: grab !important;
+    }
 }
 
 // Used by sortable plugin
@@ -81,7 +81,7 @@ body.has-page-size {
         padding-top: 0;
     }
 
-    .compensate-container-padding-h {
+    .padded-container-inset {
         margin-left: -@padding-standard;
         margin-right: -@padding-standard;
     }

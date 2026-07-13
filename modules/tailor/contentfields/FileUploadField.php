@@ -33,10 +33,6 @@ class FileUploadField extends FallbackField
     {
         $config = $this->config;
 
-        if (isset($config['span']) && $config['span'] === 'adaptive') {
-            $config['externalToolbarAppState'] = 'toolbarExtensionPoint';
-        }
-
         $form->addFormField($this->fieldName, $this->label)->useConfig($config);
     }
 
@@ -46,8 +42,9 @@ class FileUploadField extends FallbackField
     public function defineListColumn(ListElement $list, $context = null)
     {
         $list->defineColumn($this->fieldName, $this->label)
-            ->displayAs('image')
+            ->displayAs($this->mode === 'file' ? 'file' : 'image')
             ->shortLabel($this->shortLabel)
+            ->clickable($this->mode !== 'file')
             ->useConfig($this->column ?: [])
         ;
     }

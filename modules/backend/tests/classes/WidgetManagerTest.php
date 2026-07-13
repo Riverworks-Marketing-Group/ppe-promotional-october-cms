@@ -1,6 +1,5 @@
 <?php
 
-use Backend\Classes\Controller;
 use Backend\Classes\WidgetManager;
 
 class WidgetManagerTest extends TestCase
@@ -17,28 +16,28 @@ class WidgetManagerTest extends TestCase
     public function testIfWidgetsCanBeExtended()
     {
         $manager = WidgetManager::instance();
-        $manager->registerReportWidget('Acme\Fake\ReportWidget\HelloWorld', [
+        $manager->registerReportWidget(\Acme\Fake\ReportWidget\HelloWorld::class, [
             'name' => 'Hello World Test',
             'context' => 'dashboard'
         ]);
         $widgets = $manager->listReportWidgets();
 
-        $this->assertArrayHasKey('Acme\Fake\ReportWidget\HelloWorld', $widgets);
+        $this->assertArrayHasKey(\Acme\Fake\ReportWidget\HelloWorld::class, $widgets);
     }
 
     public function testIfWidgetsCanBeRemoved()
     {
         $manager = WidgetManager::instance();
-        $manager->registerReportWidget('Acme\Fake\ReportWidget\HelloWorld', [
+        $manager->registerReportWidget(\Acme\Fake\ReportWidget\HelloWorld::class, [
             'name' => 'Hello World Test',
             'context' => 'dashboard'
         ]);
-        $manager->registerReportWidget('Acme\Fake\ReportWidget\ByeWorld', [
+        $manager->registerReportWidget(\Acme\Fake\ReportWidget\ByeWorld::class, [
             'name' => 'Hello World Bye',
             'context' => 'dashboard'
         ]);
 
-        $manager->removeReportWidget('Acme\Fake\ReportWidget\ByeWorld');
+        $manager->removeReportWidget(\Acme\Fake\ReportWidget\ByeWorld::class);
 
         $widgets = $manager->listReportWidgets();
 

@@ -31,9 +31,29 @@ abstract class BlueprintModel extends Model
     }
 
     /**
+     * __sleep prepare the object for serialization
+     */
+    public function __sleep()
+    {
+        $this->isBlueprintExtended = false;
+
+        return parent::__sleep();
+    }
+
+    /**
+     * __wakeup restores the blueprint extension after unserialization
+     */
+    public function __wakeup()
+    {
+        parent::__wakeup();
+
+        $this->extendWithBlueprint();
+    }
+
+    /**
      * extendWithBlueprint
      */
-    public function extendWithBlueprint(string $uuid = null)
+    public function extendWithBlueprint(?string $uuid = null)
     {
         if ($this->isBlueprintExtended) {
             return;

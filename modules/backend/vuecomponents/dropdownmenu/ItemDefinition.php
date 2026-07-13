@@ -78,7 +78,7 @@ class ItemDefinition
     /**
      * __construct
      */
-    public function __construct($type, string $label = null, string $command = null)
+    public function __construct($type, ?string $label = null, ?string $command = null)
     {
         $this->type = $type;
 
@@ -157,7 +157,7 @@ class ItemDefinition
     /**
      * addItem
      */
-    public function addItem($type, string $label = null, string $command = null)
+    public function addItem($type, ?string $label = null, ?string $command = null)
     {
         return $this->items[] = new ItemDefinition($type, $label, $command);
     }

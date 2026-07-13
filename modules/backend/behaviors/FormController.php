@@ -36,7 +36,7 @@ use Exception;
  * values as either a YAML file, located in the controller view directory,
  * or directly as a PHP array.
  *
- * @see https://docs.octobercms.com/3.x/extend/forms/form-controller.html Form Controller Documentation
+ * @see https://docs.octobercms.com/4.x/extend/forms/form-controller.html Form Controller Documentation
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
@@ -44,6 +44,7 @@ class FormController extends ControllerBehavior
 {
     use \Backend\Traits\FormModelSaver;
     use \Backend\Behaviors\FormController\HasMultisite;
+    use \Backend\Behaviors\FormController\HasMultisiteGroup;
     use \Backend\Behaviors\FormController\HasOverrides;
     use \Backend\Behaviors\FormController\HasFormDesigns;
     use \Backend\Behaviors\FormController\HasRenderers;
@@ -103,10 +104,6 @@ class FormController extends ControllerBehavior
 
         // Build configuration
         $this->setConfig($controller->formConfig, $this->requiredConfig);
-
-        if (!$this->isPopupDesign()) {
-            $this->hidePopupDesign();
-        }
     }
 
     /**
@@ -114,8 +111,8 @@ class FormController extends ControllerBehavior
      */
     public function beforeDisplay()
     {
-        if ($this->isPopupDesign()) {
-            $this->beforeDisplayPopup();
+        if ($this->isGlobalDesignMode()) {
+            $this->applyFormDesign($this->getConfig('design[displayMode]'));
         }
     }
 
@@ -147,9 +144,14 @@ class FormController extends ControllerBehavior
         $config->model = $model;
         $config->arrayName = class_basename($model);
         $config->context = $this->getConfig("{$context}[context]", $context);
-        $config->surveyMode = $this->isSurveyDesign();
         $config->sessionKey = post('_form_session_key');
-        $config->horizontalMode = $this->isHorizontalForm();
+        $config->horizontalMode = $this->getDesignConfigValue('horizontalMode');
+        $config->surveyMode = $this->getDesignConfigValue('surveyMode');
+
+        // Allow the active design to extend the form widget config
+        if ($designObj = $this->getFormDesignObject()) {
+            $designObj->extendFormWidgetConfig($config);
+        }
 
         // Make Form Widget and apply extensions
         $this->formWidget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
@@ -222,9 +224,8 @@ class FormController extends ControllerBehavior
         }
 
         try {
-            $this->context = strlen($context) ? $context : $this->getConfig('create[context]', FormField::CONTEXT_CREATE);
-            $this->controller->bodyClass ??= $this->getDesignBodyClass();
-            $this->controller->pageSize ??= $this->getDesignFormSize();
+            $this->context = $context ?: $this->getConfig('create[context]', FormField::CONTEXT_CREATE);
+            $this->controller->formApplyDesign();
             $this->controller->pageTitle ??= $this->getLang('create[title]', 'backend::lang.form.create_title');
 
             $model = $this->controller->formCreateModelObject();
@@ -253,7 +254,7 @@ class FormController extends ControllerBehavior
             throw new ForbiddenException;
         }
 
-        $this->context = strlen($context) ? $context : $this->getConfig('create[context]', FormField::CONTEXT_CREATE);
+        $this->context = $context ?: $this->getConfig('create[context]', FormField::CONTEXT_CREATE);
 
         $model = $this->controller->formCreateModelObject();
         $model = $this->controller->formExtendModel($model) ?: $model;
@@ -294,7 +295,7 @@ class FormController extends ControllerBehavior
      */
     public function create_onCancel($context = null)
     {
-        $this->context = strlen($context) ? $context : $this->getConfig('create[context]', FormField::CONTEXT_CREATE);
+        $this->context = $context ?: $this->getConfig('create[context]', FormField::CONTEXT_CREATE);
 
         $model = $this->controller->formCreateModelObject();
         $model = $this->controller->formExtendModel($model) ?: $model;
@@ -331,9 +332,8 @@ class FormController extends ControllerBehavior
         }
 
         try {
-            $this->context = strlen($context) ? $context : $this->getConfig('update[context]', FormField::CONTEXT_UPDATE);
-            $this->controller->bodyClass ??= $this->getDesignBodyClass();
-            $this->controller->pageSize ??= $this->getDesignFormSize();
+            $this->context = $context ?: $this->getConfig('update[context]', FormField::CONTEXT_UPDATE);
+            $this->controller->formApplyDesign();
             $this->controller->pageTitle ??= $this->getLang('update[title]', 'backend::lang.form.update_title');
 
             $model = $this->controller->formFindModelObject($recordId);
@@ -371,7 +371,7 @@ class FormController extends ControllerBehavior
             throw new ForbiddenException;
         }
 
-        $this->context = strlen($context) ? $context : $this->getConfig('update[context]', FormField::CONTEXT_UPDATE);
+        $this->context = $context ?: $this->getConfig('update[context]', FormField::CONTEXT_UPDATE);
         $model = $this->controller->formFindModelObject($recordId);
         $this->initForm($model);
 
@@ -476,9 +476,8 @@ class FormController extends ControllerBehavior
         }
 
         try {
-            $this->context = strlen($context) ? $context : $this->getConfig('preview[context]', FormField::CONTEXT_PREVIEW);
-            $this->controller->bodyClass ??= $this->getDesignBodyClass();
-            $this->controller->pageSize ??= $this->getDesignFormSize();
+            $this->context = $context ?: $this->getConfig('preview[context]', FormField::CONTEXT_PREVIEW);
+            $this->controller->formApplyDesign();
             $this->controller->pageTitle ??= $this->getLang('preview[title]', 'backend::lang.form.preview_title');
 
             $model = $this->controller->formFindModelObject($recordId);
@@ -504,6 +503,17 @@ class FormController extends ControllerBehavior
     //
 
     /**
+     * formApplyDesign resolves the form design behavior and applies
+     * the design body class and page size to the controller.
+     */
+    public function formApplyDesign(): void
+    {
+        $this->resolveFormDesign();
+        $this->controller->bodyClass ??= $this->getDesignBodyClass();
+        $this->controller->pageSize ??= $this->getDesignFormSize();
+    }
+
+    /**
      * formRender the prepared form markup. This method is usually called from a view file.
      *
      *     <?= $this->formRender() ?>
@@ -524,10 +534,10 @@ class FormController extends ControllerBehavior
         }
 
         // Sections provided by the behavior, then use the widget as fallback
-        $section = $options['section'] ?? null;
-        switch (strtolower($section)) {
+        $section = strtolower($options['section'] ?? '');
+        switch ($section) {
             case 'buttons':
-                return $this->formMakePartial($this->isPopupDesign() ? 'popup_buttons' : 'buttons');
+                return $this->controller->formRenderDesignButtons();
         }
 
         return $this->formWidget->render($options);
@@ -540,30 +550,20 @@ class FormController extends ControllerBehavior
     public function formRenderDesign($options = [])
     {
         if ($this->controller->hasFatalError()) {
-            return $this->formMakePartial($this->isPopupDesign() ? 'popup_error' : 'error', [
-                'fatalError' => $this->controller->getFatalError()
-            ]);
+            return $this->controller->formRenderDesignError(
+                $this->controller->getFatalError()
+            );
         }
 
-        if (!isset($options['displayMode'])) {
-            $options['displayMode'] = $this->getDesignDisplayMode();
+        $displayMode = $options['displayMode'] ?? $this->getDesignDisplayMode();
+
+        if ($displayMode === 'custom') {
+            return $this->formRender();
         }
 
         $this->vars['options'] = $options;
 
-        $displayMode = strtolower($options['displayMode'] ?? 'basic');
-        switch ($displayMode) {
-            case 'popup':
-            case 'sidebar':
-            case 'document':
-                return $this->formMakePartial("mode_{$displayMode}");
-
-            case 'custom':
-                return $this->formRender();
-
-            default:
-                return $this->formMakePartial('mode_basic');
-        }
+        return $this->controller->renderDesignContent($options);
     }
 
     /**
@@ -592,6 +592,15 @@ class FormController extends ControllerBehavior
     public function formGetModel()
     {
         return $this->model;
+    }
+
+    /**
+     * formSetContext sets the form context manually, used when the context
+     * needs to be established before delegating to another behavior.
+     */
+    public function formSetContext(string $context): void
+    {
+        $this->context = $context;
     }
 
     /**
@@ -627,7 +636,7 @@ class FormController extends ControllerBehavior
     public function makeRedirect($context = null, $model = null, $queryParams = [])
     {
         $redirectUrl = null;
-        if (post('close') && !ends_with($context, '-close')) {
+        if (post('close') && !str_ends_with($context, '-close')) {
             $context .= '-close';
         }
 
@@ -656,7 +665,11 @@ class FormController extends ControllerBehavior
             $redirectUrl .= '?' . http_build_query($queryParams);
         }
 
-        if (starts_with($redirectUrl, ['//', 'http://', 'https://'])) {
+        if (
+            str_starts_with($redirectUrl, '//') ||
+            str_starts_with($redirectUrl, 'http://') ||
+            str_starts_with($redirectUrl, 'https://')
+        ) {
             $redirect = Redirect::to($redirectUrl);
         }
         else {
@@ -676,7 +689,7 @@ class FormController extends ControllerBehavior
     protected function getRedirectUrl($context = null)
     {
         $redirectContext = explode('-', $context, 2)[0];
-        $redirectSource = ends_with($context, '-close') ? 'redirectClose' : 'redirect';
+        $redirectSource = str_ends_with($context, '-close') ? 'redirectClose' : 'redirect';
 
         // Get the redirect for the provided context
         $redirects = [$context => $this->getConfig("{$redirectContext}[{$redirectSource}]", '')];
@@ -714,7 +727,7 @@ class FormController extends ControllerBehavior
     /**
      * getCustomLang parses custom messages provided by the config
      */
-    protected function getCustomLang(string $name, string $default = null, array $extras = []): string
+    protected function getCustomLang(string $name, ?string $default = null, array $extras = []): string
     {
         $foundKey = $this->getConfig("{$this->context}[customMessages][{$name}]");
 
@@ -847,6 +860,9 @@ class FormController extends ControllerBehavior
         if ($this->controller->formHasMultisite($model)) {
             $query->withSites();
         }
+        elseif ($this->controller->formHasMultisiteGroup($model)) {
+            $query->withSiteGroups();
+        }
 
         $this->controller->formExtendQuery($query);
         $result = $query->find($recordId);
@@ -865,7 +881,7 @@ class FormController extends ControllerBehavior
     /**
      * extendFormFields is a static helper for extending form fields
      * @deprecated for best performance, use Event class directly, see docs
-     * @link https://docs.octobercms.com/3.x/extend/forms/form-controller.html#extending-form-fields
+     * @link https://docs.octobercms.com/4.x/extend/forms/form-controller.html#extending-form-fields
      */
     public static function extendFormFields($callback)
     {

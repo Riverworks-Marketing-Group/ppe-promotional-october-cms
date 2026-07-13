@@ -243,7 +243,7 @@
             for (var property in values) {
                 var value = values[property];
 
-                if ($.isArray(value) || $.isPlainObject(value)) {
+                if (Array.isArray(value) || $.isPlainObject(value)) {
                     value = 'json:' + encodeURIComponent(JSON.stringify(value));
                 }
 
@@ -333,7 +333,7 @@
     }
 
     BaseWrapper.prototype.parseConfiguration = function(configuration) {
-        if (!$.isArray(configuration) && !$.isPlainObject(configuration)) {
+        if (!Array.isArray(configuration) && !$.isPlainObject(configuration)) {
             if ($.trim(configuration) === 0) {
                 return {};
             }

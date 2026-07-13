@@ -2,8 +2,8 @@
 
 use System;
 use Request;
-use Cms\Classes\EditorExtension;
 use Editor\Classes\ApiHelpers;
+use Cms\Classes\EditorExtension;
 use October\Rain\Filesystem\Definitions as FileDefinitions;
 
 /**

@@ -174,6 +174,23 @@ class SettingsManager
     }
 
     /**
+     * listAllItems as a flat array
+     */
+    public function listAllItems(?string $context = null): array
+    {
+        if ($this->items === null) {
+            $this->loadItems();
+        }
+
+        // Emulate groups for filterByContext by wrapping and unwrapping
+        if ($context !== null) {
+            return $this->filterByContext([$this->items], $context)[0];
+        }
+
+        return $this->items;
+    }
+
+    /**
      * filterByContext filters a set of items by a given context.
      * @param  array $items
      * @param  string $context

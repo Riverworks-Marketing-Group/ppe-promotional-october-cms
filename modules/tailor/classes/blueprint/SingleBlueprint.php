@@ -14,6 +14,14 @@ class SingleBlueprint extends EntryBlueprint
     protected $typeName = 'single';
 
     /**
+     * getModelClassName
+     */
+    public function getModelClassName()
+    {
+        return \Tailor\Models\SingleRecord::class;
+    }
+
+    /**
      * usePageFinder in a specific context, either item or list.
      */
     public function usePageFinder(string $context = 'item')

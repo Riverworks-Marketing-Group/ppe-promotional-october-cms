@@ -1,5 +1,6 @@
 <?php namespace Tailor\Classes;
 
+use Db;
 use October\Contracts\Element\ListElement;
 use October\Contracts\Element\FormElement;
 use October\Contracts\Element\FilterElement;
@@ -189,7 +190,10 @@ class Fieldset extends FieldsetDefinition
     {
         $columnNames = [];
 
-        $table = new DbBlueprint('temp');
+        // Lazy load the grammar
+        Db::connection()->getSchemaBuilder();
+
+        $table = new DbBlueprint(Db::connection(), 'temp');
         foreach ($this->getAllFields() as $name => $fieldObj) {
             if (!str_starts_with($name, '_')) {
                 $fieldObj->extendDatabaseTable($table);

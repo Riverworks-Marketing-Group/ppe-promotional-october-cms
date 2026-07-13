@@ -9,13 +9,282 @@ if (!window.oc.langMessages) {
     window.oc.langMessages = {};
 }
 
-window.oc.langMessages['ja'] = $.extend(
+window.oc.langMessages['ja'] = Object.assign(
     window.oc.langMessages['ja'] || {},
-    {"markdowneditor":{"formatting":"Formatting","quote":"Quote","code":"Code","header1":"Header 1","header2":"Header 2","header3":"Header 3","header4":"Header 4","header5":"Header 5","header6":"Header 6","bold":"Bold","italic":"Italic","unorderedlist":"Unordered List","orderedlist":"Ordered List","snippet":"Snippet","video":"Video","image":"Image","link":"Link","horizontalrule":"Insert Horizontal Rule","fullscreen":"Full Screen","preview":"Preview","strikethrough":"Strikethrough","cleanblock":"Clean Block","table":"Table","sidebyside":"Side by Side"},"mediamanager":{"insert_link":"Insert Media Link","insert_image":"Insert Media Image","insert_video":"Insert Media Video","insert_audio":"Insert Media Audio","invalid_file_empty_insert":"Please select file to insert a links to.","invalid_file_single_insert":"Please select a single file.","invalid_image_empty_insert":"Please select image(s) to insert.","invalid_video_empty_insert":"Please select a video file to insert.","invalid_audio_empty_insert":"Please select an audio file to insert."},"alert":{"error":"Error","confirm":"Confirm","dismiss":"Dismiss","confirm_button_text":"OK","cancel_button_text":"Cancel","widget_remove_confirm":"Remove this widget?"},"datepicker":{"previousMonth":"Previous Month","nextMonth":"Next Month","months":["January","February","March","April","May","June","July","August","September","October","November","December"],"weekdays":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"weekdaysShort":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]},"colorpicker":{"choose":"OK"},"filter":{"group":{"all":"all"},"scopes":{"apply_button_text":"Apply","clear_button_text":"Clear"},"dates":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","date_placeholder":"Date","after_placeholder":"After","before_placeholder":"Before"},"numbers":{"all":"all","filter_button_text":"Filter","reset_button_text":"Reset","min_placeholder":"Min","max_placeholder":"Max"}},"eventlog":{"show_stacktrace":"Show the stacktrace","hide_stacktrace":"Hide the stacktrace","tabs":{"formatted":"Formatted","raw":"Raw"},"editor":{"title":"Source Code Editor","description":"Your operating system should be configured to listen to one of these URL schemes.","openWith":"Open with","remember_choice":"Remember selected option for this session","open":"Open","cancel":"Cancel"}},"upload":{"max_files":"You can not upload any more files.","invalid_file_type":"You can't upload files of this type.","file_too_big":"File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.","response_error":"Server responded with {{statusCode}} code.","remove_file":"Remove file"},"inspector":{"add":"Add","remove":"Remove","key":"Key","value":"Value","ok":"OK","cancel":"Cancel","items":"Items"}}
+    {
+    "markdowneditor": {
+        "formatting": "Formatting",
+        "quote": "Quote",
+        "code": "Code",
+        "header1": "Header 1",
+        "header2": "Header 2",
+        "header3": "Header 3",
+        "header4": "Header 4",
+        "header5": "Header 5",
+        "header6": "Header 6",
+        "bold": "Bold",
+        "italic": "Italic",
+        "unorderedlist": "Unordered List",
+        "orderedlist": "Ordered List",
+        "snippet": "Snippet",
+        "video": "Video",
+        "image": "Image",
+        "link": "Link",
+        "horizontalrule": "Insert Horizontal Rule",
+        "fullscreen": "Full Screen",
+        "preview": "Preview",
+        "strikethrough": "Strikethrough",
+        "cleanblock": "Clean Block",
+        "table": "Table",
+        "sidebyside": "Side by Side"
+    },
+    "mediamanager": {
+        "insert_link": "Insert Media Link",
+        "insert_image": "Insert Media Image",
+        "insert_video": "Insert Media Video",
+        "insert_audio": "Insert Media Audio",
+        "invalid_file_empty_insert": "Please select file to insert a links to.",
+        "invalid_file_single_insert": "Please select a single file.",
+        "invalid_image_empty_insert": "Please select image(s) to insert.",
+        "invalid_video_empty_insert": "Please select a video file to insert.",
+        "invalid_audio_empty_insert": "Please select an audio file to insert."
+    },
+    "alert": {
+        "error": "Error",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "confirm_button_text": "OK",
+        "cancel_button_text": "Cancel",
+        "widget_remove_confirm": "Remove this widget?",
+        "reload": "Reload"
+    },
+    "datepicker": {
+        "previousMonth": "Previous Month",
+        "nextMonth": "Next Month",
+        "months": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "weekdays": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+        ],
+        "weekdaysShort": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+        ]
+    },
+    "colorpicker": {
+        "choose": "OK"
+    },
+    "filter": {
+        "group": {
+            "all": "all"
+        },
+        "scopes": {
+            "apply_button_text": "Apply",
+            "clear_button_text": "Clear"
+        },
+        "dates": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "date_placeholder": "Date",
+            "after_placeholder": "After",
+            "before_placeholder": "Before"
+        },
+        "numbers": {
+            "all": "all",
+            "filter_button_text": "Filter",
+            "reset_button_text": "Reset",
+            "min_placeholder": "Min",
+            "max_placeholder": "Max",
+            "number_placeholder": "N\u00famero"
+        }
+    },
+    "eventlog": {
+        "show_stacktrace": "Show the stacktrace",
+        "hide_stacktrace": "Hide the stacktrace",
+        "tabs": {
+            "formatted": "Formatted",
+            "raw": "Raw"
+        },
+        "editor": {
+            "title": "Source Code Editor",
+            "description": "Your operating system should be configured to listen to one of these URL schemes.",
+            "openWith": "Open with",
+            "remember_choice": "Remember selected option for this session",
+            "open": "Open",
+            "cancel": "Cancel",
+            "rememberChoice": "Recuerde la opci\u00f3n seleccionada para esta sesi\u00f3n del navegador"
+        }
+    },
+    "upload": {
+        "max_files": "You can not upload any more files.",
+        "invalid_file_type": "You can't upload files of this type.",
+        "file_too_big": "File is too big ({{filesize}}MB). Max filesize: {{maxFilesize}}MB.",
+        "response_error": "Server responded with {{statusCode}} code.",
+        "remove_file": "Remove file"
+    },
+    "inspector": {
+        "add": "Add",
+        "remove": "Remove",
+        "key": "Key",
+        "value": "Value",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "items": "Items"
+    },
+    "[not set]": "[\u672a\u8a2d\u5b9a]",
+    "1 day (today) if not set": "\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u306a\u3044\u5834\u5408\u306f1\u65e5\uff08\u4eca\u65e5\uff09",
+    "Apply": "\u9069\u7528\u3059\u308b",
+    "Ascending": "\u4e0a\u6607",
+    "Attribute": "\u5c5e\u6027",
+    "Bar": "\u30d0\u30fc",
+    "Cancel": "\u30ad\u30e3\u30f3\u30bb\u30eb",
+    "Chart": "\u30c1\u30e3\u30fc\u30c8",
+    "Chart type": "\u30c1\u30e3\u30fc\u30c8\u306e\u7a2e\u985e",
+    "Color": "\u8272",
+    "Compare Totals": "\u5408\u8a08\u3092\u6bd4\u8f03\u3059\u308b",
+    "Configure": "\u8a2d\u5b9a",
+    "Custom": "\u30ab\u30b9\u30bf\u30e0",
+    "Custom Range": "\u30ab\u30b9\u30bf\u30e0\u7bc4\u56f2",
+    "Dashboard interval": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u9593\u9694",
+    "Data source": "\u30c7\u30fc\u30bf\u30bd\u30fc\u30b9",
+    "Date interval": "\u65e5\u4ed8\u9593\u9694",
+    "Day": "\u65e5",
+    "Delete": "\u6d88\u53bb",
+    "Delete Dashboard": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u3092\u524a\u9664",
+    "Delete row": "\u884c\u3092\u524a\u9664",
+    "Descending": "\u964d\u9806",
+    "Dimension": "\u5bf8\u6cd5",
+    "Direction": "\u65b9\u5411",
+    "Disabled": "\u7121\u52b9",
+    "Display": "\u753b\u9762",
+    "Display [not set]": "\u8868\u793a [\u672a\u8a2d\u5b9a]",
+    "Display all records": "\u3059\u3079\u3066\u306e\u30ec\u30b3\u30fc\u30c9\u3092\u8868\u793a",
+    "Display relative bars": "\u76f8\u5bfe\u30d0\u30fc\u3092\u8868\u793a",
+    "Display totals": "\u5408\u8a08\u3092\u8868\u793a",
+    "Edit Dashboard": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u3092\u7de8\u96c6",
+    "Empty values": "\u7a7a\u306e\u5024",
+    "Enter a positive number": "\u6b63\u306e\u6570\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Enter a positive number or leave empty to display all records.": "\u6b63\u306e\u6570\u3092\u5165\u529b\u3059\u308b\u304b\u3001\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u3066\u3059\u3079\u3066\u306e\u30ec\u30b3\u30fc\u30c9\u3092\u8868\u793a\u3057\u307e\u3059\u3002",
+    "Equal to": "\u7b49\u3057\u3044",
+    "Export Dashboard": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u306e\u30a8\u30af\u30b9\u30dd\u30fc\u30c8",
+    "Extra table fields": "\u8ffd\u52a0\u306e\u30c6\u30fc\u30d6\u30eb\u30d5\u30a3\u30fc\u30eb\u30c9",
+    "Filters": "\u30d5\u30a3\u30eb\u30bf\u30fc",
+    "General": "\u4e00\u822c\u7684\u306a",
+    "Greater or equal to": "\u3088\u308a\u5927\u304d\u3044\u304b\u7b49\u3057\u3044",
+    "Greater than": "\u3088\u308a\u5927\u304d\u3044",
+    "Hide": "\u96a0\u308c\u308b",
+    "Horizontal": "\u6c34\u5e73",
+    "Icon": "\u30a2\u30a4\u30b3\u30f3",
+    "Icon Status": "\u30a2\u30a4\u30b3\u30f3\u306e\u30b9\u30c6\u30fc\u30bf\u30b9",
+    "Important": "\u91cd\u8981",
+    "Includes": "\u542b\u307e\u308c\u308b\u3082\u306e",
+    "Indicator": "\u30a4\u30f3\u30b8\u30b1\u30fc\u30bf",
+    "Information": "\u60c5\u5831",
+    "Last 30 days": "\u904e\u53bb30\u65e5\u9593",
+    "Last 7 days": "\u904e\u53bb7\u65e5\u9593",
+    "Last month": "\u5148\u6708",
+    "Leave empty to disable pagination": "\u30da\u30fc\u30b8\u533a\u5207\u308a\u3092\u7121\u52b9\u306b\u3059\u308b\u306b\u306f\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Leave empty to hide the title": "\u30bf\u30a4\u30c8\u30eb\u3092\u975e\u8868\u793a\u306b\u3059\u308b\u306b\u306f\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Less or equal to": "\u4ee5\u4e0b",
+    "Less than": "\u672a\u6e80",
+    "Limit": "\u5236\u9650",
+    "Line": "\u30e9\u30a4\u30f3",
+    "Link Text": "\u30ea\u30f3\u30af\u30c6\u30ad\u30b9\u30c8",
+    "Link URL": "\u30ea\u30f3\u30afURL",
+    "Make Default": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306b\u3059\u308b",
+    "Manage Dashboards": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u306e\u7ba1\u7406",
+    "Metric": "\u30e1\u30c8\u30ea\u30c3\u30af",
+    "Metrics": "\u30e1\u30c8\u30ea\u30af\u30b9",
+    "Month": "\u6708",
+    "My Custom Widget": "\u30ab\u30b9\u30bf\u30e0\u30a6\u30a3\u30b8\u30a7\u30c3\u30c8",
+    "No Value": "\u4fa1\u5024\u306a\u3057",
+    "Notice text": "\u901a\u77e5\u30c6\u30ad\u30b9\u30c8",
+    "Number of days": "\u65e5\u6570",
+    "One of": "1\u3064",
+    "One value per line": "1\u884c\u306b1\u3064\u306e\u5024",
+    "Operation": "\u624b\u8853",
+    "Order": "\u6ce8\u6587",
+    "Past hour": "\u904e\u53bb1\u6642\u9593",
+    "Past X days": "\u904e\u53bbX\u65e5\u9593",
+    "Please provide the widget title": "\u30a6\u30a3\u30b8\u30a7\u30c3\u30c8\u306e\u30bf\u30a4\u30c8\u30eb\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Please select a data source": "\u30c7\u30fc\u30bf\u30bd\u30fc\u30b9\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Please select a dimension": "\u5bf8\u6cd5\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Please select an icon": "\u30a2\u30a4\u30b3\u30f3\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044",
+    "Please select metric(s).": "\u30e1\u30c8\u30ea\u30c3\u30af\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
+    "Prev period": "\u524d\u671f",
+    "Quarter": "\u56db\u534a\u671f",
+    "Records per page": "\u30da\u30fc\u30b8\u3042\u305f\u308a\u306e\u30ec\u30b3\u30fc\u30c9\u6570",
+    "Refresh every minute": "1\u5206\u3054\u3068\u306b\u66f4\u65b0",
+    "Rename Dashboard": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u306e\u540d\u524d\u3092\u5909\u66f4\u3059\u308b",
+    "Reset Layout": "\u30ec\u30a4\u30a2\u30a6\u30c8\u3092\u30ea\u30bb\u30c3\u30c8",
+    "Reset layout back to default?": "\u30ec\u30a4\u30a2\u30a6\u30c8\u3092\u30c7\u30d5\u30a9\u30eb\u30c8\u306b\u623b\u3057\u307e\u3059\u304b?",
+    "Same period last year": "\u524d\u5e74\u540c\u671f",
+    "Section": "\u30bb\u30af\u30b7\u30e7\u30f3",
+    "Section Title": "\u30bb\u30af\u30b7\u30e7\u30f3\u30bf\u30a4\u30c8\u30eb",
+    "Select a dimension and metrics": "\u30c7\u30a3\u30e1\u30f3\u30b7\u30e7\u30f3\u3068\u6307\u6a19\u3092\u9078\u629e\u3059\u308b",
+    "Select an attribute": "\u5c5e\u6027\u3092\u9078\u629e",
+    "Select an operation": "\u64cd\u4f5c\u3092\u9078\u629e",
+    "Select sorting metric or dimension": "\u4e26\u3079\u66ff\u3048\u306e\u6307\u6a19\u307e\u305f\u306f\u30c7\u30a3\u30e1\u30f3\u30b7\u30e7\u30f3\u3092\u9078\u629e",
+    "Select the metric color": "\u30e1\u30c8\u30ea\u30c3\u30af\u306e\u8272\u3092\u9078\u629e",
+    "Set the current layout as the default?": "\u73fe\u5728\u306e\u30ec\u30a4\u30a2\u30a6\u30c8\u3092\u30c7\u30d5\u30a9\u30eb\u30c8\u3068\u3057\u3066\u8a2d\u5b9a\u3057\u307e\u3059\u304b?",
+    "Show Date Interval": "\u65e5\u4ed8\u9593\u9694\u3092\u8868\u793a",
+    "Sort by": "\u4e26\u3079\u66ff\u3048",
+    "Sorting": "\u30bd\u30fc\u30c8",
+    "Sorting & Filtering": "\u4e26\u3079\u66ff\u3048\u3068\u30d5\u30a3\u30eb\u30bf\u30ea\u30f3\u30b0",
+    "Stacked Bar": "\u7a4d\u307f\u4e0a\u3052\u68d2\u30b0\u30e9\u30d5",
+    "Starts with": "\u59cb\u307e\u308a\u306f",
+    "Success": "\u6210\u529f",
+    "Table": "\u30c6\u30fc\u30d6\u30eb",
+    "Text Notice": "\u30c6\u30ad\u30b9\u30c8\u901a\u77e5",
+    "The dashboard layout has been reset to default.": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u306e\u30ec\u30a4\u30a2\u30a6\u30c8\u304c\u30c7\u30d5\u30a9\u30eb\u30c8\u306b\u30ea\u30bb\u30c3\u30c8\u3055\u308c\u307e\u3057\u305f\u3002",
+    "The dashboard was successfully updated.": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u306f\u6b63\u5e38\u306b\u66f4\u65b0\u3055\u308c\u307e\u3057\u305f\u3002",
+    "The limit value must be at least 1": "\u5236\u9650\u5024\u306f\u5c11\u306a\u304f\u3068\u30821\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059",
+    "This dashboard is now the default layout.": "\u3053\u306e\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u304c\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30ec\u30a4\u30a2\u30a6\u30c8\u306b\u306a\u308a\u307e\u3057\u305f\u3002",
+    "This is a text notice widget.": "\u30c6\u30ad\u30b9\u30c8\u901a\u77e5\u30a6\u30a3\u30b8\u30a7\u30c3\u30c8\u3067\u3059\u3002",
+    "This month": "\u4eca\u6708",
+    "This quarter": "\u4eca\u56db\u534a\u671f",
+    "This week": "\u4eca\u9031",
+    "This year": "\u4eca\u5e74",
+    "Title": "\u30bf\u30a4\u30c8\u30eb",
+    "Today": "\u4eca\u65e5",
+    "Value": "\u4fa1\u5024",
+    "Values": "\u4fa1\u5024\u89b3",
+    "Vertical": "\u5782\u76f4",
+    "Warning": "\u8b66\u544a",
+    "Week": "\u9031",
+    "Year": "\u5e74",
+    "Yesterday": "\u6628\u65e5"
+}
 );
 
 
-//! moment.js locale configuration v2.22.2
+//! moment.js locale configuration
+//! locale : Japanese [ja]
+//! author : LI Long : https://github.com/baryon
 
 ;(function (global, factory) {
    typeof exports === 'object' && typeof module !== 'undefined'
@@ -24,59 +293,125 @@ window.oc.langMessages['ja'] = $.extend(
    factory(global.moment)
 }(this, (function (moment) { 'use strict';
 
+    //! moment.js locale configuration
 
     var ja = moment.defineLocale('ja', {
-        months : '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split('_'),
-        monthsShort : '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split('_'),
-        weekdays : '日曜日_月曜日_火曜日_水曜日_木曜日_金曜日_土曜日'.split('_'),
-        weekdaysShort : '日_月_火_水_木_金_土'.split('_'),
-        weekdaysMin : '日_月_火_水_木_金_土'.split('_'),
-        longDateFormat : {
-            LT : 'HH:mm',
-            LTS : 'HH:mm:ss',
-            L : 'YYYY/MM/DD',
-            LL : 'YYYY年M月D日',
-            LLL : 'YYYY年M月D日 HH:mm',
-            LLLL : 'YYYY年M月D日 dddd HH:mm',
-            l : 'YYYY/MM/DD',
-            ll : 'YYYY年M月D日',
-            lll : 'YYYY年M月D日 HH:mm',
-            llll : 'YYYY年M月D日(ddd) HH:mm'
+        eras: [
+            {
+                since: '2019-05-01',
+                offset: 1,
+                name: '令和',
+                narrow: '㋿',
+                abbr: 'R',
+            },
+            {
+                since: '1989-01-08',
+                until: '2019-04-30',
+                offset: 1,
+                name: '平成',
+                narrow: '㍻',
+                abbr: 'H',
+            },
+            {
+                since: '1926-12-25',
+                until: '1989-01-07',
+                offset: 1,
+                name: '昭和',
+                narrow: '㍼',
+                abbr: 'S',
+            },
+            {
+                since: '1912-07-30',
+                until: '1926-12-24',
+                offset: 1,
+                name: '大正',
+                narrow: '㍽',
+                abbr: 'T',
+            },
+            {
+                since: '1873-01-01',
+                until: '1912-07-29',
+                offset: 6,
+                name: '明治',
+                narrow: '㍾',
+                abbr: 'M',
+            },
+            {
+                since: '0001-01-01',
+                until: '1873-12-31',
+                offset: 1,
+                name: '西暦',
+                narrow: 'AD',
+                abbr: 'AD',
+            },
+            {
+                since: '0000-12-31',
+                until: -Infinity,
+                offset: 1,
+                name: '紀元前',
+                narrow: 'BC',
+                abbr: 'BC',
+            },
+        ],
+        eraYearOrdinalRegex: /(元|\d+)年/,
+        eraYearOrdinalParse: function (input, match) {
+            return match[1] === '元' ? 1 : parseInt(match[1] || input, 10);
+        },
+        months: '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split('_'),
+        monthsShort: '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split(
+            '_'
+        ),
+        weekdays: '日曜日_月曜日_火曜日_水曜日_木曜日_金曜日_土曜日'.split('_'),
+        weekdaysShort: '日_月_火_水_木_金_土'.split('_'),
+        weekdaysMin: '日_月_火_水_木_金_土'.split('_'),
+        longDateFormat: {
+            LT: 'HH:mm',
+            LTS: 'HH:mm:ss',
+            L: 'YYYY/MM/DD',
+            LL: 'YYYY年M月D日',
+            LLL: 'YYYY年M月D日 HH:mm',
+            LLLL: 'YYYY年M月D日 dddd HH:mm',
+            l: 'YYYY/MM/DD',
+            ll: 'YYYY年M月D日',
+            lll: 'YYYY年M月D日 HH:mm',
+            llll: 'YYYY年M月D日(ddd) HH:mm',
         },
         meridiemParse: /午前|午後/i,
-        isPM : function (input) {
+        isPM: function (input) {
             return input === '午後';
         },
-        meridiem : function (hour, minute, isLower) {
+        meridiem: function (hour, minute, isLower) {
             if (hour < 12) {
                 return '午前';
             } else {
                 return '午後';
             }
         },
-        calendar : {
-            sameDay : '[今日] LT',
-            nextDay : '[明日] LT',
-            nextWeek : function (now) {
-                if (now.week() < this.week()) {
+        calendar: {
+            sameDay: '[今日] LT',
+            nextDay: '[明日] LT',
+            nextWeek: function (now) {
+                if (now.week() !== this.week()) {
                     return '[来週]dddd LT';
                 } else {
                     return 'dddd LT';
                 }
             },
-            lastDay : '[昨日] LT',
-            lastWeek : function (now) {
-                if (this.week() < now.week()) {
+            lastDay: '[昨日] LT',
+            lastWeek: function (now) {
+                if (this.week() !== now.week()) {
                     return '[先週]dddd LT';
                 } else {
                     return 'dddd LT';
                 }
             },
-            sameElse : 'L'
+            sameElse: 'L',
         },
-        dayOfMonthOrdinalParse : /\d{1,2}日/,
-        ordinal : function (number, period) {
+        dayOfMonthOrdinalParse: /\d{1,2}日/,
+        ordinal: function (number, period) {
             switch (period) {
+                case 'y':
+                    return number === 1 ? '元年' : number + '年';
                 case 'd':
                 case 'D':
                 case 'DDD':
@@ -85,22 +420,22 @@ window.oc.langMessages['ja'] = $.extend(
                     return number;
             }
         },
-        relativeTime : {
-            future : '%s後',
-            past : '%s前',
-            s : '数秒',
-            ss : '%d秒',
-            m : '1分',
-            mm : '%d分',
-            h : '1時間',
-            hh : '%d時間',
-            d : '1日',
-            dd : '%d日',
-            M : '1ヶ月',
-            MM : '%dヶ月',
-            y : '1年',
-            yy : '%d年'
-        }
+        relativeTime: {
+            future: '%s後',
+            past: '%s前',
+            s: '数秒',
+            ss: '%d秒',
+            m: '1分',
+            mm: '%d分',
+            h: '1時間',
+            hh: '%d時間',
+            d: '1日',
+            dd: '%d日',
+            M: '1ヶ月',
+            MM: '%dヶ月',
+            y: '1年',
+            yy: '%d年',
+        },
     });
 
     return ja;

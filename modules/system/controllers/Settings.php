@@ -3,6 +3,7 @@
 use Lang;
 use Flash;
 use Backend;
+use Redirect;
 use BackendMenu;
 use System\Classes\SettingsManager;
 use Backend\Classes\Controller;
@@ -49,9 +50,11 @@ class Settings extends Controller
      */
     public function index()
     {
-        $this->pageTitle = 'Settings';
-        $this->vars['items'] = SettingsManager::instance()->listItems('system');
-        $this->bodyClass = 'compact-container sidenav-tree-expanded';
+        if ($first = array_first(SettingsManager::instance()->listAllItems('system'))) {
+            return Redirect::intended($first->url);
+        }
+
+        return Backend::redirect('/');
     }
 
     /**
@@ -59,10 +62,11 @@ class Settings extends Controller
      */
     public function mysettings()
     {
-        BackendMenu::setContextSideMenu('mysettings');
-        $this->pageTitle = 'backend::lang.mysettings.menu_label';
-        $this->vars['items'] = SettingsManager::instance()->listItems('mysettings');
-        $this->bodyClass = 'compact-container';
+        if ($first = array_first(SettingsManager::instance()->listAllItems('mysettings'))) {
+            return Redirect::intended($first->url);
+        }
+
+        return Backend::redirect('/');
     }
 
     //
@@ -122,7 +126,7 @@ class Settings extends Controller
 
         $model->save(['propagate' => true, 'sessionKey' => $this->formWidget->getSessionKey()]);
 
-        Flash::success(__(':name settings updated', ['name' => e(Lang::get($item->label))]));
+        Flash::success(__(':name settings updated', ['name' => __($item->label)]));
 
         // Handle redirect
         if ($redirectUrl = post('redirect', true)) {

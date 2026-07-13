@@ -99,17 +99,13 @@ class CombineAssets
         // AJAX Framework
         $this->registerAlias('framework', '~/modules/system/assets/js/framework.min.js');
 
-        // AJAX Framework (Only Extras)
-        $this->registerAlias('framework.extras', '~/modules/system/assets/js/framework-extras.min.js');
-        $this->registerAlias('framework.extras.js', '~/modules/system/assets/js/framework-extras.min.js');
+        // AJAX Framework (Extras)
+        $this->registerAlias('framework.extras', '~/modules/system/assets/js/framework-bundle.min.js');
+        $this->registerAlias('framework.extras.js', '~/modules/system/assets/js/framework-bundle.min.js');
         $this->registerAlias('framework.extras', '~/modules/system/assets/css/framework-extras.css');
         $this->registerAlias('framework.extras.css', '~/modules/system/assets/css/framework-extras.css');
 
-        // AJAX Framework (Only Turbo)
-        $this->registerAlias('framework.turbo', '~/modules/system/assets/js/framework-turbo.min.js');
-        $this->registerAlias('framework.turbo.js', '~/modules/system/assets/js/framework-turbo.min.js');
-
-        // AJAX Framework (Complete Bundle)
+        // @deprecated from v3
         $this->registerAlias('framework.bundle', '~/modules/system/assets/js/framework-bundle.min.js');
         $this->registerAlias('framework.bundle.js', '~/modules/system/assets/js/framework-bundle.min.js');
         $this->registerAlias('framework.bundle', '~/modules/system/assets/css/framework-extras.css');
@@ -501,7 +497,7 @@ class CombineAssets
     /**
      * getFilters returns all defined filters for a given extension
      */
-    public function getFilters(string $extension = null, $isProduction = false): array
+    public function getFilters(?string $extension = null, $isProduction = false): array
     {
         return $this->getAssetic()->getFilters($extension, $isProduction);
     }
@@ -652,13 +648,13 @@ class CombineAssets
     {
         $cacheKey = 'combiner.'.$cacheKey;
 
-        if (Cache::has($cacheKey)) {
+        if (Cache::memo()->has($cacheKey)) {
             return false;
         }
 
         $this->putCacheIndex($cacheKey);
 
-        Cache::forever($cacheKey, base64_encode(serialize($cacheInfo)));
+        Cache::forever($cacheKey, base64_encode(json_encode($cacheInfo)));
 
         return true;
     }
@@ -672,8 +668,10 @@ class CombineAssets
     {
         $cacheKey = 'combiner.'.$cacheKey;
 
-        if ($cache = Cache::get($cacheKey)) {
-            return @unserialize(@base64_decode($cache));
+        if ($cache = Cache::memo()->get($cacheKey)) {
+            $decoded = base64_decode($cache);
+            // @deprecated unserialize can be removed in v4.4
+            return json_decode($decoded, true) ?: @unserialize($decoded, ['allowed_classes' => false]);
         }
 
         return false;
@@ -719,7 +717,9 @@ class CombineAssets
     public static function resetCache()
     {
         if ($cache = Cache::get('combiner.index')) {
-            $index = (array) @unserialize(@base64_decode($cache)) ?: [];
+            $decoded = base64_decode($cache);
+            // @deprecated unserialize can be removed in v4.4
+            $index = (array) (json_decode($decoded, true) ?: @unserialize($decoded, ['allowed_classes' => false])) ?: [];
 
             foreach ($index as $cacheKey) {
                 Cache::forget($cacheKey);
@@ -740,8 +740,10 @@ class CombineAssets
     {
         $index = [];
 
-        if ($cache = Cache::get('combiner.index')) {
-            $index = (array) @unserialize(@base64_decode($cache)) ?: [];
+        if ($cache = Cache::memo()->get('combiner.index')) {
+            $decoded = base64_decode($cache);
+            // @deprecated unserialize can be removed in v4.4
+            $index = (array) (json_decode($decoded, true) ?: @unserialize($decoded, ['allowed_classes' => false])) ?: [];
         }
 
         if (in_array($cacheKey, $index)) {
@@ -750,7 +752,7 @@ class CombineAssets
 
         $index[] = $cacheKey;
 
-        Cache::forever('combiner.index', base64_encode(serialize($index)));
+        Cache::forever('combiner.index', base64_encode(json_encode($index)));
 
         return true;
     }

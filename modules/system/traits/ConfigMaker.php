@@ -203,7 +203,7 @@ trait ConfigMaker
     /**
      * getConfigValueFrom will apply the config getter convention
      */
-    protected function getConfigValueFrom(object $configObj, string $name = null, $default = null)
+    protected function getConfigValueFrom(object $configObj, ?string $name = null, $default = null)
     {
         // Return all config
         if ($name === null) {

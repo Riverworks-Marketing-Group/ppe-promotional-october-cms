@@ -63,7 +63,7 @@ class DebugExtension extends TwigExtension
     /**
      * __construct the extension instance.
      */
-    public function __construct(Controller $controller = null)
+    public function __construct(?Controller $controller = null)
     {
         $this->controller = $controller;
     }

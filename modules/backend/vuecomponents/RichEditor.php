@@ -1,8 +1,6 @@
 <?php namespace Backend\VueComponents;
 
 use App;
-use Url;
-use File;
 use BackendAuth;
 use Backend\Models\EditorSetting;
 use Backend\Classes\VueComponentBase;
@@ -18,6 +16,11 @@ use Backend\Classes\VueComponentBase;
 class RichEditor extends VueComponentBase
 {
     /**
+     * @var string componentName is the Vue component tag name.
+     */
+    protected $componentName = 'backend-richeditor';
+
+    /**
      * Prepares variables required by the component's partials
      */
     protected function prepareVars()
@@ -25,7 +28,6 @@ class RichEditor extends VueComponentBase
         $configuration = [
             'editorLang' => $this->getValidEditorLang(),
             'useMediaManager' => BackendAuth::userHasAccess('media.library'),
-            'iframeStylesFile' => Url::asset('/modules/backend/vuecomponents/richeditor/assets/css/iframestyles.css'),
 
             'globalToolbarButtons' => $this->getGlobalButtons(),
             'allowEmptyTags' => EditorSetting::getConfigured('html_allow_empty_tags'),
@@ -41,7 +43,7 @@ class RichEditor extends VueComponentBase
             'paragraphStyles' => EditorSetting::getConfiguredStyles('html_style_paragraph'),
             'inlineStyles' => EditorSetting::getConfiguredStyles('html_style_inline'),
             'tableStyles' => EditorSetting::getConfiguredStyles('html_style_table'),
-            'tableCellStyles' => EditorSetting::getConfiguredStyles('html_style_table_cell')
+            'tableCellStyles' => EditorSetting::getConfiguredStyles('html_style_table_cell'),
         ];
 
         $this->vars['configuration'] = json_encode($configuration);
@@ -56,8 +58,7 @@ class RichEditor extends VueComponentBase
     protected function loadAssets()
     {
         // This Vue component uses Froala dependencies from the rich editor form widget
-        $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/build-min.js');
-        $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/richeditor.js');
+        // $this->addJs('/modules/backend/formwidgets/richeditor/assets/js/richeditor.js');
         $this->addCss('/modules/backend/formwidgets/richeditor/assets/css/richeditor.css');
     }
 
@@ -82,9 +83,9 @@ class RichEditor extends VueComponentBase
      */
     protected function getGlobalButtons()
     {
-        $result = trim(EditorSetting::getConfigured('html_toolbar_buttons'));
-        if (!strlen($result)) {
-            return null;
+        $result = EditorSetting::getConfigured('html_toolbar_buttons');
+        if (!$result) {
+            return $this->getDefaultButtons();
         }
 
         $result = explode(',', $result);
@@ -94,5 +95,30 @@ class RichEditor extends VueComponentBase
         }
 
         return $buttons;
+    }
+
+    /**
+     * getDefaultButtons returns the default toolbar button set, matching
+     * oc.richEditorButtons which may not be available in all contexts.
+     */
+    protected function getDefaultButtons()
+    {
+        return [
+            'paragraphFormat',
+            'align',
+            'bold',
+            'italic',
+            'underline',
+            '|',
+            'formatOL',
+            'formatUL',
+            '|',
+            'insertSnippet',
+            'insertTable',
+            'insertPageLink',
+            'insertImage',
+            'insertHR',
+            'html'
+        ];
     }
 }

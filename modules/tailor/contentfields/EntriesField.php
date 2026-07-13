@@ -106,9 +106,9 @@ class EntriesField extends FallbackField
             $this->defineFormFieldAsRelationController($field);
         }
 
-        // @deprecated this should be default
+        // @deprecated useKey with relation should support primary keys
         if ($field->type === 'taglist') {
-            $field->customTags(false);
+            $field->useKey(false);
         }
     }
 
@@ -190,30 +190,43 @@ class EntriesField extends FallbackField
     protected function defineModelRelationship($model)
     {
         $relatedMultisite = $this->getSourceBlueprint()->useMultisite();
+        $relatedModel = $this->getSourceBlueprint()->newModelInstance();
+
         $isSingular = $this->maxItems === 1;
         $isNested = $model instanceof RepeaterItem;
 
+        // RepeaterItem doesn't have getBlueprintDefinition, and nested relations
+        // don't participate in dual-multisite propagation
+        $parentMultisite = $isNested ? false : $model->getBlueprintDefinition()->useMultisite();
+
+        // Dual-multisite: both parent and related use multisite, so use actual IDs
+        // and let pivot site_id scoping + propagation handle site separation
+        $isDualMultisite = $parentMultisite && $relatedMultisite;
+
         if ($isSingular) {
             $model->belongsTo[$this->fieldName] = [
-                EntryRecord::class,
-                'key' => $this->getSingularKeyName()
+                $relatedModel::class,
+                'key' => $this->getSingularKeyName(),
+                'otherKey' => ($relatedMultisite && !$isDualMultisite) ? 'site_root_id' : 'id'
             ];
         }
         elseif ($isNested) {
             $model->belongsToMany[$this->fieldName] = [
-                EntryRecord::class,
+                $relatedModel::class,
                 'table' => 'tailor_content_joins',
                 'relationClass' => CustomNestedJoinRelation::class,
-                'relatedKey' => $relatedMultisite ? 'site_root_id' : 'id'
+                'relatedKey' => $relatedMultisite ? 'site_root_id' : 'id',
+                'relatedMultisite' => $relatedMultisite
             ];
         }
         else {
             $model->morphedByMany[$this->fieldName] = [
-                EntryRecord::class,
+                $relatedModel::class,
                 'table' => $model->getBlueprintDefinition()->getJoinTableName(),
                 'name' => $this->fieldName,
                 'relationClass' => CustomMultiJoinRelation::class,
-                'relatedKey' => $relatedMultisite ? 'site_root_id' : 'id'
+                'relatedKey' => ($relatedMultisite && !$isDualMultisite) ? 'site_root_id' : 'id',
+                'relatedMultisite' => $relatedMultisite
             ];
         }
     }
@@ -232,36 +245,45 @@ class EntriesField extends FallbackField
 
         $parentMultisite = $model->getBlueprintDefinition()->useMultisite();
         $relatedMultisite = $this->getSourceBlueprint()->useMultisite();
+        $relatedModel = $this->getSourceBlueprint()->newModelInstance();
+
+        // Dual-multisite: both parent and related use multisite
+        $isDualMultisite = $parentMultisite && $relatedMultisite;
 
         $isSingular = $this->maxItems === 1;
         $otherIsSingular = $otherField->maxItems === 1;
         $otherIsPropagatable = $relatedMultisite && ($otherField->translatable === false || $otherField->propagatable === true);
 
+        // In dual-multisite, use 'id' for proper site isolation; otherwise use site_root_id for sharing
+        $useRelatedRootKey = $otherIsPropagatable && !$isDualMultisite;
+        $useParentRootKey = $parentMultisite && !$isDualMultisite;
+
         if ($isSingular) {
             $model->hasOne[$this->fieldName] = [
-                EntryRecord::class,
+                $relatedModel::class,
                 'key' => $otherField->getSingularKeyName(),
-                'otherKey' => $otherIsPropagatable ? 'site_root_id' : 'id',
+                'otherKey' => $useRelatedRootKey ? 'site_root_id' : 'id',
                 'replicate' => false
             ];
         }
         elseif ($otherIsSingular) {
             $model->hasMany[$this->fieldName] = [
-                EntryRecord::class,
+                $relatedModel::class,
                 'key' => $otherField->getSingularKeyName(),
-                'otherKey' => $otherIsPropagatable ? 'site_root_id' : 'id',
+                'otherKey' => $useRelatedRootKey ? 'site_root_id' : 'id',
                 'replicate' => false
             ];
         }
         else {
             $model->morphToMany[$this->fieldName] = [
-                EntryRecord::class,
+                $relatedModel::class,
                 'table' => $this->getSourceBlueprint()->getJoinTableName(),
                 'name' => $this->inverse,
                 'relationClass' => CustomMultiJoinRelation::class,
-                'relatedKey' => $otherIsPropagatable ? 'site_root_id' : 'id',
-                'parentKey' => $parentMultisite ? 'site_root_id' : 'id',
-                'replicate' => false
+                'relatedKey' => $useRelatedRootKey ? 'site_root_id' : 'id',
+                'parentKey' => $useParentRootKey ? 'site_root_id' : 'id',
+                'replicate' => false,
+                'relatedMultisite' => $relatedMultisite
             ];
         }
     }
@@ -300,10 +322,6 @@ class EntriesField extends FallbackField
                 'maxDepth' => $blueprint->getMaxDepth(),
                 'showTree' => $blueprint->hasTree(),
             ] + ((array) $blueprint->structure);
-        }
-
-        if ($this->span === 'adaptive') {
-            $fieldConfig['externalToolbarAppState'] = 'toolbarExtensionPoint';
         }
 
         // Transfer custom configuration

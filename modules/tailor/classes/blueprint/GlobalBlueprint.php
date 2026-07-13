@@ -16,6 +16,14 @@ class GlobalBlueprint extends Blueprint
     protected $typeName = 'global';
 
     /**
+     * getModelClassName
+     */
+    public function getModelClassName()
+    {
+        return \Tailor\Models\GlobalRecord::class;
+    }
+
+    /**
      * makeBlueprintTableName where type can be used for content, join or repeater
      */
     protected function makeBlueprintTableName($type = 'content'): string

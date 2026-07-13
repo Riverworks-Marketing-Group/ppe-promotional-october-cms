@@ -131,7 +131,7 @@
     //
 
     DataInteraction.prototype.parseConfiguration = function(configuration) {
-        if (!$.isArray(configuration) && !$.isPlainObject(configuration)) {
+        if (!Array.isArray(configuration) && !$.isPlainObject(configuration)) {
             if ($.trim(configuration) === 0) {
                 return {};
             }

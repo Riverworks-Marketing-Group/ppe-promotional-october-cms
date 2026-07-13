@@ -112,7 +112,7 @@ class MailTemplate extends Model
         // Clean up non-customized templates
         foreach ($dbTemplates as $code => $isCustom) {
             if (!$isCustom && !array_key_exists($code, $templates)) {
-                self::whereCode($code)->delete();
+                self::where('code', $code)->delete();
             }
         }
 
@@ -125,7 +125,7 @@ class MailTemplate extends Model
             $template = new self;
             $template->code = $code;
             $template->description = $description;
-            $template->is_custom = 0;
+            $template->is_custom = false;
             $template->layout_id = MailLayout::getIdFromCode($layoutCode);
             $template->forceSave();
         }
@@ -214,6 +214,6 @@ class MailTemplate extends Model
             return true;
         }
 
-        return self::where('code', $code)->count() > 0;
+        return self::where('code', $code)->exists();
     }
 }

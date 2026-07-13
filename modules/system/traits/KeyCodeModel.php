@@ -19,9 +19,18 @@ trait KeyCodeModel
     protected static $cacheByCode = [];
 
     /**
+     * clearKeyCodeCache clears the static lookup caches
+     */
+    public static function clearKeyCodeCache()
+    {
+        self::$cacheByKey = [];
+        self::$cacheByCode = [];
+    }
+
+    /**
      * findByKey locates a tax class by its key, cached.
      */
-    public static function findByKey(string $key = null): ?self
+    public static function findByKey(?string $key = null): ?self
     {
         if (!$key) {
             return null;
@@ -37,7 +46,7 @@ trait KeyCodeModel
     /**
      * findByCode locates a payment method by its code, cached.
      */
-    public static function findByCode(string $code = null): ?self
+    public static function findByCode(?string $code = null): ?self
     {
         if (!$code) {
             return null;

@@ -1,48 +1,18 @@
-/*
- * Application
- */
-$(function() {
-    /*
-     * Auto hide navbar
-     */
-    var $header = $('.navbar-autohide'),
-        scrolling = false,
-        previousTop = 0,
-        scrollDelta = 10,
-        scrollOffset = 150;
+addEventListener('render', function() {
 
-    $(window).on('scroll', function(){
-        if (!scrolling) {
-            scrolling = true;
-
-            if (!window.requestAnimationFrame) {
-                setTimeout(autoHideHeader, 250);
-            }
-            else {
-                requestAnimationFrame(autoHideHeader);
-            }
-        }
+    // Auto Collapsed List
+    $('ul.bullet-list li.active:first').each(function() {
+        $(this).parents('ul.collapse').each(function() {
+            $(this).addClass('show').prevAll('.collapse-caret:first').removeClass('collapsed');
+        });
     });
 
-    function autoHideHeader() {
-        var currentTop = $(window).scrollTop();
+    // Tooltips
+    $('[data-bs-toggle="tooltip"]').each(function() {
+        $(this).tooltip();
+    });
 
-        // Scrolling up
-        if (previousTop - currentTop > scrollDelta) {
-            $header.removeClass('is-hidden');
-        }
-        else if (currentTop - previousTop > scrollDelta && currentTop > scrollOffset) {
-            // Scrolling down
-            $header.addClass('is-hidden');
-        }
-
-        previousTop = currentTop;
-        scrolling = false;
-    }
-
-    /*
-     * Popovers
-     */
+    // Popovers
     $('[data-bs-toggle="popover"]').each(function() {
         var $el = $(this);
         if ($el.data('content-target')) {
@@ -57,4 +27,10 @@ $(function() {
             $el.popover();
         }
     });
+
+    // How it is made
+    setTimeout(function() {
+        $('.how-its-made').removeClass('init');
+    }, 1);
+
 });
