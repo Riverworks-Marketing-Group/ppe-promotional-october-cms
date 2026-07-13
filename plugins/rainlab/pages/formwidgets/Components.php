@@ -1,9 +1,9 @@
 <?php namespace RainLab\Pages\FormWidgets;
 
-use Backend\Classes\FormWidgetBase;
 use Cms\Classes\ComponentManager;
-use Cms\Classes\ComponentHelpers;
+use Cms\Helpers\Component as ComponentHelpers;
 use Cms\Components\UnknownComponent;
+use Backend\Classes\FormWidgetBase;
 use Exception;
 
 /**
@@ -39,7 +39,7 @@ class Components extends FormWidgetBase
         $manager->listComponents();
 
         foreach ($this->model->settings['components'] as $name => $properties) {
-            [$name, $alias] = strpos($name, ' ') ? explode(' ', $name) : [$name, $name];
+            list($name, $alias) = strpos($name, ' ') ? explode(' ', $name) : [$name, $name];
 
             try {
                 $componentObj = $manager->makeComponent($name, null, $properties);

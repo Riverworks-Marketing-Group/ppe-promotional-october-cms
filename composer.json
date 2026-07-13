@@ -7,7 +7,12 @@
     "require": {
         "php": "^8.2",
         "october/rain": "^4.3",
-        "laravel/framework": "^12.0"
+        "laravel/framework": "^12.0",
+        "rainlab/sitemap-plugin": "^1.2",
+        "rainlab/pages-plugin": "^2.2",
+        "rainlab/builder-plugin": "^3.0",
+        "martin/forms-plugin": "^1.5",
+        "luketowers/twigpcre-plugin": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.5|^9.0",
@@ -62,5 +67,11 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [{
+        "name": "octobercms",
+        "type": "composer",
+        "url": "https://gateway.octobercms.com",
+        "only": ["october/*", "*-plugin", "*-theme"]
+    }]
 }
