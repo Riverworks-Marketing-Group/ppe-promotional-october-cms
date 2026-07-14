@@ -11,10 +11,10 @@
         "rainlab/sitemap-plugin": "^1.2",
         "rainlab/pages-plugin": "^2.2",
         "rainlab/builder-plugin": "^3.0",
-        "martin/forms-plugin": "^1.5",
         "luketowers/twigpcre-plugin": "^1.0",
         "symfony/mailgun-mailer": "^8.1",
-        "symfony/http-client": "^8.1"
+        "symfony/http-client": "^8.1",
+        "blakejones/magicforms-plugin": "^1.6"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.5|^9.0",
